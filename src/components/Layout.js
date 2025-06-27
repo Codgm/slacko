@@ -22,7 +22,7 @@ const Layout = () => { // children prop 제거
       id: 'dashboard',
       title: '대시보드',
       icon: Home,
-      path: '/',
+      path: '/dashboard',
       exact: true
     },
     {
