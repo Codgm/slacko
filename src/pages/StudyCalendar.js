@@ -67,7 +67,6 @@ const StudyCalendar = () => {
     review: { label: '복습', color: 'bg-green-500', icon: RotateCcw },
     project: { label: '프로젝트', color: 'bg-purple-500', icon: Flag },
     reading: { label: '원서읽기', color: 'bg-orange-500', icon: Code },
-    personal: { label: '개인', color: 'bg-gray-500', icon: User }
   };
 
   const repeatOptions = {
