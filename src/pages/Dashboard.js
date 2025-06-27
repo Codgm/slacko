@@ -190,7 +190,6 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
-            {/* <StudyCalendar /> */}
 
             {/* 현재 진행 중인 프로젝트 */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
