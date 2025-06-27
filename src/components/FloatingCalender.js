@@ -59,10 +59,6 @@ const FloatingCalendar = () => {
            selectedDate.getFullYear() === currentDate.getFullYear();
   };
 
-  const formatDate = (date) => {
-    if (!date) return '날짜를 선택하세요';
-    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
-  };
 
   const renderCalendarDays = () => {
     const days = [];
