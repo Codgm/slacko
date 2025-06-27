@@ -1,6 +1,6 @@
 // Layout.js - 공통 레이아웃 컴포넌트
 import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, Outlet } from 'react-router-dom'; // Outlet 추가!
 import { 
   Home, 
   BookOpen, 
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import FloatingCalendar from './FloatingCalender';
 
-const Layout = ({ children }) => {
+const Layout = () => { // children prop 제거
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
 
@@ -133,7 +133,7 @@ const Layout = ({ children }) => {
       {/* 메인 콘텐츠 */}
       <div className="flex-1 overflow-auto">
         <div className="p-6">
-          {children}
+          <Outlet /> {/* children 대신 Outlet 사용! */}
         </div>
       </div>
     </div>

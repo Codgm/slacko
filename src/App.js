@@ -14,10 +14,9 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* 온보딩: Layout 없이 */}
         <Route path="/onboarding" element={<OnboardingLanding />} />
-
-        {/* Layout이 적용되는 페이지들 */}
+        
+        {/* Layout을 element로 사용하고, 중첩 라우트 구조 */}
         <Route element={<Layout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/study" element={<StudyManagementSystem />} />
