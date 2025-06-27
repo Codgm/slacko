@@ -5,8 +5,6 @@ const FloatingCalendar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(null);
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [iconSize, setIconSize] = useState(56); // 기본 크기
-  const [opacity, setOpacity] = useState(0.8);
   const calendarRef = useRef(null);
 
   // 캘린더 외부 클릭 시 닫기
@@ -58,12 +56,6 @@ const FloatingCalendar = () => {
            selectedDate.getMonth() === currentDate.getMonth() && 
            selectedDate.getFullYear() === currentDate.getFullYear();
   };
-
-  const formatDate = (date) => {
-    if (!date) return '날짜를 선택하세요';
-    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
-  };
-
   const renderCalendarDays = () => {
     const days = [];
     

@@ -246,7 +246,7 @@ const TextbookManagementSystem = () => {
     if (!book) return null;
 
     const progressPercentage = getProgressPercentage(book.currentPage, book.totalPages);
-    const daysRemaining = getDaysRemaining(book.targetDate);
+    // const daysRemaining = getDaysRemaining(book.targetDate);
     const recommendedPages = getRecommendedDailyPages(book);
 
     return (

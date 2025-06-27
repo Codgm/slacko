@@ -5,7 +5,6 @@ const StudyCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [view, setView] = useState('month'); // month, week, day
   const [showAddModal, setShowAddModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(null);
   const [events, setEvents] = useState([
     {
       id: 1,
@@ -174,7 +173,6 @@ const StudyCalendar = () => {
   };
 
   const openAddModal = (date) => {
-    setSelectedDate(date);
     setNewEvent(prev => ({ ...prev, date: formatDate(date) }));
     setShowAddModal(true);
   };
