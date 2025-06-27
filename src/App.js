@@ -14,11 +14,11 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/onboarding" element={<OnboardingLanding />} />
+        <Route path="/" element={<OnboardingLanding />} />
         
         {/* Layout을 element로 사용하고, 중첩 라우트 구조 */}
         <Route element={<Layout />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/study" element={<StudyManagementSystem />} />
           <Route path="/project" element={<ProjectManagementSystem />} />
           <Route path="/textbook" element={<TextbookManagementSystem />} />
