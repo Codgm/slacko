@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar, Minus, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 
 const FloatingCalendar = () => {
   const [isOpen, setIsOpen] = useState(false);

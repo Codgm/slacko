@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Book, Calendar, Target, Edit3, Plus, X, BookOpen, Clock, TrendingUp, FileText, Star, Search } from 'lucide-react';
+import { Book, Target, Plus, X, BookOpen, Clock, TrendingUp, FileText } from 'lucide-react';
 
 const TextbookManagementSystem = () => {
   const [books, setBooks] = useState([
