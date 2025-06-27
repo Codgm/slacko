@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BookOpen, Target, Users, CheckCircle, ArrowRight, Star, Play, ChevronDown, BarChart3, Zap, Clock, Trophy, TrendingUp } from 'lucide-react';
+import { BookOpen, Target, Users, CheckCircle, Star,BarChart3, Zap, Clock, Trophy, TrendingUp } from 'lucide-react';
 
 const OnboardingLanding = () => {
   useEffect(() => {
