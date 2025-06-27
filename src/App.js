@@ -9,33 +9,24 @@ import StudyManagementSystem from './pages/StudyManagementSystem';
 import TextbookManagementSystem from './pages/TextbookManagementSystem';
 import Layout from './components/Layout';
 import NotFound from './components/Notfound';
+import OnboardingLanding from './pages/Onboarding';
 function App() {
   return (
     <Router>
-      <Layout>
-        <Routes>
-          {/* 대시보드 */}
+      <Routes>
+        {/* 온보딩: Layout 없이 */}
+        <Route path="/onboarding" element={<OnboardingLanding />} />
+
+        {/* Layout이 적용되는 페이지들 */}
+        <Route element={<Layout />}>
           <Route path="/" element={<Dashboard />} />
-          
-          {/* 학습 관리 */}
           <Route path="/study" element={<StudyManagementSystem />} />
-          {/* <Route path="/study/:id" element={<StudyDetail />} /> */}
-          
-          {/* 프로젝트 관리 */}
           <Route path="/project" element={<ProjectManagementSystem />} />
-          {/* <Route path="/project/:id" element={<ProjectDetail />} /> */}
-          
-          {/* 원서 관리 */}
           <Route path="/textbook" element={<TextbookManagementSystem />} />
-          {/* <Route path="/textbook/:id" element={<TextbookDetail />} /> */}
-          
-          {/* 캘린더 */}
           <Route path="/calendar" element={<StudyCalendar />} />
-          
-          {/* 404 페이지 */}
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Layout>
+        </Route>
+      </Routes>
     </Router>
   );
 }
