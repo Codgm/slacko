@@ -129,44 +129,9 @@ const FloatingCalendar = () => {
                 {renderCalendarDays()}
               </div>
 
-              {/* 투명도 조절 */}
-              {/* <div className="border-t pt-3">
-                <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-                  <span>투명도:</span>
-                  <span>{Math.round(opacity * 100)}%</span>
-                </div>
-                <input
-                  type="range"
-                  min="0.3"
-                  max="1"
-                  step="0.1"
-                  value={opacity}
-                  onChange={(e) => setOpacity(parseFloat(e.target.value))}
-                  className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-                />
-              </div> */}
             </div>
           </div>
         )}
-
-        {/* 크기 조절 버튼들 */}
-        {/* <div className="flex gap-2 mb-2 justify-end">
-          <button
-            onClick={() => setIconSize(Math.max(40, iconSize - 8))}
-            className="w-8 h-8 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center hover:scale-110"
-            style={{ opacity }}
-          >
-            <Minus className="w-4 h-4 text-gray-600" />
-          </button>
-          
-          <button
-            onClick={() => setIconSize(Math.min(80, iconSize + 8))}
-            className="w-8 h-8 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center hover:scale-110"
-            style={{ opacity }}
-          >
-            <Plus className="w-4 h-4 text-gray-600" />
-          </button>
-        </div> */}
 
         {/* 메인 플로팅 버튼 */}
         <button
