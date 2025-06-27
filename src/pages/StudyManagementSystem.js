@@ -76,7 +76,7 @@ const StudyManagementSystem = () => {
   ]);
 
   const [selectedSubject, setSelectedSubject] = useState(null);
-  // const [showAddForm, setShowAddForm] = useState(false);
+  const [ setShowAddForm] = useState(false);
   const [showStudyLog, setShowStudyLog] = useState(false);
   const [timer, setTimer] = useState({ minutes: 0, seconds: 0, isRunning: false });
   const [studyLog, setStudyLog] = useState('');
