@@ -135,6 +135,8 @@ const StudyCalendar = () => {
       case 'day':
         newDate.setDate(newDate.getDate() + direction);
         break;
+      default:
+        break;
     }
     
     setCurrentDate(newDate);
