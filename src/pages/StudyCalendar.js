@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Calendar, Clock, Plus, ChevronLeft, ChevronRight, BookOpen, Code, Target, User, Check, RotateCcw, Flag, Edit3, Trash2, X } from 'lucide-react';
 
 const StudyCalendar = () => {

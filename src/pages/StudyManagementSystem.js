@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Plus, BookOpen, Clock, Target, Edit3, Trash2, Play, Pause, Square, CheckCircle, Circle, Calendar, FileText, TrendingUp, BarChart3 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Play, Pause, Square, CheckCircle, FileText } from 'lucide-react';
 
 const StudyManagementSystem = () => {
   // 상태 관리

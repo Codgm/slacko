@@ -1,5 +1,5 @@
 // Layout.js - 공통 레이아웃 컴포넌트
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, 

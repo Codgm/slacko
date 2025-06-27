@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Calendar, Minus, Plus } from 'lucide-react';
 
 const FloatingCalendar = () => {

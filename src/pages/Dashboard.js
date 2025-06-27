@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Calendar, Clock, Target, BookOpen, FileText, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import StudyCalendar from './StudyCalendar';
 
 const Dashboard = () => {
   // 샘플 데이터 (날짜를 2025년으로 업데이트)

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Calendar, CheckCircle, Circle, FileText, Link, Plus, X, Upload, Trash2, Edit3 } from 'lucide-react';
 
 const ProjectManagementSystem = () => {
