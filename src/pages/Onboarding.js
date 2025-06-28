@@ -15,8 +15,8 @@ const OnboardingLanding = () => {
       "applicationCategory": "EducationalApplication",
       "operatingSystem": "Any",
       "description": "과탑은 대학생과 취준생을 위한 국내 1위 과제관리 플랫폼입니다. 과제, 시험, 프로젝트를 한 곳에서 관리하고 AI가 우선순위를 자동 추천하여 학습 효율을 200% 향상시킵니다.",
-      "url": "https://gwatop.com",
-      "downloadUrl": "https://gwatop.com",
+      "url": "https://gwatop.netlify.app",
+      "downloadUrl": "https://gwatop.netlify.app",
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": "4.9",
