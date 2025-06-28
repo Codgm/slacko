@@ -733,7 +733,7 @@ const OnboardingLanding = () => {
               <h3 className="text-xl font-bold mb-4">과탑</h3>
               <p className="text-gray-400 mb-4">대학생을 위한 스마트 과제관리 플랫폼</p>
               <div className="flex space-x-4">
-                <span className="text-gray-400">📧 contact@gwatop.com</span>
+                <span className="text-gray-400">📧 contact@ gwatop-j@gmail.com</span>
               </div>
             </div>
             <div>
