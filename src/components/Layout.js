@@ -1,6 +1,6 @@
-// Layout.js - 공통 레이아웃 컴포넌트
+// Layout.js - 스크롤 문제가 해결된 레이아웃 컴포넌트
 import { useState } from 'react';
-import { Link, useLocation, Outlet } from 'react-router-dom'; // Outlet 추가!
+import { Link, useLocation, Outlet } from 'react-router-dom';
 import { 
   Home, 
   BookOpen, 
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import FloatingCalendar from './FloatingCalender';
 
-const Layout = () => { // children prop 제거
+const Layout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const location = useLocation();
 
@@ -72,11 +72,12 @@ const Layout = () => { // children prop 제거
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    // 전체 컨테이너: 고정 높이, 오버플로우 숨김
+    <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* 사이드바 */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg transition-all duration-300 flex flex-col`}>
+      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg transition-all duration-300 flex flex-col flex-shrink-0`}>
         {/* 헤더 */}
-        <div className="p-4 border-b">
+        <div className="p-4 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
             {sidebarOpen && (
               <h1 className="text-xl font-bold text-gray-800">학습 관리</h1>
@@ -90,8 +91,8 @@ const Layout = () => { // children prop 제거
           </div>
         </div>
 
-        {/* 메뉴 */}
-        <nav className="flex-1 p-4 space-y-2">
+        {/* 메뉴 - 스크롤 가능 영역 */}
+        <nav className="flex-1 p-4 space-y-2 overflow-y">
           {menuItems.map(item => {
             const Icon = item.icon;
             const isActive = isActiveRoute(item);
@@ -119,10 +120,12 @@ const Layout = () => { // children prop 제거
             );
           })}
         </nav>
+        
         <FloatingCalendar />
+        
         {/* 하단 정보 */}
         {sidebarOpen && (
-          <div className="p-4 border-t">
+          <div className="p-4 border-t flex-shrink-0">
             <div className="text-xs text-gray-500 text-center">
               <p>학습 관리 시스템 v1.0</p>
             </div>
@@ -130,10 +133,12 @@ const Layout = () => { // children prop 제거
         )}
       </div>
 
-      {/* 메인 콘텐츠 */}
-      <div className="flex-1 overflow-auto">
-        <div className="p-6">
-          <Outlet /> {/* children 대신 Outlet 사용! */}
+      {/* 메인 콘텐츠 - 스크롤 가능 영역 */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <div className="flex-1 overflow-y-auto">
+          <div className="p-6">
+            <Outlet />
+          </div>
         </div>
       </div>
     </div>
