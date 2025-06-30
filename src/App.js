@@ -10,6 +10,7 @@ import TextbookManagementSystem from './pages/TextbookManagementSystem';
 import Layout from './components/Layout';
 import NotFound from './components/Notfound';
 import OnboardingLanding from './pages/Onboarding';
+import TextbookDetailPage from './pages/TextbookDetailPage';
 function App() {
   return (
     <Router>
@@ -22,6 +23,7 @@ function App() {
           <Route path="/study" element={<StudyManagementSystem />} />
           <Route path="/project" element={<ProjectManagementSystem />} />
           <Route path="/textbook" element={<TextbookManagementSystem />} />
+          <Route path="/textbook/:id" element={<TextbookDetailPage />} />
           <Route path="/calendar" element={<StudyCalendar />} />
           <Route path="*" element={<NotFound />} />
         </Route>
