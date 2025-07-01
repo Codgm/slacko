@@ -1,23 +1,495 @@
 import { useState } from 'react';
-import { ArrowLeft, BookOpen, Target, FileText, Settings, X, Brain } from 'lucide-react';
-import StudyPlanComponent from '../components/StudyPlanComponent';
+import { ArrowLeft, BookOpen, Target, FileText, Settings, Brain, Eye, PenTool, Save, Plus, ChevronLeft, ChevronRight, Clock, Hash, Minimize2, Maximize2 } from 'lucide-react';
 import ConceptStudyComponent from '../components/ConceptStudyComponent';
-import IntegratedStudyInterface from '../components/CornellNotes';
+import StudyPlanComponent from '../components/StudyPlanComponent';
 
+// 통합 학습 인터페이스 컴포넌트
+const IntegratedStudyInterface = ({ textbook, onClose }) => {
+  const [currentPage, setCurrentPage] = useState(95);
+  const [isNoteCollapsed, setIsNoteCollapsed] = useState(false);
+  const [activeNoteTab, setActiveNoteTab] = useState('write');
+  const [noteMode, setNoteMode] = useState('view');
+  const [currentNote, setCurrentNote] = useState({
+    cues: '• PCB란 무엇인가?\n• 왜 필요한가?\n• 주요 구성요소는?\n• Context Switching과 관계?',
+    notes: '📝 Process Control Block (PCB) 핵심 정리\n\n• 정의: 운영체제가 각 프로세스를 관리하기 위해 유지하는 자료구조\n• 목적: 프로세스 상태 정보를 체계적으로 저장 및 관리\n\n주요 구성요소:\n1. Process ID (PID) - 프로세스 고유 식별자\n2. Process State - NEW, READY, RUNNING, WAITING, TERMINATED\n3. Program Counter - 다음 실행할 명령어 주소\n4. CPU Registers - 프로세스 실행 중 사용된 레지스터 값들\n5. Memory Management Info - 메모리 할당 정보\n\n💡 핵심 이해\n• Context Switching 시 PCB에 현재 상태를 저장하고 복원\n• 멀티태스킹 운영체제의 필수 요소',
+    summary: 'PCB는 운영체제가 프로세스를 효율적으로 관리하기 위한 핵심 자료구조로, Context Switching과 멀티태스킹을 가능하게 하는 필수 요소',
+    pageRange: '95-97'
+  });
+  const [existingNotes, setExistingNotes] = useState([
+    {
+      id: 1,
+      title: 'Process 개념 정리',
+      pageRange: '90-94',
+      date: '2025-07-01',
+      chapter: 'Chapter 3',
+      summary: '프로세스의 정의와 상태 변화 모델',
+      content: {
+        cues: '• 프로세스란?\n• 프로그램과 차이점?\n• 프로세스 상태',
+        notes: '프로세스는 실행 중인 프로그램을 의미한다.\n- 메모리에 로드된 상태\n- CPU 시간을 할당받을 수 있는 상태\n- 독립적인 메모리 공간 보유',
+        summary: '프로세스 = 실행 중인 프로그램 + 시스템 자원'
+      }
+    },
+    {
+      id: 2,
+      title: 'Context Switching',
+      pageRange: '88-89',
+      date: '2025-06-30',
+      chapter: 'Chapter 3',
+      summary: '컨텍스트 스위칭의 필요성과 오버헤드',
+      content: {
+        cues: '• Context Switching이란?\n• 언제 발생?\n• 오버헤드는?',
+        notes: 'CPU를 한 프로세스에서 다른 프로세스로 넘겨주는 과정\n- 현재 상태 저장 (PCB에)\n- 새 프로세스 상태 복원\n- 시간이 많이 소요되는 작업',
+        summary: 'Context Switching = 프로세스 간 CPU 전환 과정'
+      }
+    }
+  ]);
+  const [selectedNote, setSelectedNote] = useState(null);
+  const [ setHoveredNote] = useState(null);
+
+  const textbookContent = {
+    chapter: "Chapter 3",
+    section: "3.2 Process Control Block",
+    title: "Process Control Block (PCB)",
+    content: `
+Process Control Block (PCB)는 운영체제가 프로세스를 관리하기 위해 유지하는 자료구조입니다.
+
+**PCB의 주요 구성요소:**
+
+1. **Process ID (PID)**
+   - 프로세스를 고유하게 식별하는 번호
+   - 시스템 내에서 중복되지 않는 정수값
+
+2. **Process State**
+   - NEW: 프로세스가 생성 중인 상태
+   - READY: CPU 할당을 기다리는 상태  
+   - RUNNING: 현재 CPU를 사용하고 있는 상태
+   - WAITING: I/O 완료 등을 기다리는 상태
+   - TERMINATED: 프로세스가 종료된 상태
+
+3. **Program Counter (PC)**
+   - 다음에 실행할 명령어의 주소를 저장
+   - Context switching 시 복원에 필요
+
+4. **CPU Registers**
+   - 프로세스 실행 중 사용된 레지스터 값들
+   - 인덱스 레지스터, 스택 포인터, 범용 레지스터 등
+
+5. **Memory Management Information**
+   - 베이스/리미트 레지스터 값
+   - 페이지 테이블 또는 세그먼트 테이블 정보
+    `,
+    pageInfo: "페이지 95-97"
+  };
+
+  const saveNote = () => {
+    if (currentNote.notes.trim() || currentNote.cues.trim() || currentNote.summary.trim()) {
+      const newNote = {
+        id: existingNotes.length + 1,
+        title: currentNote.summary ? currentNote.summary.substring(0, 30) + '...' : '새 노트',
+        pageRange: currentNote.pageRange,
+        date: new Date().toISOString().split('T')[0],
+        chapter: 'Chapter 3',
+        summary: currentNote.summary || '요약 없음',
+        content: {
+          cues: currentNote.cues,
+          notes: currentNote.notes,
+          summary: currentNote.summary
+        }
+      };
+      setExistingNotes([newNote, ...existingNotes]);
+      setNoteMode('view');
+      alert('노트가 저장되었습니다!');
+    }
+  };
+
+  const startNewNote = () => {
+    setCurrentNote({
+      cues: '',
+      notes: '',
+      summary: '',
+      pageRange: '95-97'
+    });
+    setNoteMode('edit');
+    setActiveNoteTab('write');
+  };
+
+  return (
+    <div className="h-screen bg-gray-50 flex flex-col">
+      {/* 전체화면 모달 헤더 */}
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title="돌아가기"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="flex items-center space-x-2">
+              <BookOpen className="w-6 h-6 text-blue-600" />
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">{textbook.title}</h1>
+                <p className="text-sm text-gray-600">{textbookContent.chapter} · {textbookContent.section}</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center space-x-3">
+            <span className="text-sm text-gray-500">{textbookContent.pageInfo}</span>
+            <button
+              onClick={() => setIsNoteCollapsed(!isNoteCollapsed)}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title={isNoteCollapsed ? "노트 영역 펼치기" : "노트 영역 접기"}
+            >
+              {isNoteCollapsed ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 메인 컨텐츠 영역 */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* 왼쪽: 교재 내용 */}
+        <div className={`${isNoteCollapsed ? 'w-full' : 'w-3/5'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300`}>
+          {/* 페이지 네비게이션 */}
+          <div className="border-b border-gray-100 p-4">
+            <div className="flex items-center justify-between">
+              <button 
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <ChevronLeft className="w-4 h-4" />
+                <span>이전</span>
+              </button>
+              <span className="font-medium text-gray-900 px-4 py-2 bg-gray-50 rounded-lg">페이지 {currentPage}</span>
+              <button 
+                onClick={() => setCurrentPage(prev => prev + 1)}
+                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
+              >
+                <span>다음</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* 교재 본문 */}
+          <div className="flex-1 overflow-y-auto p-8">
+            <div className="max-w-4xl mx-auto">
+              <h2 className="text-3xl font-bold text-gray-900 mb-8">{textbookContent.title}</h2>
+              <div className="prose prose-lg max-w-none">
+                {textbookContent.content.split('\n').map((paragraph, index) => {
+                  if (paragraph.trim() === '') return <br key={index} />;
+                  if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
+                    return <h3 key={index} className="text-xl font-semibold text-gray-800 mt-8 mb-4">{paragraph.slice(2, -2)}</h3>;
+                  }
+                  if (paragraph.trim().startsWith('- ')) {
+                    return <li key={index} className="ml-6 mb-3 text-gray-700 leading-relaxed">{paragraph.slice(2)}</li>;
+                  }
+                  if (paragraph.trim().match(/^\d+\./)) {
+                    return <p key={index} className="font-semibold text-gray-800 mt-6 mb-3 text-lg">{paragraph}</p>;
+                  }
+                  return <p key={index} className="mb-5 text-gray-700 leading-relaxed text-lg">{paragraph}</p>;
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 오른쪽: 노트 영역 */}
+        {!isNoteCollapsed && (
+          <div className="w-2/5 bg-gray-50 flex flex-col">
+            {/* 탭 헤더 */}
+            <div className="bg-white border-b border-gray-100">
+              <div className="flex items-center justify-between p-5 pb-0">
+                <h3 className="font-bold text-gray-900 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-slate-600" />
+                  Chapter 3 노트
+                </h3>
+                <div className="flex items-center space-x-2">
+                  {activeNoteTab === 'write' && (
+                    <>
+                      <div className="flex bg-gray-100 rounded-lg p-1">
+                        <button
+                          onClick={() => setNoteMode('view')}
+                          className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                            noteMode === 'view'
+                              ? 'bg-white text-gray-900 shadow-sm'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          <Eye className="w-4 h-4 inline mr-1" />
+                          읽기
+                        </button>
+                        <button
+                          onClick={() => setNoteMode('edit')}
+                          className={`px-3 py-1 rounded text-sm font-medium transition-colors ${
+                            noteMode === 'edit'
+                              ? 'bg-white text-gray-900 shadow-sm'
+                              : 'text-gray-600 hover:text-gray-900'
+                          }`}
+                        >
+                          <PenTool className="w-4 h-4 inline mr-1" />
+                          편집
+                        </button>
+                      </div>
+                      {noteMode === 'edit' && (
+                        <button
+                          onClick={saveNote}
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                        >
+                          <Save className="w-4 h-4" />
+                          <span>저장</span>
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              </div>
+              <div className="flex border-b border-gray-100">
+                <button
+                  onClick={() => setActiveNoteTab('write')}
+                  className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeNoteTab === 'write'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  노트 작성
+                </button>
+                <button
+                  onClick={() => setActiveNoteTab('list')}
+                  className={`px-5 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeNoteTab === 'list'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  노트 목록 ({existingNotes.filter(note => note.chapter === 'Chapter 3').length})
+                </button>
+              </div>
+            </div>
+
+            {/* 탭 콘텐츠 */}
+            <div className="flex-1 overflow-hidden">
+              {activeNoteTab === 'write' ? (
+                <div className="h-full">
+                  {noteMode === 'view' ? (
+                    /* 읽기 모드 */
+                    <div className="h-full flex flex-col">
+                      <div className="p-5 bg-white border-b border-gray-100">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <Hash className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full font-medium">
+                              {currentNote.pageRange}p
+                            </span>
+                            <span className="text-sm text-gray-500">
+                              {new Date().toLocaleDateString()}
+                            </span>
+                          </div>
+                          <button
+                            onClick={startNewNote}
+                            className="text-blue-600 hover:text-blue-700 text-sm font-medium flex items-center space-x-1"
+                          >
+                            <Plus className="w-4 h-4" />
+                            <span>새 노트</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="flex-1 flex flex-col">
+                        <div className="flex flex-1">
+                          <div className="w-2/5 bg-amber-50 border-r border-amber-100">
+                            <div className="p-4 bg-amber-100 border-b border-amber-200">
+                              <h4 className="font-semibold text-amber-800 text-sm flex items-center">
+                                <Brain className="w-4 h-4 mr-2" />
+                                질문 & 키워드
+                              </h4>
+                            </div>
+                            <div className="p-4 h-full overflow-y-auto">
+                              <div className="text-sm text-amber-900 leading-relaxed whitespace-pre-wrap">
+                                {currentNote.cues || '작성된 내용이 없습니다.'}
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex-1 bg-white">
+                            <div className="p-4 bg-blue-50 border-b border-blue-100">
+                              <h4 className="font-semibold text-blue-800 text-sm flex items-center">
+                                <FileText className="w-4 h-4 mr-2" />
+                                메인 노트
+                              </h4>
+                            </div>
+                            <div className="p-4 h-full overflow-y-auto">
+                              <div className="text-sm text-gray-900 leading-relaxed whitespace-pre-wrap">
+                                {currentNote.notes || '작성된 내용이 없습니다.'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="h-32 bg-emerald-50 border-t border-emerald-100">
+                          <div className="p-4 bg-emerald-100 border-b border-emerald-200">
+                            <h4 className="font-semibold text-emerald-800 text-sm flex items-center">
+                              <Target className="w-4 h-4 mr-2" />
+                              핵심 요약
+                            </h4>
+                          </div>
+                          <div className="p-4 h-full overflow-y-auto">
+                            <div className="text-sm text-emerald-900 leading-relaxed">
+                              {currentNote.summary || '작성된 내용이 없습니다.'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* 편집 모드 */
+                    <div className="h-full flex flex-col">
+                      <div className="p-5 bg-white border-b border-gray-100">
+                        <div className="flex items-center space-x-3">
+                          <Hash className="w-4 h-4 text-gray-400" />
+                          <input
+                            type="text"
+                            value={currentNote.pageRange}
+                            onChange={(e) => setCurrentNote(prev => ({...prev, pageRange: e.target.value}))}
+                            className="bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                            placeholder="페이지 범위 (예: 95-97)"
+                          />
+                        </div>
+                      </div>
+                      <div className="flex-1 flex flex-col">
+                        <div className="flex flex-1">
+                          <div className="w-2/5 bg-amber-50 border-r border-amber-100">
+                            <div className="p-4 bg-amber-100 border-b border-amber-200">
+                              <h4 className="font-semibold text-amber-800 text-sm flex items-center">
+                                <Brain className="w-4 h-4 mr-2" />
+                                질문 & 키워드
+                              </h4>
+                            </div>
+                            <div className="p-4 h-full">
+                              <textarea
+                                value={currentNote.cues}
+                                onChange={(e) => setCurrentNote(prev => ({...prev, cues: e.target.value}))}
+                                placeholder="• 핵심 질문들을 입력하세요"
+                                className="w-full h-full border-none outline-none resize-none text-sm bg-transparent leading-relaxed placeholder-amber-500 text-amber-900"
+                              />
+                            </div>
+                          </div>
+                          <div className="flex-1 bg-white">
+                            <div className="p-4 bg-blue-50 border-b border-blue-100">
+                              <h4 className="font-semibold text-blue-800 text-sm flex items-center">
+                                <FileText className="w-4 h-4 mr-2" />
+                                메인 노트
+                              </h4>
+                            </div>
+                            <div className="p-4 h-full">
+                              <textarea
+                                value={currentNote.notes}
+                                onChange={(e) => setCurrentNote(prev => ({...prev, notes: e.target.value}))}
+                                placeholder="핵심 내용을 자유롭게 정리하세요"
+                                className="w-full h-full border-none outline-none resize-none text-sm leading-relaxed text-gray-900"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                        <div className="h-32 bg-emerald-50 border-t border-emerald-100">
+                          <div className="p-4 bg-emerald-100 border-b border-emerald-200">
+                            <h4 className="font-semibold text-emerald-800 text-sm flex items-center">
+                              <Target className="w-4 h-4 mr-2" />
+                              핵심 요약
+                            </h4>
+                          </div>
+                          <div className="p-4 h-full">
+                            <textarea
+                              value={currentNote.summary}
+                              onChange={(e) => setCurrentNote(prev => ({...prev, summary: e.target.value}))}
+                              placeholder="학습한 내용을 한 문장으로 요약해보세요"
+                              className="w-full h-full border-none outline-none resize-none text-sm bg-transparent leading-relaxed placeholder-emerald-500 text-emerald-900"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                /* 노트 목록 */
+                <div className="h-full overflow-y-auto p-5">
+                  <div className="space-y-2">
+                    {existingNotes
+                      .filter(note => note.chapter === 'Chapter 3')
+                      .map(note => (
+                      <div key={note.id} className="relative">
+                        <div
+                          className="bg-white rounded-lg border border-gray-200 p-4 cursor-pointer transition-all hover:border-blue-300 hover:shadow-sm"
+                          onMouseEnter={() => setHoveredNote(note.id)}
+                          onMouseLeave={() => setHoveredNote(null)}
+                          onClick={() => setSelectedNote(selectedNote?.id === note.id ? null : note)}
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-3 mb-1">
+                                <span className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded font-medium">
+                                  {note.pageRange}p
+                                </span>
+                                <span className="text-xs text-gray-500">{note.date}</span>
+                              </div>
+                              <h5 className="font-medium text-gray-900 truncate">{note.title}</h5>
+                              <p className="text-sm text-gray-600 truncate mt-1">{note.summary}</p>
+                            </div>
+                            <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${
+                              selectedNote?.id === note.id ? 'rotate-90' : ''
+                            }`} />
+                          </div>
+                        </div>
+                        {selectedNote?.id === note.id && (
+                          <div className="bg-gray-50 border-t border-gray-200 p-4 space-y-4">
+                            <div className="bg-white rounded-lg p-4 border-l-4 border-amber-400">
+                              <h6 className="text-sm font-semibold text-amber-800 mb-2">질문 & 키워드</h6>
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{note.content.cues}</p>
+                            </div>
+                            <div className="bg-white rounded-lg p-4 border-l-4 border-blue-400">
+                              <h6 className="text-sm font-semibold text-blue-800 mb-2">메인 노트</h6>
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{note.content.notes}</p>
+                            </div>
+                            <div className="bg-white rounded-lg p-4 border-l-4 border-emerald-400">
+                              <h6 className="text-sm font-semibold text-emerald-800 mb-2">핵심 요약</h6>
+                              <p className="text-sm text-gray-700">{note.content.summary}</p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 하단: 상태바 */}
+      <div className="bg-white border-t border-gray-100 px-6 py-3">
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <div className="flex items-center space-x-4">
+            <span>Chapter 3 · Process Management</span>
+            <span>•</span>
+            <span>총 {existingNotes.filter(note => note.chapter === 'Chapter 3').length}개 노트</span>
+          </div>
+          <div className="flex items-center space-x-2">
+            <Clock className="w-4 h-4" />
+            <span>마지막 저장: 방금 전</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// 메인 원서 상세 페이지
 const TextbookDetailPage = () => {
   const [activeTab, setActiveTab] = useState('concept');
-  const [showCornellEditor, setShowCornellEditor] = useState(false);
-  const [showConceptModal, setShowConceptModal] = useState(false);
-  const [currentCornellNote, setCurrentCornellNote] = useState({
-    title: '',
-    pageRange: '',
-    overview: '',
-    questions: [''],
-    summary: '',
-    keyPoints: ''
-  });
+  const [isFullScreenStudy, setIsFullScreenStudy] = useState(false);
 
-  // 샘플 원서 데이터
   const textbook = {
     id: 1,
     title: "Operating System Concepts",
@@ -54,17 +526,6 @@ const TextbookDetailPage = () => {
                   <div className="text-sm text-gray-600">복습 완료</div>
                 </div>
               </div>
-              <h4 className="font-medium text-gray-900 mb-3">복습 필요 항목</h4>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between bg-white rounded-lg p-3">
-                  <span className="text-sm">Memory Management</span>
-                  <span className="text-xs text-red-600 bg-red-50 px-2 py-1 rounded">복습 필요</span>
-                </div>
-                <div className="flex items-center justify-between bg-white rounded-lg p-3">
-                  <span className="text-sm">Virtual Memory</span>
-                  <span className="text-xs text-yellow-600 bg-yellow-50 px-2 py-1 rounded">재복습</span>
-                </div>
-              </div>
             </div>
           </div>
         );
@@ -74,12 +535,43 @@ const TextbookDetailPage = () => {
         );
       case 'notes':
         return (
-            <IntegratedStudyInterface/>
+          <div className="p-6">
+            <div className="text-center">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-8 border border-blue-100">
+                <h3 className="text-xl font-semibold text-blue-900 mb-4">📚 집중 학습 모드</h3>
+                <p className="text-gray-600 mb-6">
+                  교재와 노트를 동시에 보면서 효율적으로 학습해보세요.
+                  <br />
+                  코넬 노트 방식으로 체계적인 정리가 가능합니다.
+                </p>
+                <button
+                  onClick={() => setIsFullScreenStudy(true)}
+                  className="bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-medium hover:bg-blue-700 transition-colors flex items-center space-x-3 mx-auto"
+                >
+                  <BookOpen className="w-6 h-6" />
+                  <span>집중 학습 모드로 전환</span>
+                </button>
+                <div className="mt-4 text-sm text-gray-500">
+                  전체화면에서 교재 읽기와 노트 작성을 함께 할 수 있습니다
+                </div>
+              </div>
+            </div>
+          </div>
         );
       default:
         return null;
     }
   };
+
+  // 전체화면 학습 모드가 활성화된 경우
+  if (isFullScreenStudy) {
+    return (
+      <IntegratedStudyInterface 
+        textbook={textbook}
+        onClose={() => setIsFullScreenStudy(false)}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -103,7 +595,6 @@ const TextbookDetailPage = () => {
         {/* 책 정보 섹션 */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
           <div className="flex flex-col md:flex-row gap-6">
-            {/* 책 표지 */}
             <div className="flex-shrink-0">
               <img
                 src={textbook.coverImage}
@@ -111,7 +602,6 @@ const TextbookDetailPage = () => {
                 className="w-32 h-40 object-cover rounded-lg shadow-md"
               />
             </div>
-            {/* 책 정보 */}
             <div className="flex-1">
               <div className="mb-4">
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">{textbook.title}</h2>
@@ -119,7 +609,6 @@ const TextbookDetailPage = () => {
                 <p className="text-gray-600 mb-1">출판사: {textbook.publisher}</p>
                 <p className="text-gray-600">총 {textbook.totalPages}페이지</p>
               </div>
-              {/* 진도율 표시 */}
               <div className="mb-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-700">학습 진도</span>
@@ -134,7 +623,6 @@ const TextbookDetailPage = () => {
                   ></div>
                 </div>
               </div>
-              {/* 통계 정보 */}
               <div className="grid grid-cols-3 gap-4">
                 <div className="text-center p-3 bg-blue-50 rounded-lg">
                   <div className="text-lg font-bold text-blue-600">{textbook.notes}</div>
@@ -185,263 +673,6 @@ const TextbookDetailPage = () => {
           </div>
         </div>
       </div>
-
-      {/* 코넬식 노트 작성 모달 */}
-      {showCornellEditor && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-6xl w-full h-[90vh] overflow-hidden">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-bold text-gray-900">코넬식 노트 작성</h3>
-                  <p className="text-sm text-gray-600">체계적인 학습 노트를 작성해보세요</p>
-                </div>
-                <button
-                  onClick={() => setShowCornellEditor(false)}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="w-6 h-6" />
-                </button>
-              </div>
-            </div>
-            <div className="flex h-full">
-              {/* 좌측: 질문/키워드 작성 영역 */}
-              <div className="w-1/3 bg-yellow-50 p-6 border-r border-gray-200">
-                <h4 className="font-semibold text-gray-800 mb-4 flex items-center">
-                  <Brain className="w-4 h-4 mr-2" />
-                  질문 & 키워드 영역
-                </h4>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">핵심 질문들</label>
-                    <div className="space-y-2">
-                      {currentCornellNote.questions.map((question, index) => (
-                        <div key={index} className="relative">
-                          <textarea
-                            className="w-full p-3 border border-yellow-200 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                            rows="2"
-                            value={question}
-                            onChange={(e) => {
-                              const newQuestions = [...currentCornellNote.questions];
-                              newQuestions[index] = e.target.value;
-                              setCurrentCornellNote({...currentCornellNote, questions: newQuestions});
-                            }}
-                            placeholder="질문을 입력하세요..."
-                          />
-                          {currentCornellNote.questions.length > 1 && (
-                            <button
-                              onClick={() => {
-                                const newQuestions = currentCornellNote.questions.filter((_, i) => i !== index);
-                                setCurrentCornellNote({...currentCornellNote, questions: newQuestions});
-                              }}
-                              className="absolute top-2 right-2 text-red-500 hover:text-red-700"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
-                      ))}
-                      <button
-                        onClick={() => {
-                          setCurrentCornellNote({
-                            ...currentCornellNote, 
-                            questions: [...currentCornellNote.questions, '']
-                          });
-                        }}
-                        className="w-full p-2 border-2 border-dashed border-yellow-300 rounded-lg text-yellow-600 hover:border-yellow-400 hover:text-yellow-700 text-sm"
-                      >
-                        + 질문 추가
-                      </button>
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">핵심 키워드</label>
-                    <textarea
-                      className="w-full p-3 border border-yellow-200 rounded-lg text-sm focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
-                      rows="3"
-                      value={currentCornellNote.keyPoints}
-                      onChange={(e) => setCurrentCornellNote({...currentCornellNote, keyPoints: e.target.value})}
-                      placeholder="중요한 키워드들을 입력하세요..."
-                    />
-                  </div>
-                </div>
-              </div>
-              {/* 우측: 노트 내용 작성 영역 */}
-              <div className="flex-1 p-6">
-                <h4 className="font-semibold text-gray-800 mb-4 flex items-center">
-                  <FileText className="w-4 h-4 mr-2" />
-                  노트 내용 영역
-                </h4>
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">개념명</label>
-                      <input
-                        type="text"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={currentCornellNote.title}
-                        onChange={(e) => setCurrentCornellNote({...currentCornellNote, title: e.target.value})}
-                        placeholder="개념명을 입력하세요"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">페이지 범위</label>
-                      <input
-                        type="text"
-                        className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        value={currentCornellNote.pageRange}
-                        onChange={(e) => setCurrentCornellNote({...currentCornellNote, pageRange: e.target.value})}
-                        placeholder="예: p.95-97"
-                      />
-                    </div>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">개요 및 상세 내용</label>
-                    <textarea
-                      className="w-full p-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      rows="12"
-                      value={currentCornellNote.overview}
-                      onChange={(e) => setCurrentCornellNote({...currentCornellNote, overview: e.target.value})}
-                      placeholder="개념의 상세한 설명을 작성하세요..."
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-            {/* 하단: 요약 영역 */}
-            <div className="bg-blue-50 p-6 border-t border-gray-200">
-              <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
-                <Target className="w-4 h-4 mr-2" />
-                핵심 요약
-              </h4>
-              <textarea
-                className="w-full text-sm text-blue-800 bg-white p-3 rounded-lg border border-blue-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                rows="3"
-                value={currentCornellNote.summary}
-                onChange={(e) => setCurrentCornellNote({...currentCornellNote, summary: e.target.value})}
-                placeholder="핵심 내용을 한줄로 요약하세요..."
-              />
-              <div className="flex justify-end space-x-3 mt-4">
-                <button
-                  onClick={() => setShowCornellEditor(false)}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCornellEditor(false);
-                  }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  저장하기
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 개념 등록 모달 */}
-      {showConceptModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <h3 className="text-lg font-bold text-gray-900">새 개념 등록</h3>
-              <p className="text-sm text-gray-600">새로운 개념을 체계적으로 정리해보세요</p>
-            </div>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">개념명 *</label>
-                <input
-                  type="text"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="예: Process Control Block"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">정의 *</label>
-                <textarea
-                  rows="3"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="개념의 정확한 정의를 입력하세요"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">카테고리</label>
-                  <input
-                    type="text"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="예: Process Management"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">페이지 참조</label>
-                  <input
-                    type="text"
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="예: p.95-97"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">태그 (쉼표로 구분)</label>
-                <input
-                  type="text"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="예: OS, Process, Data Structure"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">예시 코드</label>
-                <textarea
-                  rows="6"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
-                  placeholder="관련 코드 예시를 입력하세요"
-                />
-              </div>
-            </div>
-            <div className="p-6 border-t border-gray-200 flex justify-end space-x-3">
-              <button
-                onClick={() => setShowConceptModal(false)}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                취소
-              </button>
-              <button
-                onClick={() => setShowConceptModal(false)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                등록하기
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 하단 여백 (탭 네비게이션 공간 확보) */}
-      <div className="h-20"></div>
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #8b5cf6;
-          cursor: pointer;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-        .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: #8b5cf6;
-          cursor: pointer;
-          border: none;
-          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-        }
-      `}</style>
     </div>
   );
 };
