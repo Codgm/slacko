@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { ArrowLeft, BookOpen, Target, FileText, Settings, X, Brain } from 'lucide-react';
-import CornellNotesUI from '../components/CornellNotes';
 import StudyPlanComponent from '../components/StudyPlanComponent';
 import ConceptStudyComponent from '../components/ConceptStudyComponent';
+import IntegratedStudyInterface from '../components/CornellNotes';
 
 const TextbookDetailPage = () => {
   const [activeTab, setActiveTab] = useState('concept');
@@ -74,7 +74,7 @@ const TextbookDetailPage = () => {
         );
       case 'notes':
         return (
-            <CornellNotesUI/>
+            <IntegratedStudyInterface/>
         );
       default:
         return null;
