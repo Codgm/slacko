@@ -44,7 +44,7 @@ const IntegratedStudyInterface = ({ textbook, onClose }) => {
     }
   ]);
   const [selectedNote, setSelectedNote] = useState(null);
-  const [hoveredNote, setHoveredNote] = useState(null);
+  const [ setHoveredNote] = useState(null);
 
   const textbookContent = {
     chapter: "Chapter 3",
