@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowLeft, BookOpen, Target, FileText, Settings, Brain, Eye, PenTool, Save, Plus, ChevronLeft, ChevronRight, Clock, Hash, Minimize2, Maximize2 } from 'lucide-react';
-import ConceptStudyComponent from '../components/ConceptStudyComponent';
 import StudyPlanComponent from '../components/StudyPlanComponent';
+import LearningDashboard from '../components/ConceptBook';
 
 // 통합 학습 인터페이스 컴포넌트
 const IntegratedStudyInterface = ({ textbook, onClose }) => {
@@ -44,7 +44,7 @@ const IntegratedStudyInterface = ({ textbook, onClose }) => {
     }
   ]);
   const [selectedNote, setSelectedNote] = useState(null);
-  const [ setHoveredNote] = useState(null);
+  const [hoveredNote, setHoveredNote] = useState(null);
 
   const textbookContent = {
     chapter: "Chapter 3",
@@ -489,7 +489,6 @@ Process Control Block (PCB)는 운영체제가 프로세스를 관리하기 위�
 const TextbookDetailPage = () => {
   const [activeTab, setActiveTab] = useState('concept');
   const [isFullScreenStudy, setIsFullScreenStudy] = useState(false);
-
   const textbook = {
     id: 1,
     title: "Operating System Concepts",
@@ -509,7 +508,7 @@ const TextbookDetailPage = () => {
     switch(activeTab) {
       case 'concept':
         return (
-          <ConceptStudyComponent/>
+          <LearningDashboard/>
         );
       case 'review':
         return (
@@ -589,6 +588,7 @@ const TextbookDetailPage = () => {
           </div>
         </div>
       </div>
+
 
       {/* 메인 콘텐츠 */}
       <div className="max-w-4xl mx-auto px-6 py-6">
