@@ -1,16 +1,16 @@
 // App.js - 메인 앱 컴포넌트
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-// 페이지 컴포넌트들 import
+// 페이지 컴포넌트들 import (폴더 기반)
 import Dashboard from './pages/Dashboard';
-import ProjectManagementSystem from './pages/ProjectManagementSystem';
+import ProjectManagementSystem from './pages/ProjectManagement';
 import StudyCalendar from './pages/StudyCalendar';
-import StudyManagementSystem from './pages/StudyManagementSystem';
-import TextbookManagementSystem from './pages/TextbookManagementSystem';
+import StudyManagementSystem from './pages/StudyManagement';
+import TextbookManagementSystem from './pages/TextbookManagement';
 import Layout from './components/Layout';
 import NotFound from './components/Notfound';
 import OnboardingLanding from './pages/Onboarding';
-import TextbookDetailPage from './pages/TextbookDetailPage';
+import TextbookDetailPage from './pages/TextbookDetail';
 function App() {
   return (
     <Router>
