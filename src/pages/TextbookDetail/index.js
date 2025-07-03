@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Button from '../../components/common/Button';
 import { ArrowLeft, BookOpen, Target, FileText, Settings, Brain, ChevronLeft, ChevronRight, Clock, Minimize2, Maximize2 } from 'lucide-react';
 import ConceptStudyComponent from '../../components/ConceptStudyComponent';
@@ -212,9 +212,73 @@ const IntegratedStudyInterface = ({ textbook, onClose }) => {
   );
 };
 
+function SlidingTabBar({ tabs, activeTab, setActiveTab }) {
+  const tabRefs = useRef([]);
+  const underlineRef = useRef(null);
+  const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
+
+  useEffect(() => {
+    const idx = tabs.findIndex(tab => tab.id === activeTab);
+    const tabEl = tabRefs.current[idx];
+    if (tabEl) {
+      setUnderlineStyle({
+        left: tabEl.offsetLeft,
+        width: tabEl.clientWidth
+      });
+    }
+  }, [activeTab, tabs]);
+
+  // 윈도우 리사이즈 대응
+  useEffect(() => {
+    const handleResize = () => {
+      const idx = tabs.findIndex(tab => tab.id === activeTab);
+      const tabEl = tabRefs.current[idx];
+      if (tabEl) {
+        setUnderlineStyle({
+          left: tabEl.offsetLeft,
+          width: tabEl.clientWidth
+        });
+      }
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [activeTab, tabs]);
+
+  return (
+    <nav className="relative max-w-4xl mx-auto overflow-x-auto scrollbar-hide px-2 sm:px-4 md:px-0">
+      <div className="flex gap-2 sm:gap-4 md:gap-6 relative">
+        {/* underline */}
+        <span
+          ref={underlineRef}
+          className="absolute bottom-0 h-1 bg-blue-600 rounded-full transition-all duration-300 z-10"
+          style={{ left: underlineStyle.left, width: underlineStyle.width }}
+          aria-hidden="true"
+        />
+        {tabs.map((tab, i) => (
+          <button
+            key={tab.id}
+            ref={el => (tabRefs.current[i] = el)}
+            onClick={() => setActiveTab(tab.id)}
+            className={`w-full flex flex-col items-center py-3 px-2 sm:px-4 rounded-lg transition-all font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
+              activeTab === tab.id
+                ? 'text-blue-700 font-bold' : 'text-gray-500 hover:text-blue-600'
+            }`}
+            aria-current={activeTab === tab.id ? 'page' : undefined}
+            tabIndex={0}
+          >
+            <span className="text-xl mb-1">{tab.emoji}</span>
+            <span className="text-xs sm:text-sm">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
 export default function TextbookDetailPage() {
   const [activeTab, setActiveTab] = useState('concept');
   const [isFullScreenStudy, setIsFullScreenStudy] = useState(false);
+  const [showChapterPreview, setShowChapterPreview] = useState(true);
 
   const textbook = {
     id: 1,
@@ -230,6 +294,14 @@ export default function TextbookDetailPage() {
     bookmarks: 8,
     category: 'Computer Science'
   };
+
+  const tabList = [
+    { id: 'concept', label: '개념 정리', emoji: '📖' },
+    { id: 'review', label: '복습 현황', emoji: '🧠' },
+    { id: 'plan', label: '학습 플랜', emoji: '🧭' },
+    { id: 'notes', label: '노트/요약', emoji: '✍️' },
+    { id: 'quiz', label: '퀴즈', emoji: '📝' },
+  ];
 
   const renderTabContent = () => {
     switch(activeTab) {
@@ -329,92 +401,83 @@ export default function TextbookDetailPage() {
           </div>
         </div>
       </div>
-      {/* 메인 콘텐츠 */}
-      <div className="max-w-4xl mx-auto px-6 py-6">
-        {/* 책 정보 섹션 */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            <div className="flex-shrink-0">
-              <img
-                src={textbook.coverImage}
-                alt={textbook.title}
-                className="w-32 h-40 object-cover rounded-lg shadow-md"
-              />
+      {/* 전체 레이아웃을 학습관리 크기(max-w-7xl)로 확장 */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        {/* 책 정보/진도/챕터 프리뷰 카드형 분리 */}
+        <div className="flex flex-col md:flex-row gap-8 mb-8">
+          {/* 책 정보 카드 */}
+          <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 flex flex-col items-center md:items-start w-full md:w-1/3 min-w-[240px]">
+            <img
+              src={textbook.coverImage}
+              alt={textbook.title}
+              className="w-36 h-48 object-cover rounded-lg shadow mb-6"
+            />
+            <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center md:text-left">{textbook.title}</h2>
+            <p className="text-gray-600 mb-1 text-center md:text-left">저자: {textbook.author}</p>
+            <p className="text-gray-600 mb-1 text-center md:text-left">출판사: {textbook.publisher}</p>
+            <p className="text-gray-600 text-center md:text-left">총 {textbook.totalPages}페이지</p>
+            <div className="flex gap-3 mt-6 w-full justify-center md:justify-start">
+              <div className="text-center p-3 bg-blue-50 rounded-lg min-w-[70px]">
+                <div className="text-lg font-bold text-blue-600">{textbook.notes}</div>
+                <div className="text-xs text-gray-600">노트</div>
+              </div>
+              <div className="text-center p-3 bg-green-50 rounded-lg min-w-[70px]">
+                <div className="text-lg font-bold text-green-600">{textbook.bookmarks}</div>
+                <div className="text-xs text-gray-600">북마크</div>
+              </div>
+              <div className="text-center p-3 bg-purple-50 rounded-lg min-w-[70px]">
+                <div className="text-lg font-bold text-purple-600">12</div>
+                <div className="text-xs text-gray-600">학습일</div>
+              </div>
             </div>
-            <div className="flex-1">
-              <div className="mb-4">
-                <h2 className="text-2xl font-bold text-gray-900 mb-2">{textbook.title}</h2>
-                <p className="text-gray-600 mb-1">저자: {textbook.author}</p>
-                <p className="text-gray-600 mb-1">출판사: {textbook.publisher}</p>
-                <p className="text-gray-600">총 {textbook.totalPages}페이지</p>
-                {/* 진도/목표/동기부여 UI */}
-                <div className="mt-4">
-                  <ProgressBar
-                    current={textbook.currentPage}
-                    total={textbook.totalPages}
-                    percent={textbook.progress}
-                    goal={30}
-                    goalRate={80}
-                    remain={6}
-                    goalMessage="화이팅! 🎯"
-                  />
-                </div>
-                {/* 챕터 프리뷰/AI 요약 */}
+          </div>
+          {/* 진도/목표 카드 */}
+          <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 flex-1 flex flex-col justify-between min-w-[240px]">
+            <div>
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-base font-medium text-gray-700">학습 진도</span>
+                <span className="text-sm text-gray-500">{textbook.currentPage} / {textbook.totalPages} 페이지</span>
+              </div>
+              <ProgressBar
+                current={textbook.currentPage}
+                total={textbook.totalPages}
+                percent={textbook.progress}
+                goal={30}
+                goalRate={80}
+                remain={6}
+                goalMessage="화이팅! 🎯"
+              />
+              <div className="mt-3 text-base font-bold text-blue-700 bg-blue-50 rounded px-4 py-2 inline-block shadow-sm">
+                목표까지 6일 남음 · 화이팅! 🎯
+              </div>
+            </div>
+            {/* 챕터 프리뷰 접기/펼치기 */}
+            <div className="mt-8">
+              <button
+                className="text-xs text-blue-600 hover:underline mb-2"
+                onClick={() => setShowChapterPreview(v => !v)}
+              >
+                {showChapterPreview ? '챕터 프리뷰 접기' : '챕터 프리뷰 펼치기'}
+              </button>
+              {showChapterPreview && (
                 <ChapterPreview
                   objectives={['PCB의 정의와 역할', '프로세스 상태와 전이', 'Context Switching의 원리']}
                   aiSummary="PCB는 운영체제가 프로세스를 관리하기 위한 핵심 자료구조입니다."
                   keywords={['PCB', 'Context Switching', '프로세스 상태']}
                 />
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="text-center p-3 bg-blue-50 rounded-lg">
-                  <div className="text-lg font-bold text-blue-600">{textbook.notes}</div>
-                  <div className="text-xs text-gray-600">노트</div>
-                </div>
-                <div className="text-center p-3 bg-green-50 rounded-lg">
-                  <div className="text-lg font-bold text-green-600">{textbook.bookmarks}</div>
-                  <div className="text-xs text-gray-600">북마크</div>
-                </div>
-                <div className="text-center p-3 bg-purple-50 rounded-lg">
-                  <div className="text-lg font-bold text-purple-600">12</div>
-                  <div className="text-xs text-gray-600">학습일</div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
-        {/* 상단 탭 네비게이션 (모던/가로 스크롤) */}
-        <nav className="w-full overflow-x-auto mb-6">
-          <ul className="flex gap-2 sm:gap-4 md:gap-6 px-2 sm:px-4 md:px-0 max-w-4xl mx-auto">
-            {[
-              { id: 'concept', label: '개념 정리', icon: BookOpen, emoji: '📖' },
-              { id: 'review', label: '복습 현황', icon: Target, emoji: '🧠' },
-              { id: 'plan', label: '학습 플랜', icon: Settings, emoji: '🧭' },
-              { id: 'notes', label: '노트/요약', icon: FileText, emoji: '✍️' },
-              { id: 'quiz', label: '퀴즈', icon: Brain, emoji: '📝' },
-            ].map((tab) => (
-              <li key={tab.id} className="flex-1 min-w-[80px]">
-                <Button
-                  onClick={() => setActiveTab(tab.id)}
-                  variant={activeTab === tab.id ? 'primary' : 'ghost'}
-                  size="sm"
-                  className="w-full flex flex-col items-center py-3 px-2 sm:px-4 rounded-lg transition-all font-medium"
-                  aria-current={activeTab === tab.id ? 'page' : undefined}
-                >
-                  <span className="text-xl mb-1">{tab.emoji}</span>
-                  <span className="text-xs sm:text-sm">{tab.label}</span>
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-        {/* 탭 콘텐츠 */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 mb-6">
+        {/* SlidingTabBar ... */}
+        <div className="mb-8">
+          <SlidingTabBar tabs={tabList} activeTab={activeTab} setActiveTab={setActiveTab} />
+        </div>
+        {/* 탭 콘텐츠 ... */}
+        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
           {renderTabContent()}
         </div>
       </div>
-      
-
     </div>
   );
 } 

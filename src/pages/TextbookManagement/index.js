@@ -420,8 +420,7 @@ export default function TextbookManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
         {/* 헤더 */}
         <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-8">
           <div className="max-w-5xl mx-auto px-4 py-4">
@@ -457,9 +456,8 @@ export default function TextbookManagement() {
         </div>
         {/* 원서 상세 슬라이드 */}
         <BookDetail book={selectedBook} />
-      </div>
-      {/* 새 원서 추가 모달 */}
-      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="새 원서 추가">
+        {/* 새 원서 추가 모달 */}
+        <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="새 원서 추가">
         <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
           <FileUpload
             onFileChange={handleFileChange}

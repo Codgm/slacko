@@ -323,11 +323,10 @@ export default function ProjectManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
-      <div className="max-w-5xl mx-auto">
+    <div className="min-h-screen bg-gray-50">
         {/* 헤더 */}
         <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-8">
-          <div className="max-w-5xl mx-auto px-4 py-4">
+          <div className="max-w-6xl mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">프로젝트 관리</h1>
@@ -352,9 +351,8 @@ export default function ProjectManagement() {
         </div>
         {/* 프로젝트 상세 슬라이드 */}
         <ProjectDetail project={selectedProject} />
-      </div>
-      {/* 새 프로젝트 추가 모달 */}
-      <Modal open={showAddModal} onClose={() => setShowAddModal(false)}>
+        {/* 새 프로젝트 추가 모달 */}
+        <Modal open={showAddModal} onClose={() => setShowAddModal(false)}>
         <div className="space-y-4">
           <div className="text-lg font-semibold">새 프로젝트 추가</div>
           <input
