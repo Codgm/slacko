@@ -18,15 +18,15 @@ export default function Toast({ open, onClose, children, type = 'info', duration
 
   return (
     <div
-      className={`fixed top-6 right-6 z-50 px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 ${typeStyles[type]} ${className}`}
+      className={`fixed top-8 right-8 z-50 px-6 py-3 rounded-xl shadow-md flex items-center space-x-2 min-w-[200px] max-w-xs ${typeStyles[type]} ${className} animate-fade-in`}
       role="alert"
       aria-live="assertive"
       {...props}
     >
-      {children}
+      <span className="flex-1 truncate">{children}</span>
       <button
-        className="ml-3 text-white/70 hover:text-white text-lg font-bold"
         onClick={onClose}
+        className="ml-2 text-white/80 hover:text-white text-lg font-bold"
         aria-label="닫기"
       >
         ×

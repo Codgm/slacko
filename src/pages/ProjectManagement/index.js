@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import Button from '../../components/common/Button';
+import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
 import { Calendar, CheckCircle, FileText, Link, Plus, X, Upload, Trash2} from 'lucide-react';
 
@@ -50,6 +51,17 @@ export default function ProjectManagement() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newProject, setNewProject] = useState({
+    name: '',
+    description: '',
+    startDate: '',
+    endDate: '',
+    status: '진행 중',
+    milestones: [],
+    files: [],
+    notes: ''
+  });
 
   const openProjectDetail = (project) => {
     setSelectedProject(project);
@@ -285,6 +297,31 @@ export default function ProjectManagement() {
     );
   };
 
+  // 새 프로젝트 추가
+  const handleAddProject = () => {
+    if (!newProject.name.trim() || !newProject.startDate || !newProject.endDate) {
+      setToastMessage('프로젝트명, 시작일, 종료일을 입력하세요.');
+      setToastType('error');
+      setShowToast(true);
+      return;
+    }
+    setProjects([
+      {
+        ...newProject,
+        id: Date.now(),
+        milestones: [],
+        files: [],
+        notes: newProject.notes || ''
+      },
+      ...projects
+    ]);
+    setShowAddModal(false);
+    setNewProject({ name: '', description: '', startDate: '', endDate: '', status: '진행 중', milestones: [], files: [], notes: '' });
+    setToastMessage('새 프로젝트가 추가되었습니다!');
+    setToastType('success');
+    setShowToast(true);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-5xl mx-auto">
@@ -299,10 +336,10 @@ export default function ProjectManagement() {
               <Button
                 variant="primary"
                 className="flex items-center gap-2"
-                disabled
+                onClick={() => setShowAddModal(true)}
               >
                 <Plus className="w-4 h-4" />
-                새 프로젝트(준비중)
+                새 프로젝트
               </Button>
             </div>
           </div>
@@ -316,15 +353,56 @@ export default function ProjectManagement() {
         {/* 프로젝트 상세 슬라이드 */}
         <ProjectDetail project={selectedProject} />
       </div>
-      
+      {/* 새 프로젝트 추가 모달 */}
+      <Modal open={showAddModal} onClose={() => setShowAddModal(false)}>
+        <div className="space-y-4">
+          <div className="text-lg font-semibold">새 프로젝트 추가</div>
+          <input
+            type="text"
+            value={newProject.name}
+            onChange={e => setNewProject(prev => ({ ...prev, name: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="프로젝트명"
+            autoFocus
+          />
+          <input
+            type="text"
+            value={newProject.description}
+            onChange={e => setNewProject(prev => ({ ...prev, description: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="설명"
+          />
+          <div className="flex gap-2">
+            <input
+              type="date"
+              value={newProject.startDate}
+              onChange={e => setNewProject(prev => ({ ...prev, startDate: e.target.value }))}
+              className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="시작일"
+            />
+            <input
+              type="date"
+              value={newProject.endDate}
+              onChange={e => setNewProject(prev => ({ ...prev, endDate: e.target.value }))}
+              className="w-1/2 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="종료일"
+            />
+          </div>
+          <textarea
+            value={newProject.notes}
+            onChange={e => setNewProject(prev => ({ ...prev, notes: e.target.value }))}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            placeholder="노트(선택)"
+            rows={2}
+          />
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowAddModal(false)}>취소</Button>
+            <Button variant="primary" onClick={handleAddProject} disabled={!newProject.name.trim() || !newProject.startDate || !newProject.endDate}>추가</Button>
+          </div>
+        </div>
+      </Modal>
       {/* Toast 알림 */}
-      <Toast
-        open={showToast}
-        onClose={() => setShowToast(false)}
-        type={toastType}
-      >
-        {toastMessage}
-      </Toast>
+      <Toast open={showToast} onClose={() => setShowToast(false)} type={toastType}>{toastMessage}</Toast>
     </div>
   );
 } 

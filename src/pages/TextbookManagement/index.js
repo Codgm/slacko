@@ -3,6 +3,7 @@ import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
 import { Book, Plus, X, FileText } from 'lucide-react';
+import FileUpload from '../../components/common/FileUpload';
 
 export default function TextbookManagement() {
   const [books, setBooks] = useState([
@@ -95,6 +96,21 @@ export default function TextbookManagement() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newBook, setNewBook] = useState({
+    title: '',
+    author: '',
+    publisher: '',
+    totalPages: '',
+    targetDate: '',
+    status: '읽는 중',
+    startDate: '',
+    currentPage: 0
+  });
+  const [addBookFile, setAddBookFile] = useState(null);
+  const [addBookPreview, setAddBookPreview] = useState(null);
+  const [addBookDates, setAddBookDates] = useState({ start: '', end: '' });
+  const [addBookDaysLeft, setAddBookDaysLeft] = useState(null);
 
   const openBookDetail = (book) => {
     setSelectedBook(book);
@@ -339,6 +355,70 @@ export default function TextbookManagement() {
     );
   };
 
+  const handleFileChange = (file) => {
+    setAddBookFile(file);
+    if (file && file.name) {
+      const nameParts = file.name.replace(/\.[^/.]+$/, '').split('-');
+      setNewBook(prev => ({
+        ...prev,
+        title: nameParts[0] || '',
+        publisher: nameParts[1] || '',
+        totalPages: nameParts[2] ? parseInt(nameParts[2].replace(/[^0-9]/g, '')) : ''
+      }));
+    }
+  };
+
+  const handleDateChange = (e) => {
+    const { name, value } = e.target;
+    setAddBookDates(prev => ({ ...prev, [name]: value }));
+    if (name === 'end' && addBookDates.start) {
+      const start = new Date(addBookDates.start);
+      const end = new Date(value);
+      const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+      setAddBookDaysLeft(diff);
+    } else if (name === 'start' && addBookDates.end) {
+      const start = new Date(value);
+      const end = new Date(addBookDates.end);
+      const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+      setAddBookDaysLeft(diff);
+    }
+  };
+
+  const handleAddBook = () => {
+    if (!addBookFile || !newBook.title || !newBook.totalPages || !addBookDates.start || !addBookDates.end) {
+      setToastMessage('모든 필드를 입력해주세요!');
+      setToastType('error');
+      setShowToast(true);
+      return;
+    }
+    setBooks([
+      ...books,
+      {
+        id: Date.now(),
+        title: newBook.title,
+        author: newBook.author,
+        publisher: newBook.publisher,
+        totalPages: parseInt(newBook.totalPages),
+        currentPage: 0,
+        targetDate: addBookDates.end,
+        status: '읽는 중',
+        startDate: addBookDates.start,
+        notes: [],
+        readingHistory: [],
+        file: addBookFile,
+        daysLeft: addBookDaysLeft
+      }
+    ]);
+    setShowAddModal(false);
+    setToastMessage('새 원서가 추가되었습니다!');
+    setToastType('success');
+    setShowToast(true);
+    setNewBook({ title: '', author: '', publisher: '', totalPages: '', targetDate: '', status: '읽는 중', startDate: '', currentPage: 0 });
+    setAddBookFile(null);
+    setAddBookDates({ start: '', end: '' });
+    setAddBookDaysLeft(null);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
       <div className="max-w-5xl mx-auto">
@@ -350,13 +430,8 @@ export default function TextbookManagement() {
                 <h1 className="text-2xl font-bold text-gray-900">원서 관리</h1>
                 <p className="text-sm text-gray-600">진행 중인 원서들을 한눈에 관리하세요!</p>
               </div>
-              <Button
-                variant="primary"
-                className="flex items-center gap-2"
-                disabled
-              >
-                <Plus className="w-4 h-4" />
-                새 원서(준비중)
+              <Button onClick={() => setShowAddModal(true)} icon={<Plus />}>
+                새 원서
               </Button>
             </div>
           </div>
@@ -383,15 +458,72 @@ export default function TextbookManagement() {
         {/* 원서 상세 슬라이드 */}
         <BookDetail book={selectedBook} />
       </div>
-      
+      {/* 새 원서 추가 모달 */}
+      <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="새 원서 추가">
+        <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
+          <FileUpload
+            onFileChange={handleFileChange}
+            accept="application/pdf,image/*"
+            label="전공 원서 파일 업로드 (PDF, 이미지 등)"
+          />
+          <div className="flex flex-col gap-2">
+            <label className="font-semibold">원서 이름</label>
+            <input
+              className="border rounded px-3 py-2"
+              value={newBook.title}
+              onChange={e => setNewBook(prev => ({ ...prev, title: e.target.value }))}
+              placeholder="예: Operating Systems"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="font-semibold">출판사</label>
+            <input
+              className="border rounded px-3 py-2"
+              value={newBook.publisher}
+              onChange={e => setNewBook(prev => ({ ...prev, publisher: e.target.value }))}
+              placeholder="예: MIT Press"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="font-semibold">페이지 수</label>
+            <input
+              className="border rounded px-3 py-2"
+              type="number"
+              value={newBook.totalPages}
+              onChange={e => setNewBook(prev => ({ ...prev, totalPages: e.target.value }))}
+              placeholder="예: 400"
+            />
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="font-semibold">기간 설정</label>
+            <div className="flex gap-2 items-center">
+              <input
+                type="date"
+                name="start"
+                className="border rounded px-3 py-2"
+                value={addBookDates.start}
+                onChange={handleDateChange}
+              />
+              <span>~</span>
+              <input
+                type="date"
+                name="end"
+                className="border rounded px-3 py-2"
+                value={addBookDates.end}
+                onChange={handleDateChange}
+              />
+            </div>
+            {addBookDaysLeft !== null && (
+              <div className="text-xs text-gray-500 mt-1">남은 일수: {addBookDaysLeft}일</div>
+            )}
+          </div>
+          <Button onClick={handleAddBook} className="mt-4 w-full">
+            저장
+          </Button>
+        </div>
+      </Modal>
       {/* Toast 알림 */}
-      <Toast
-        open={showToast}
-        onClose={() => setShowToast(false)}
-        type={toastType}
-      >
-        {toastMessage}
-      </Toast>
+      <Toast open={showToast} onClose={() => setShowToast(false)} type={toastType}>{toastMessage}</Toast>
     </div>
   );
 } 

@@ -1,21 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Calendar, Clock, Target, BookOpen, FileText, AlertCircle, CheckCircle, TrendingUp,
+  Plus, X, ChevronDown, ChevronUp, AlarmClock, Bell, Settings, User
+} from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import Button from '../../components/common/Button';
+import Card from '../../components/common/Card';
+import Modal from '../../components/common/Modal';
+import Toast from '../../components/common/Toast';
 import TodoSection from '../../components/dashboard/TodoSection';
 import ChartSection from '../../components/dashboard/ChartSection';
 import ProjectSection from '../../components/dashboard/ProjectSection';
 import DeadlineSection from '../../components/dashboard/DeadlineSection';
-import Button from '../../components/common/Button';
-import Modal from '../../components/common/Modal';
-import Toast from '../../components/common/Toast';
-import { Target, TrendingUp, BookOpen, Plus, X, ChevronUp, ChevronDown, AlarmClock } from 'lucide-react';
 
-export default function Dashboard() {
-  // 상태 및 데이터
+const Dashboard = () => {
+  // 상태 관리
   const [todoList, setTodoList] = useState([
     { id: 1, task: '자료구조 알고리즘 복습', priority: 'high', completed: false, category: '학습', deadline: '2025-07-05' },
     { id: 2, task: '프로젝트 API 설계서 작성', priority: 'high', completed: false, category: '프로젝트', deadline: '2025-07-03' },
     { id: 3, task: '영어 단어 100개 암기', priority: 'medium', completed: true, category: '학습', deadline: '2025-07-02' },
     { id: 4, task: '포트폴리오 웹사이트 디자인', priority: 'medium', completed: false, category: '프로젝트', deadline: '2025-07-08' },
   ]);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [quickAddMode, setQuickAddMode] = useState(false);
@@ -23,6 +29,7 @@ export default function Dashboard() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
+
   const [newTodo, setNewTodo] = useState({
     task: '',
     priority: 'medium',
@@ -32,12 +39,16 @@ export default function Dashboard() {
     description: '',
     reminder: false
   });
+
+  // 프로젝트 데이터
   const [currentProjects] = useState([
     { id: 1, name: '웹 개발 포트폴리오', progress: 75, category: '프로젝트', dueDate: '2025-07-15' },
     { id: 2, name: 'React 심화 과정', progress: 45, category: '학습', dueDate: '2025-07-20' },
     { id: 3, name: '데이터베이스 설계', progress: 90, category: '학습', dueDate: '2025-07-10' },
     { id: 4, name: 'UI/UX 디자인 스터디', progress: 30, category: '학습', dueDate: '2025-07-25' },
   ]);
+
+  // 학습 데이터
   const [weeklyStudyData] = useState([
     { day: '월', hours: 3.5 },
     { day: '화', hours: 4.2 },
@@ -47,27 +58,39 @@ export default function Dashboard() {
     { day: '토', hours: 6.2 },
     { day: '일', hours: 4.5 },
   ]);
+
   const [upcomingDeadlines] = useState([
     { id: 1, title: '프로젝트 중간 발표', date: '2025-07-02', type: '발표' },
     { id: 2, title: '자기소개서 제출', date: '2025-07-05', type: '서류' },
     { id: 3, title: '코딩 테스트', date: '2025-07-08', type: '시험' },
     { id: 4, title: '최종 포트폴리오 제출', date: '2025-07-15', type: '제출' },
   ]);
-  const weeklyGoal = 85;
-  const monthlyGoal = 72;
+
+  // 설정
   const priorities = {
     high: { label: '높음', color: 'bg-red-50 text-red-700 border-red-200', icon: '🔥' },
     medium: { label: '보통', color: 'bg-yellow-50 text-yellow-700 border-yellow-200', icon: '⚡' },
     low: { label: '낮음', color: 'bg-green-50 text-green-700 border-green-200', icon: '🌱' }
   };
+
   const categories = ['학습', '프로젝트', '과제', '시험', '기타'];
 
-  // 핸들러/유틸
+  // 통계 계산
+  const weeklyGoal = 85;
+  const monthlyGoal = 72;
+  const totalStudyTime = weeklyStudyData.reduce((sum, day) => sum + day.hours, 0);
+  const averageStudyTime = totalStudyTime / weeklyStudyData.length;
+  const completedTodos = todoList.filter(todo => todo.completed).length;
+  const pendingTodos = todoList.filter(todo => !todo.completed).length;
+
+  // 함수들
   const toggleTodo = (id) => {
     setTodoList(prev => prev.map(todo => 
       todo.id === id ? { ...todo, completed: !todo.completed } : todo
     ));
+    showToastMessage('할 일 상태가 업데이트되었습니다.', 'success');
   };
+
   const resetForm = () => {
     setNewTodo({
       task: '',
@@ -80,8 +103,13 @@ export default function Dashboard() {
     });
     setShowAdvanced(false);
   };
+
   const handleAddTodo = () => {
-    if (!newTodo.task.trim()) return;
+    if (!newTodo.task.trim()) {
+      showToastMessage('할 일 내용을 입력해주세요.', 'error');
+      return;
+    }
+
     const todo = {
       id: Date.now(),
       task: newTodo.task,
@@ -94,15 +122,19 @@ export default function Dashboard() {
       completed: false,
       createdAt: new Date().toISOString()
     };
+
     setTodoList(prev => [todo, ...prev]);
     setShowAddModal(false);
     resetForm();
-    setToastMessage('할 일이 성공적으로 추가되었습니다!');
-    setToastType('success');
-    setShowToast(true);
+    showToastMessage('새로운 할 일이 추가되었습니다.', 'success');
   };
+
   const handleQuickAdd = () => {
-    if (!quickTask.trim()) return;
+    if (!quickTask.trim()) {
+      showToastMessage('할 일 내용을 입력해주세요.', 'error');
+      return;
+    }
+
     const todo = {
       id: Date.now(),
       task: quickTask,
@@ -111,13 +143,13 @@ export default function Dashboard() {
       completed: false,
       createdAt: new Date().toISOString()
     };
+
     setTodoList(prev => [todo, ...prev]);
     setQuickTask('');
     setQuickAddMode(false);
-    setToastMessage('할 일이 빠르게 추가되었습니다!');
-    setToastType('success');
-    setShowToast(true);
+    showToastMessage('할 일이 빠르게 추가되었습니다.', 'success');
   };
+
   const getPriorityColor = (priority) => {
     switch(priority) {
       case 'high': return 'text-red-600 bg-red-50 border-red-200';
@@ -126,11 +158,13 @@ export default function Dashboard() {
       default: return 'text-gray-600 bg-gray-50 border-gray-200';
     }
   };
+
   const getProgressColor = (progress) => {
     if (progress >= 80) return 'bg-green-500';
     if (progress >= 50) return 'bg-blue-500';
     return 'bg-yellow-500';
   };
+
   const getDaysUntilDeadline = (date) => {
     const today = new Date();
     const deadline = new Date(date);
@@ -138,102 +172,179 @@ export default function Dashboard() {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
-  // 원형 목표 달성률
-  const CircularProgress = ({ percentage, color, size = 96 }) => {
+
+  const showToastMessage = (message, type = 'success') => {
+    setToastMessage(message);
+    setToastType(type);
+    setShowToast(true);
+  };
+
+  // 원형 진행률 컴포넌트
+  const CircularProgress = ({ percentage, color, size = 96, label }) => {
     const radius = 40;
     const circumference = 2 * Math.PI * radius;
     const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
     return (
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg className="transform -rotate-90 w-full h-full">
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={`${color}20`}
-            strokeWidth="6"
-            fill="none"
-          />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={radius}
-            stroke={color}
-            strokeWidth="6"
-            fill="none"
-            strokeDasharray={circumference}
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            className="transition-all duration-300 ease-in-out"
-          />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-xl font-bold" style={{ color }}>{percentage}%</span>
+      <div className="text-center">
+        <div className="relative inline-block" style={{ width: size, height: size }}>
+          <svg className="transform -rotate-90 w-full h-full">
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={`${color}20`}
+              strokeWidth="6"
+              fill="none"
+            />
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              stroke={color}
+              strokeWidth="6"
+              fill="none"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              className="transition-all duration-300 ease-in-out"
+            />
+          </svg>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-xl font-bold" style={{ color }}>{percentage}%</span>
+          </div>
         </div>
+        {label && <p className="text-sm text-gray-600 mt-2">{label}</p>}
       </div>
     );
   };
 
-  // UI 조립
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* 헤더 */}
-        <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">학습 대시보드</h1>
-                <p className="text-sm text-gray-600">오늘도 목표를 향해 한 걸음씩 나아가세요! 📚</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      {/* 헤더 */}
+      <div className="bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <BookOpen className="w-8 h-8 text-blue-600" />
+                <h1 className="text-xl font-bold text-gray-900">Slacko</h1>
               </div>
+              <div className="hidden md:flex items-center space-x-1 text-sm text-gray-500">
+                <span>•</span>
+                <span>학습 대시보드</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Button variant="ghost" size="sm">
+                <Bell className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="sm">
+                <Settings className="w-5 h-5" />
+              </Button>
+              <Button variant="ghost" size="sm">
+                <User className="w-5 h-5" />
+              </Button>
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+        {/* 환영 메시지 */}
+        <div className="mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+            안녕하세요! 👋
+          </h2>
+          <p className="text-gray-600">
+            오늘도 목표를 향해 한 걸음씩 나아가세요! 📚
+          </p>
+        </div>
+
         {/* 상단 통계 카드 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">이번 주 목표 달성률</p>
-                <p className="text-2xl font-bold text-blue-600">{weeklyGoal}%</p>
-              </div>
-              <div className="w-12 h-12">
-                <div className="w-full h-full bg-blue-100 rounded-full flex items-center justify-center">
-                  <Target className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+          <Card className="text-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3">
+              <Target className="w-6 h-6 text-blue-600" />
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">이번 달 목표 달성률</p>
-                <p className="text-2xl font-bold text-green-600">{monthlyGoal}%</p>
-              </div>
-              <div className="w-12 h-12">
-                <div className="w-full h-full bg-green-100 rounded-full flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-green-600" />
-                </div>
-              </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">{weeklyGoal}%</h3>
+            <p className="text-sm text-gray-600">주간 목표 달성률</p>
+          </Card>
+
+          <Card className="text-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-green-100 rounded-lg mx-auto mb-3">
+              <Clock className="w-6 h-6 text-green-600" />
             </div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200 sm:col-span-2 lg:col-span-1">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">진행 중인 프로젝트</p>
-                <p className="text-2xl font-bold text-purple-600">{currentProjects.length}개</p>
-              </div>
-              <div className="w-12 h-12">
-                <div className="w-full h-full bg-purple-100 rounded-full flex items-center justify-center">
-                  <BookOpen className="w-6 h-6 text-purple-600" />
-                </div>
-              </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">{totalStudyTime}h</h3>
+            <p className="text-sm text-gray-600">이번 주 총 학습 시간</p>
+          </Card>
+
+          <Card className="text-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-purple-100 rounded-lg mx-auto mb-3">
+              <CheckCircle className="w-6 h-6 text-purple-600" />
             </div>
-          </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">{completedTodos}</h3>
+            <p className="text-sm text-gray-600">완료된 할 일</p>
+          </Card>
+
+          <Card className="text-center">
+            <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mx-auto mb-3">
+              <TrendingUp className="w-6 h-6 text-orange-600" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-1">{averageStudyTime.toFixed(1)}h</h3>
+            <p className="text-sm text-gray-600">일평균 학습 시간</p>
+          </Card>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* 메인 콘텐츠 그리드 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* 왼쪽 컬럼 */}
           <div className="lg:col-span-2 space-y-6">
+            {/* 학습 차트 */}
+            <Card>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">이번 주 학습 시간</h3>
+                <Button variant="outline" size="sm">
+                  상세 보기
+                </Button>
+              </div>
+              <div className="h-64">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={weeklyStudyData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                    <XAxis 
+                      dataKey="day" 
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickLine={{ stroke: '#d1d5db' }}
+                      axisLine={{ stroke: '#d1d5db' }}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickLine={{ stroke: '#d1d5db' }}
+                      axisLine={{ stroke: '#d1d5db' }}
+                    />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#ffffff',
+                        border: 'solid #e5e7eb',
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                      }}
+                    />
+                    <Line 
+                      type="monotone" 
+                      dataKey="hours" 
+                      stroke="#8b5cf6" 
+                      strokeWidth={3}
+                      dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 6 }}
+                      activeDot={{ r: 8, fill: '#8b5cf6' }}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </Card>
+
+            {/* 할 일 섹션 */}
             <TodoSection
               todoList={todoList}
               priorities={priorities}
@@ -254,40 +365,35 @@ export default function Dashboard() {
               handleAddTodo={handleAddTodo}
               categories={categories}
             />
+          </div>
+
+          {/* 오른쪽 컬럼 */}
+          <div className="space-y-6">
+            {/* 진행률 원형 차트 */}
+            <Card>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">목표 진행률</h3>
+              <div className="grid grid-cols-2 gap-4">
+                <CircularProgress 
+                  percentage={weeklyGoal} 
+                  color="#3b82f6" 
+                  label="주간 목표"
+                />
+                <CircularProgress 
+                  percentage={monthlyGoal} 
+                  color="#8b5cf6" 
+                  label="월간 목표"
+                />
+              </div>
+            </Card>
+
+            {/* 프로젝트 섹션 */}
             <ProjectSection
               currentProjects={currentProjects}
               getProgressColor={getProgressColor}
               getDaysUntilDeadline={getDaysUntilDeadline}
             />
-            <ChartSection weeklyStudyData={weeklyStudyData} />
-          </div>
-          {/* 오른쪽 컬럼 */}
-          <div className="space-y-6">
-            {/* 목표 달성률 */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center gap-3">
-                  <Target className="w-6 h-6 text-orange-600" />
-                  <h2 className="text-lg font-semibold text-gray-900">목표 달성률</h2>
-                </div>
-              </div>
-              <div className="p-6">
-                <div className="space-y-8">
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-600 mb-4">이번 주</p>
-                    <div className="flex justify-center">
-                      <CircularProgress percentage={weeklyGoal} color="#3b82f6" />
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-gray-600 mb-4">이번 달</p>
-                    <div className="flex justify-center">
-                      <CircularProgress percentage={monthlyGoal} color="#10b981" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+
+            {/* 마감일 섹션 */}
             <DeadlineSection
               upcomingDeadlines={upcomingDeadlines}
               getDaysUntilDeadline={getDaysUntilDeadline}
@@ -295,30 +401,26 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-      {/* 상세 추가 모달 */}
-      <Modal
-        open={showAddModal}
-        onClose={() => {
-          setShowAddModal(false);
-          resetForm();
-        }}
-        className="max-w-md"
-      >
-        <div className="space-y-4 max-h-96 overflow-y-auto">
+
+      {/* 할 일 추가 모달 */}
+      <Modal open={showAddModal} onClose={() => setShowAddModal(false)}>
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-900">새로운 할 일 추가</h3>
+          
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              할 일 *
+              할 일 내용 *
             </label>
             <input
               type="text"
               value={newTodo.task}
               onChange={(e) => setNewTodo(prev => ({ ...prev, task: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="예: 데이터베이스 과제 완료하기"
-              autoFocus
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="할 일을 입력하세요"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+
+          <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 우선순위
@@ -326,11 +428,11 @@ export default function Dashboard() {
               <select
                 value={newTodo.priority}
                 onChange={(e) => setNewTodo(prev => ({ ...prev, priority: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                {Object.entries(priorities).map(([key, config]) => (
-                  <option key={key} value={key}>{config.icon} {config.label}</option>
-                ))}
+                <option value="low">낮음</option>
+                <option value="medium">보통</option>
+                <option value="high">높음</option>
               </select>
             </div>
             <div>
@@ -340,7 +442,7 @@ export default function Dashboard() {
               <select
                 value={newTodo.category}
                 onChange={(e) => setNewTodo(prev => ({ ...prev, category: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 {categories.map(category => (
                   <option key={category} value={category}>{category}</option>
@@ -348,108 +450,33 @@ export default function Dashboard() {
               </select>
             </div>
           </div>
-          {/* 고급 옵션 토글 */}
-          <Button
-            onClick={() => setShowAdvanced(!showAdvanced)}
-            variant="ghost"
-            size="sm"
-            className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
-          >
-            {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-            고급 옵션
-          </Button>
-          {/* 고급 옵션 */}
-          {showAdvanced && (
-            <div className="space-y-4 pt-2 border-t border-gray-200">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    마감일
-                  </label>
-                  <input
-                    type="date"
-                    value={newTodo.deadline}
-                    onChange={(e) => setNewTodo(prev => ({ ...prev, deadline: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    예상 소요시간
-                  </label>
-                  <input
-                    type="text"
-                    value={newTodo.estimatedTime}
-                    onChange={(e) => setNewTodo(prev => ({ ...prev, estimatedTime: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="예: 2시간"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  메모
-                </label>
-                <textarea
-                  value={newTodo.description}
-                  onChange={(e) => setNewTodo(prev => ({ ...prev, description: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  rows="2"
-                  placeholder="추가 메모나 설명을 입력하세요"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  id="reminder"
-                  checked={newTodo.reminder}
-                  onChange={(e) => setNewTodo(prev => ({ ...prev, reminder: e.target.checked }))}
-                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                />
-                <label htmlFor="reminder" className="text-sm text-gray-700 flex items-center gap-2">
-                  <AlarmClock className="w-4 h-4" />
-                  마감일 알림 받기
-                </label>
-              </div>
-            </div>
-          )}
-        </div>
-        <div className="flex gap-3 pt-4 border-t">
-          <Button
-            onClick={() => {
-              setShowAddModal(false);
-              resetForm();
-            }}
-            variant="outline"
-            className="flex-1"
-          >
-            취소
-          </Button>
-          <Button
-            onClick={handleAddTodo}
-            disabled={!newTodo.task.trim()}
-            variant="primary"
-            className="flex-1"
-          >
-            추가하기
-          </Button>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              마감일
+            </label>
+            <input
+              type="date"
+              value={newTodo.deadline}
+              onChange={(e) => setNewTodo(prev => ({ ...prev, deadline: e.target.value }))}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+
+          <div className="flex justify-end space-x-3">
+            <Button variant="outline" onClick={() => setShowAddModal(false)}>
+              취소
+            </Button>
+            <Button variant="primary" onClick={handleAddTodo}>
+              추가
+            </Button>
+          </div>
         </div>
       </Modal>
-      {/* 플로팅 액션 버튼 (우하단) */}
-      <div className="fixed bottom-6 right-6">
-        <Button
-          onClick={() => setShowAddModal(true)}
-          variant="primary"
-          size="lg"
-          className="w-14 h-14 rounded-full shadow-lg hover:shadow-xl"
-        >
-          <Plus className="w-6 h-6" />
-        </Button>
-      </div>
-      
+
       {/* Toast 알림 */}
-      <Toast
-        open={showToast}
+      <Toast 
+        open={showToast} 
         onClose={() => setShowToast(false)}
         type={toastType}
       >
@@ -457,4 +484,6 @@ export default function Dashboard() {
       </Toast>
     </div>
   );
-} 
+};
+
+export default Dashboard; 
