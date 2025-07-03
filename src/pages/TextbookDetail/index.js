@@ -303,8 +303,8 @@ export default function TextbookDetailPage() {
     { id: 'quiz', label: '퀴즈', emoji: '📝' },
   ];
 
-  const renderTabContent = () => {
-    switch(activeTab) {
+  const renderTabContent = (tab) => {
+    switch(tab) {
       case 'concept':
         return <ConceptStudyComponent/>;
       case 'review':
@@ -387,7 +387,7 @@ export default function TextbookDetailPage() {
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
       <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-4">
+        <div className="max-w-6xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
               <Button variant="ghost" size="sm" className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors">
@@ -474,8 +474,8 @@ export default function TextbookDetailPage() {
           <SlidingTabBar tabs={tabList} activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
         {/* 탭 콘텐츠 ... */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
-          {renderTabContent()}
+        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 min-h-[300px]">
+          {renderTabContent(activeTab)}
         </div>
       </div>
     </div>
