@@ -180,30 +180,24 @@ export default function StudyManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 헤더 */}
-      <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">📚 학습 관리</h1>
-              <p className="text-sm text-gray-600">체계적인 학습으로 목표를 달성하세요</p>
-            </div>
-            <Button
-              onClick={() => setShowAddForm(true)}
-              variant="primary"
-              className="flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              새 과목 추가
-            </Button>
+      {/* 해더 */}
+      <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w mx-auto px-4 py-2 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">📚 학습 관리</h1>
+            <p className="text-sm text-gray-600">체계적인 학습으로 목표를 달성하세요</p>
           </div>
+          <Button onClick={() => setShowAddForm(true)} variant="primary" className="flex items-center gap-2">
+            <Plus className="w-4 h-4" /> 새 과목 추가
+          </Button>
         </div>
       </div>
-      <div className="max-w-6xl mx-auto px-4 py-6">
-        {/* 오늘의 계획 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 mb-6">
-          <div className="p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">📝 오늘의 학습 계획</h2>
+      {/* 메인 컨테이너 */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
+          {/* 상단 정보/오늘의 계획 카드 */}
+          <div className="mb-8">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">📝 오늘의 학습 계획</h2>
             <textarea
               value={todayPlan}
               onChange={e => setTodayPlan(e.target.value)}
@@ -212,161 +206,149 @@ export default function StudyManagement() {
               placeholder="오늘의 목표를 입력하세요"
             />
           </div>
-        </div>
-        {/* 과목 리스트 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {subjects.map(subject => (
-            <div key={subject.id} className={`rounded-lg shadow-sm border ${colorMap[subject.color].bg} ${colorMap[subject.color].border} p-6`}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${categoryMap[subject.category].color}`}>{categoryMap[subject.category].name}</span>
-                  <h3 className={`text-lg font-bold ${colorMap[subject.color].text}`}>{subject.name}</h3>
+          {/* 과목 리스트 */}
+          {subjects.length === 0 ? (
+            <div className="text-center text-gray-400 py-12">아직 등록된 과목이 없습니다.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {subjects.map(subject => (
+                <div key={subject.id} className={`rounded-lg shadow-sm border ${colorMap[subject.color].bg} ${colorMap[subject.color].border} p-6`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${categoryMap[subject.category].color}`}>{categoryMap[subject.category].name}</span>
+                      <h3 className={`text-lg font-bold ${colorMap[subject.color].text}`}>{subject.name}</h3>
+                    </div>
+                    <span className="text-xs text-gray-500">{subject.completedChapters}/{subject.totalChapters} 챕터</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                    <div className={`${colorMap[subject.color].accent} h-2 rounded-full`} style={{ width: `${getProgress(subject)}%` }}></div>
+                  </div>
+                  <div className="mb-2 text-sm text-gray-700">다음 할 일: {subject.nextTodo}</div>
+                  <div className="mb-2 text-xs text-gray-500">주간 목표: {subject.weeklyGoal}</div>
+                  <div className="mb-2 text-xs text-gray-500">누적 학습 시간: {subject.studyTime}분</div>
+                  <div className="mb-2">
+                    <h4 className="font-semibold text-sm mb-1">챕터별 진행</h4>
+                    <ul className="space-y-1">
+                      {subject.chapters.map(chapter => (
+                        <li key={chapter.id} className="flex items-center gap-2">
+                          <Button
+                            onClick={() => toggleChapter(subject.id, chapter.id)}
+                            variant="ghost"
+                            size="sm"
+                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center p-0 ${chapter.completed ? colorMap[subject.color].accent : 'border-gray-300'}`}
+                            aria-label={chapter.completed ? '완료됨' : '미완료'}
+                          >
+                            {chapter.completed && <CheckCircle className="w-4 h-4 text-green-500" />}
+                          </Button>
+                          <span className={chapter.completed ? 'line-through text-gray-400' : ''}>{chapter.name}</span>
+                          <input
+                            type="text"
+                            value={chapter.memo}
+                            onChange={e => updateMemo(subject.id, chapter.id, e.target.value)}
+                            className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs ml-2"
+                            placeholder="메모"
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <Button
+                      onClick={() => { setSelectedSubject(subject); setShowStudyLog(true); }}
+                      variant="success"
+                      size="sm"
+                      className="flex-1"
+                    >
+                      학습 기록
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="flex-1"
+                      disabled
+                    >
+                      과목 편집(준비중)
+                    </Button>
+                  </div>
                 </div>
-                <span className="text-xs text-gray-500">{subject.completedChapters}/{subject.totalChapters} 챕터</span>
+              ))}
+            </div>
+          )}
+          {/* 학습 플랜/타이머 등 섹션 */}
+          {/* 필요시 조건부로 추가 */}
+          <Modal open={showStudyLog && !!selectedSubject} onClose={() => setShowStudyLog(false)} className="max-w-md">
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">학습 내용</label>
+                <textarea
+                  value={studyLog}
+                  onChange={e => setStudyLog(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  rows={4}
+                  placeholder="학습한 내용을 입력하세요"
+                  autoFocus
+                />
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-                <div className={`${colorMap[subject.color].accent} h-2 rounded-full`} style={{ width: `${getProgress(subject)}%` }}></div>
-              </div>
-              <div className="mb-2 text-sm text-gray-700">다음 할 일: {subject.nextTodo}</div>
-              <div className="mb-2 text-xs text-gray-500">주간 목표: {subject.weeklyGoal}</div>
-              <div className="mb-2 text-xs text-gray-500">누적 학습 시간: {subject.studyTime}분</div>
-              <div className="mb-2">
-                <h4 className="font-semibold text-sm mb-1">챕터별 진행</h4>
-                <ul className="space-y-1">
-                  {subject.chapters.map(chapter => (
-                    <li key={chapter.id} className="flex items-center gap-2">
-                      <Button
-                        onClick={() => toggleChapter(subject.id, chapter.id)}
-                        variant="ghost"
-                        size="sm"
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center p-0 ${chapter.completed ? colorMap[subject.color].accent : 'border-gray-300'}`}
-                        aria-label={chapter.completed ? '완료됨' : '미완료'}
-                      >
-                        {chapter.completed && <CheckCircle className="w-4 h-4 text-green-500" />}
-                      </Button>
-                      <span className={chapter.completed ? 'line-through text-gray-400' : ''}>{chapter.name}</span>
-                      <input
-                        type="text"
-                        value={chapter.memo}
-                        onChange={e => updateMemo(subject.id, chapter.id, e.target.value)}
-                        className="flex-1 px-2 py-1 border border-gray-200 rounded text-xs ml-2"
-                        placeholder="메모"
-                      />
-                    </li>
-                  ))}
-                </ul>
-              </div>
-              <div className="flex gap-2 mt-2">
+              <div className="flex items-center gap-2">
                 <Button
-                  onClick={() => { setSelectedSubject(subject); setShowStudyLog(true); }}
-                  variant="success"
+                  onClick={startTimer}
+                  variant="primary"
                   size="sm"
-                  className="flex-1"
+                  disabled={timer.isRunning}
                 >
-                  학습 기록
+                  <Play className="w-4 h-4 inline" /> 시작
                 </Button>
                 <Button
+                  onClick={pauseTimer}
+                  variant="warning"
+                  size="sm"
+                  disabled={!timer.isRunning}
+                >
+                  <Pause className="w-4 h-4 inline" /> 일시정지
+                </Button>
+                <Button
+                  onClick={resetTimer}
                   variant="secondary"
                   size="sm"
-                  className="flex-1"
-                  disabled
                 >
-                  과목 편집(준비중)
+                  <Square className="w-4 h-4 inline" /> 초기화
                 </Button>
+                <span className="ml-2 text-sm font-mono text-gray-700">
+                  {timer.minutes}분 {timer.seconds}초
+                </span>
               </div>
             </div>
-          ))}
+            <div className="flex gap-3 pt-4 border-t">
+              <Button
+                onClick={() => setShowStudyLog(false)}
+                variant="outline"
+                className="flex-1"
+              >
+                취소
+              </Button>
+              <Button
+                onClick={saveStudyLog}
+                disabled={!studyLog.trim()}
+                variant="primary"
+                className="flex-1"
+              >
+                저장하기
+              </Button>
+            </div>
+          </Modal>
+          <Modal open={showAddForm} onClose={() => setShowAddForm(false)} className="max-w-md">
+            <h3 className="text-lg font-semibold mb-4">새 과목 추가 (준비중)</h3>
+            <Button
+              onClick={() => setShowAddForm(false)}
+              variant="secondary"
+              className="w-full mt-4"
+            >
+              닫기
+            </Button>
+          </Modal>
+          <Toast open={showToast} onClose={() => setShowToast(false)} type={toastType}>{toastMessage}</Toast>
         </div>
       </div>
-      {/* 학습 기록 모달 */}
-      <Modal
-        open={showStudyLog && !!selectedSubject}
-        onClose={() => setShowStudyLog(false)}
-        className="max-w-md"
-      >
-        <div className="space-y-4 max-h-96 overflow-y-auto">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">학습 내용</label>
-            <textarea
-              value={studyLog}
-              onChange={e => setStudyLog(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              rows={4}
-              placeholder="학습한 내용을 입력하세요"
-              autoFocus
-            />
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              onClick={startTimer}
-              variant="primary"
-              size="sm"
-              disabled={timer.isRunning}
-            >
-              <Play className="w-4 h-4 inline" /> 시작
-            </Button>
-            <Button
-              onClick={pauseTimer}
-              variant="warning"
-              size="sm"
-              disabled={!timer.isRunning}
-            >
-              <Pause className="w-4 h-4 inline" /> 일시정지
-            </Button>
-            <Button
-              onClick={resetTimer}
-              variant="secondary"
-              size="sm"
-            >
-              <Square className="w-4 h-4 inline" /> 초기화
-            </Button>
-            <span className="ml-2 text-sm font-mono text-gray-700">
-              {timer.minutes}분 {timer.seconds}초
-            </span>
-          </div>
-        </div>
-        <div className="flex gap-3 pt-4 border-t">
-          <Button
-            onClick={() => setShowStudyLog(false)}
-            variant="outline"
-            className="flex-1"
-          >
-            취소
-          </Button>
-          <Button
-            onClick={saveStudyLog}
-            disabled={!studyLog.trim()}
-            variant="primary"
-            className="flex-1"
-          >
-            저장하기
-          </Button>
-        </div>
-      </Modal>
-      {/* 과목 추가 폼(모달) - 실제 구현 필요시 추가 */}
-      <Modal
-        open={showAddForm}
-        onClose={() => setShowAddForm(false)}
-        className="max-w-md"
-      >
-        <h3 className="text-lg font-semibold mb-4">새 과목 추가 (준비중)</h3>
-        <Button
-          onClick={() => setShowAddForm(false)}
-          variant="secondary"
-          className="w-full mt-4"
-        >
-          닫기
-        </Button>
-      </Modal>
-      
-      {/* Toast 알림 */}
-      <Toast
-        open={showToast}
-        onClose={() => setShowToast(false)}
-        type={toastType}
-      >
-        {toastMessage}
-      </Toast>
     </div>
   );
 } 

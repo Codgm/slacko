@@ -421,107 +421,116 @@ export default function TextbookManagement() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-        {/* 헤더 */}
-        <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-8">
-          <div className="max-w-6xl mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">원서 관리</h1>
-                <p className="text-sm text-gray-600">진행 중인 원서들을 한눈에 관리하세요!</p>
+      {/* 해더 */}
+      <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-0">
+        <div className="max-w mx-auto px-4 py-2 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">원서 관리</h1>
+            <p className="text-sm text-gray-600">진행 중인 원서들을 한눈에 관리하세요!</p>
+          </div>
+          <Button onClick={() => setShowAddModal(true)} icon={<Plus />}>새 원서</Button>
+        </div>
+      </div>
+      {/* 메인 컨테이너 */}
+      <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
+          {/* 필터 */}
+          <div className="mb-6 flex gap-2 flex-wrap">
+            {['전체', '읽는 중', '완료', '미시작'].map(status => (
+              <Button
+                key={status}
+                onClick={() => setFilterStatus(status)}
+                variant={filterStatus === status ? 'primary' : 'ghost'}
+                size="sm"
+              >
+                {status}
+              </Button>
+            ))}
+          </div>
+          {/* 원서 카드 리스트 */}
+          {filteredBooks.length === 0 ? (
+            <div className="text-center text-gray-400 py-12">아직 등록된 원서가 없습니다.</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {filteredBooks.map(book => (
+                <BookCard key={book.id} book={book} />
+              ))}
+            </div>
+          )}
+          {/* 원서 상세 슬라이드 */}
+          {selectedBook && (
+            <div className="mt-8">
+              <BookDetail book={selectedBook} />
+            </div>
+          )}
+          {/* 새 원서 추가 모달 */}
+          <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="새 원서 추가">
+            <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
+              <FileUpload
+                onFileChange={handleFileChange}
+                accept="application/pdf,image/*"
+                label="전공 원서 파일 업로드 (PDF, 이미지 등)"
+              />
+              <div className="flex flex-col gap-2">
+                <label className="font-semibold">원서 이름</label>
+                <input
+                  className="border rounded px-3 py-2"
+                  value={newBook.title}
+                  onChange={e => setNewBook(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="예: Operating Systems"
+                />
               </div>
-              <Button onClick={() => setShowAddModal(true)} icon={<Plus />}>
-                새 원서
+              <div className="flex flex-col gap-2">
+                <label className="font-semibold">출판사</label>
+                <input
+                  className="border rounded px-3 py-2"
+                  value={newBook.publisher}
+                  onChange={e => setNewBook(prev => ({ ...prev, publisher: e.target.value }))}
+                  placeholder="예: MIT Press"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="font-semibold">페이지 수</label>
+                <input
+                  className="border rounded px-3 py-2"
+                  type="number"
+                  value={newBook.totalPages}
+                  onChange={e => setNewBook(prev => ({ ...prev, totalPages: e.target.value }))}
+                  placeholder="예: 400"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="font-semibold">기간 설정</label>
+                <div className="flex gap-2 items-center">
+                  <input
+                    type="date"
+                    name="start"
+                    className="border rounded px-3 py-2"
+                    value={addBookDates.start}
+                    onChange={handleDateChange}
+                  />
+                  <span>~</span>
+                  <input
+                    type="date"
+                    name="end"
+                    className="border rounded px-3 py-2"
+                    value={addBookDates.end}
+                    onChange={handleDateChange}
+                  />
+                </div>
+                {addBookDaysLeft !== null && (
+                  <div className="text-xs text-gray-500 mt-1">남은 일수: {addBookDaysLeft}일</div>
+                )}
+              </div>
+              <Button onClick={handleAddBook} className="mt-4 w-full">
+                저장
               </Button>
             </div>
-          </div>
+          </Modal>
+          {/* Toast 알림 */}
+          <Toast open={showToast} onClose={() => setShowToast(false)} type={toastType}>{toastMessage}</Toast>
         </div>
-        {/* 필터 */}
-        <div className="flex gap-2 mb-6">
-          {['전체', '읽는 중', '완료', '미시작'].map(status => (
-            <Button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              variant={filterStatus === status ? 'primary' : 'ghost'}
-              size="sm"
-            >
-              {status}
-            </Button>
-          ))}
-        </div>
-        {/* 원서 카드 리스트 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filteredBooks.map(book => (
-            <BookCard key={book.id} book={book} />
-          ))}
-        </div>
-        {/* 원서 상세 슬라이드 */}
-        <BookDetail book={selectedBook} />
-        {/* 새 원서 추가 모달 */}
-        <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="새 원서 추가">
-        <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
-          <FileUpload
-            onFileChange={handleFileChange}
-            accept="application/pdf,image/*"
-            label="전공 원서 파일 업로드 (PDF, 이미지 등)"
-          />
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold">원서 이름</label>
-            <input
-              className="border rounded px-3 py-2"
-              value={newBook.title}
-              onChange={e => setNewBook(prev => ({ ...prev, title: e.target.value }))}
-              placeholder="예: Operating Systems"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold">출판사</label>
-            <input
-              className="border rounded px-3 py-2"
-              value={newBook.publisher}
-              onChange={e => setNewBook(prev => ({ ...prev, publisher: e.target.value }))}
-              placeholder="예: MIT Press"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold">페이지 수</label>
-            <input
-              className="border rounded px-3 py-2"
-              type="number"
-              value={newBook.totalPages}
-              onChange={e => setNewBook(prev => ({ ...prev, totalPages: e.target.value }))}
-              placeholder="예: 400"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label className="font-semibold">기간 설정</label>
-            <div className="flex gap-2 items-center">
-              <input
-                type="date"
-                name="start"
-                className="border rounded px-3 py-2"
-                value={addBookDates.start}
-                onChange={handleDateChange}
-              />
-              <span>~</span>
-              <input
-                type="date"
-                name="end"
-                className="border rounded px-3 py-2"
-                value={addBookDates.end}
-                onChange={handleDateChange}
-              />
-            </div>
-            {addBookDaysLeft !== null && (
-              <div className="text-xs text-gray-500 mt-1">남은 일수: {addBookDaysLeft}일</div>
-            )}
-          </div>
-          <Button onClick={handleAddBook} className="mt-4 w-full">
-            저장
-          </Button>
-        </div>
-      </Modal>
-      {/* Toast 알림 */}
-      <Toast open={showToast} onClose={() => setShowToast(false)} type={toastType}>{toastMessage}</Toast>
+      </div>
     </div>
   );
 } 

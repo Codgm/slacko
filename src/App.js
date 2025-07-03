@@ -2,9 +2,9 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // 페이지 컴포넌트들 import (폴더 기반)
-import Dashboard from './pages/Dashboard';
+import Dashboard from './pages/Dashboard/index';
 import ProjectManagementSystem from './pages/ProjectManagement';
-import StudyCalendar from './pages/StudyCalendar';
+import StudyCalendar from './pages/StudyCalendar/index';
 import StudyManagementSystem from './pages/StudyManagement';
 import TextbookManagementSystem from './pages/TextbookManagement';
 import Layout from './components/Layout';

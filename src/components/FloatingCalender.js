@@ -90,7 +90,7 @@ const FloatingCalendar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-indigo-100 p-8">
+    <div className="min-h-screen bg-white p-8">
 
       {/* 플로팅 캘린더 컨테이너 */}
       <div className="fixed bottom-6 right-6 z-50" ref={calendarRef}>

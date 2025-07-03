@@ -220,49 +220,24 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* 헤더 */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <BookOpen className="w-8 h-8 text-blue-600" />
-                <h1 className="text-xl font-bold text-gray-900">Slacko</h1>
-              </div>
-              <div className="hidden md:flex items-center space-x-1 text-sm text-gray-500">
-                <span>•</span>
-                <span>학습 대시보드</span>
-              </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Button variant="ghost" size="sm">
-                <Bell className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <Settings className="w-5 h-5" />
-              </Button>
-              <Button variant="ghost" size="sm">
-                <User className="w-5 h-5" />
-              </Button>
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* 해더 - 카드 바깥 */}
+      <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-0">
+        <div className="max-w mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+            <span role="img" aria-label="대시보드">📊</span> 학습 대시보드
+          </h1>
+          <div className="mt-4 md:mt-0 flex gap-2">
+          <Button variant="ghost" size="sm"><Bell className="w-5 h-5" /></Button>
+          <Button variant="ghost" size="sm"><Settings className="w-5 h-5" /></Button>
+          <Button variant="ghost" size="sm"><User className="w-5 h-5" /></Button>
+        </div>
         </div>
       </div>
-
-      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-        {/* 환영 메시지 */}
-        <div className="mb-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            안녕하세요! 👋
-          </h2>
-          <p className="text-gray-600">
-            오늘도 목표를 향해 한 걸음씩 나아가세요! 📚
-          </p>
-        </div>
-
+      {/* 메인 카드/콘텐츠 - Dashboard.js 구조 반영 */}
+      <div className="max-w-7xl mx-auto p-8 px-6 pb-12">
         {/* 상단 통계 카드 */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-8">
           <Card className="text-center">
             <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mx-auto mb-3">
               <Target className="w-6 h-6 text-blue-600" />
@@ -286,118 +261,115 @@ const Dashboard = () => {
             <h3 className="text-2xl font-bold text-gray-900 mb-1">{completedTodos}</h3>
             <p className="text-sm text-gray-600">완료된 할 일</p>
           </Card>
-
-          <Card className="text-center">
-            <div className="flex items-center justify-center w-12 h-12 bg-orange-100 rounded-lg mx-auto mb-3">
-              <TrendingUp className="w-6 h-6 text-orange-600" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-1">{averageStudyTime.toFixed(1)}h</h3>
-            <p className="text-sm text-gray-600">일평균 학습 시간</p>
-          </Card>
         </div>
-
-        {/* 메인 콘텐츠 그리드 */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* 왼쪽 컬럼 */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* 왼쪽 컬럼: 할일, 프로젝트, 차트 등 */}
           <div className="lg:col-span-2 space-y-6">
+                        {/* 할 일 섹션 */}
+            {todoList.length === 0 ? (
+              <div className="text-center text-gray-400 py-12">아직 등록된 할 일이 없습니다.</div>
+            ) : (
+              <div className="mb-8">
+                <TodoSection
+                  todoList={todoList}
+                  priorities={priorities}
+                  getPriorityColor={getPriorityColor}
+                  toggleTodo={toggleTodo}
+                  setQuickAddMode={setQuickAddMode}
+                  quickAddMode={quickAddMode}
+                  quickTask={quickTask}
+                  setQuickTask={setQuickTask}
+                  handleQuickAdd={handleQuickAdd}
+                  setShowAddModal={setShowAddModal}
+                  showAddModal={showAddModal}
+                  newTodo={newTodo}
+                  setNewTodo={setNewTodo}
+                  showAdvanced={showAdvanced}
+                  setShowAdvanced={setShowAdvanced}
+                  resetForm={resetForm}
+                  handleAddTodo={handleAddTodo}
+                  categories={categories}
+                />
+              </div>
+            )}
             {/* 학습 차트 */}
-            <Card>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">이번 주 학습 시간</h3>
-                <Button variant="outline" size="sm">
-                  상세 보기
-                </Button>
+            <div className="mb-8">
+              <div className="bg-white rounded-2xl shadow-xl border p-8">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">이번 주 학습 시간</h3>
+                  <Button variant="outline" size="sm">
+                    상세 보기
+                  </Button>
+                </div>
+                <div className="h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart data={weeklyStudyData}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
+                      <XAxis 
+                        dataKey="day" 
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        tickLine={{ stroke: '#d1d5db' }}
+                        axisLine={{ stroke: '#d1d5db' }}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 12, fill: '#6b7280' }}
+                        tickLine={{ stroke: '#d1d5db' }}
+                        axisLine={{ stroke: '#d1d5db' }}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: '#ffffff',
+                          border: 'solid #e5e7eb',
+                          borderRadius: '8px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                        }}
+                      />
+                      <Line 
+                        type="monotone" 
+                        dataKey="hours" 
+                        stroke="#8b5cf6" 
+                        strokeWidth={3}
+                        dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 6 }}
+                        activeDot={{ r: 8, fill: '#8b5cf6' }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
-              <div className="h-64">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={weeklyStudyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" />
-                    <XAxis 
-                      dataKey="day" 
-                      tick={{ fontSize: 12, fill: '#6b7280' }}
-                      tickLine={{ stroke: '#d1d5db' }}
-                      axisLine={{ stroke: '#d1d5db' }}
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 12, fill: '#6b7280' }}
-                      tickLine={{ stroke: '#d1d5db' }}
-                      axisLine={{ stroke: '#d1d5db' }}
-                    />
-                    <Tooltip 
-                      contentStyle={{
-                        backgroundColor: '#ffffff',
-                        border: 'solid #e5e7eb',
-                        borderRadius: '8px',
-                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
-                      }}
-                    />
-                    <Line 
-                      type="monotone" 
-                      dataKey="hours" 
-                      stroke="#8b5cf6" 
-                      strokeWidth={3}
-                      dot={{ fill: '#8b5cf6', strokeWidth: 2, r: 6 }}
-                      activeDot={{ r: 8, fill: '#8b5cf6' }}
-                    />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-
-            {/* 할 일 섹션 */}
-            <TodoSection
-              todoList={todoList}
-              priorities={priorities}
-              getPriorityColor={getPriorityColor}
-              toggleTodo={toggleTodo}
-              setQuickAddMode={setQuickAddMode}
-              quickAddMode={quickAddMode}
-              quickTask={quickTask}
-              setQuickTask={setQuickTask}
-              handleQuickAdd={handleQuickAdd}
-              setShowAddModal={setShowAddModal}
-              showAddModal={showAddModal}
-              newTodo={newTodo}
-              setNewTodo={setNewTodo}
-              showAdvanced={showAdvanced}
-              setShowAdvanced={setShowAdvanced}
-              resetForm={resetForm}
-              handleAddTodo={handleAddTodo}
-              categories={categories}
-            />
+            </div>
           </div>
-
-          {/* 오른쪽 컬럼 */}
+          {/* 오른쪽 컬럼: 목표, 마감 등 */}
           <div className="space-y-6">
             {/* 진행률 원형 차트 */}
             <Card>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">목표 진행률</h3>
               <div className="grid grid-cols-2 gap-4">
-                <CircularProgress 
-                  percentage={weeklyGoal} 
-                  color="#3b82f6" 
-                  label="주간 목표"
-                />
-                <CircularProgress 
-                  percentage={monthlyGoal} 
-                  color="#8b5cf6" 
-                  label="월간 목표"
-                />
+                <CircularProgress percentage={weeklyGoal} color="#3b82f6" label="주간 목표" />
+                <CircularProgress percentage={monthlyGoal} color="#8b5cf6" label="월간 목표" />
               </div>
             </Card>
 
             {/* 프로젝트 섹션 */}
-            <ProjectSection
-              currentProjects={currentProjects}
-              getProgressColor={getProgressColor}
-              getDaysUntilDeadline={getDaysUntilDeadline}
-            />
+            {currentProjects.length === 0 ? (
+              <div className="text-center text-gray-400 py-12">진행 중인 프로젝트가 없습니다.</div>
+            ) : (
+              <div className="mb-8">
+                <ProjectSection
+                  currentProjects={currentProjects}
+                  getProgressColor={getProgressColor}
+                  getDaysUntilDeadline={getDaysUntilDeadline}
+                />
+              </div>
+            )}
 
-            {/* 마감일 섹션 */}
-            <DeadlineSection
-              upcomingDeadlines={upcomingDeadlines}
-              getDaysUntilDeadline={getDaysUntilDeadline}
-            />
+            {/* 마감 임박 섹션 */}
+            {upcomingDeadlines.length === 0 ? (
+              <div className="text-center text-gray-400 py-12">임박한 마감 일정이 없습니다.</div>
+            ) : (
+              <div className="mb-8">
+                <DeadlineSection upcomingDeadlines={upcomingDeadlines} getDaysUntilDeadline={getDaysUntilDeadline} />
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -486,4 +458,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard; 
+export default Dashboard;
