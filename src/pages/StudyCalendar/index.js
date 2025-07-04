@@ -436,8 +436,8 @@ const StudyCalendar = () => {
     <div className="min-h-screen bg-gray-50">
       {/* 해더 - 카드 바깥 */}
       <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-0">
-        <div className="max-w mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
+        <div className="max-w mx-auto px-4 py-3.5 flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <span role="img" aria-label="캘린더">📅</span> 학습 캘린더
           </h1>
           <div className="mt-4 md:mt-0 flex gap-2">

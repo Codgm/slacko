@@ -7,6 +7,7 @@ import ChapterPreview from '../../components/textbook/ChapterPreview';
 import ProgressBar from '../../components/common/ProgressBar';
 import NoteSection from '../../components/notes/NoteSection';
 import QuizSection from '../../components/notes/QuizSection';
+import TextbookContentCard from '../../components/textbook/TextbookContentCard';
 
 // 집중 학습 모드(전체화면) 인터페이스
 const IntegratedStudyInterface = ({ textbook, onClose }) => {
@@ -94,87 +95,42 @@ const IntegratedStudyInterface = ({ textbook, onClose }) => {
   };
 
   return (
-    <div className="h-screen bg-gray-50 flex flex-col">
+    <div className="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col">
       {/* 전체화면 모달 헤더 */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={onClose}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              title="돌아가기"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center space-x-2">
-              <BookOpen className="w-6 h-6 text-blue-600" />
-              <div>
-                <h1 className="text-lg font-bold text-gray-900">{textbook.title}</h1>
-                <p className="text-sm text-gray-600">{textbookContent.chapter} · {textbookContent.section}</p>
-              </div>
+      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <button
+            onClick={onClose}
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            title="돌아가기"
+            aria-label="돌아가기"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div className="flex items-center space-x-2">
+            <BookOpen className="w-6 h-6 text-blue-600" />
+            <div>
+              <h1 className="text-lg font-bold text-gray-900">{textbook.title}</h1>
+              <p className="text-sm text-gray-600">집중 학습 모드</p>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
-            <span className="text-sm text-gray-500">{textbookContent.pageInfo}</span>
-            <button
-              onClick={() => setIsNoteCollapsed(!isNoteCollapsed)}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              title={isNoteCollapsed ? '노트 영역 펼치기' : '노트 영역 접기'}
-            >
-              {isNoteCollapsed ? <Maximize2 className="w-4 h-4" /> : <Minimize2 className="w-4 h-4" />}
-            </button>
-          </div>
+        </div>
+        <div className="flex items-center space-x-3">
+          <span className="text-sm text-gray-500">진행 중</span>
         </div>
       </div>
       {/* 메인 컨텐츠 영역 */}
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-gray-50">
         {/* 왼쪽: 교재 내용 */}
-        <div className={`${isNoteCollapsed ? 'w-full' : 'w-3/5'} bg-white border-r border-gray-200 flex flex-col transition-all duration-300`}>
-          {/* 페이지 네비게이션 */}
-          <div className="border-b border-gray-100 p-4">
-            <div className="flex items-center justify-between">
-              <button 
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span>이전</span>
-              </button>
-              <span className="font-medium text-gray-900 px-4 py-2 bg-gray-50 rounded-lg">페이지 {currentPage}</span>
-              <button 
-                onClick={() => setCurrentPage(prev => prev + 1)}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-50 rounded-lg transition-colors"
-              >
-                <span>다음</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-          {/* 교재 본문 */}
-          <div className="flex-1 overflow-y-auto p-8">
-            <div className="max-w-4xl mx-auto">
-              <h2 className="text-3xl font-bold text-gray-900 mb-8">{textbookContent.title}</h2>
-              <div className="prose prose-lg max-w-none">
-                {textbookContent.content.split('\n').map((paragraph, index) => {
-                  if (paragraph.trim() === '') return <br key={index} />;
-                  if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
-                    return <h3 key={index} className="text-xl font-semibold text-gray-800 mt-8 mb-4">{paragraph.slice(2, -2)}</h3>;
-                  }
-                  if (paragraph.trim().startsWith('- ')) {
-                    return <li key={index} className="ml-6 mb-3 text-gray-700 leading-relaxed">{paragraph.slice(2)}</li>;
-                  }
-                  if (paragraph.trim().match(/^\d+\./)) {
-                    return <p key={index} className="font-semibold text-gray-800 mt-6 mb-3 text-lg">{paragraph}</p>;
-                  }
-                  return <p key={index} className="mb-5 text-gray-700 leading-relaxed text-lg">{paragraph}</p>;
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
+        <TextbookContentCard
+          title={textbookContent.title}
+          content={textbookContent.content}
+          page={currentPage}
+          onPrev={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+          onNext={() => setCurrentPage(prev => prev + 1)}
+        />
         {/* 오른쪽: 노트 영역 */}
-        {!isNoteCollapsed && (
-          <div className="w-2/5 bg-gray-50 flex flex-col">
+        <div className="w-full md:w-5/12 bg-gray-50 flex flex-col p-0 md:p-6">
             <NoteSection
               currentNote={currentNote}
               setCurrentNote={setCurrentNote}
@@ -191,18 +147,17 @@ const IntegratedStudyInterface = ({ textbook, onClose }) => {
               setHoveredNote={setHoveredNote}
               hoveredNote={hoveredNote}
             />
-          </div>
-        )}
+        </div>
       </div>
       {/* 하단: 상태바 */}
       <div className="bg-white border-t border-gray-100 px-6 py-3">
-        <div className="flex items-center justify-between text-sm text-gray-600">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between text-sm text-gray-600 gap-2 md:gap-0">
           <div className="flex items-center space-x-4">
             <span>Chapter 3 · Process Management</span>
             <span>•</span>
             <span>총 {existingNotes.filter(note => note.chapter === 'Chapter 3').length}개 노트</span>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-2 mt-2 md:mt-0">
             <Clock className="w-4 h-4" />
             <span>마지막 저장: 방금 전</span>
           </div>
@@ -279,6 +234,7 @@ export default function TextbookDetailPage() {
   const [activeTab, setActiveTab] = useState('concept');
   const [isFullScreenStudy, setIsFullScreenStudy] = useState(false);
   const [showChapterPreview, setShowChapterPreview] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
 
   const textbook = {
     id: 1,
@@ -373,6 +329,12 @@ export default function TextbookDetailPage() {
     }
   };
 
+  useEffect(() => {
+    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   // 전체화면 학습 모드가 활성화된 경우
   if (isFullScreenStudy) {
     return (
@@ -387,10 +349,10 @@ export default function TextbookDetailPage() {
     <div className="min-h-screen bg-gray-50">
       {/* 헤더 */}
       <div className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-2">
+        <div className="max-w mx-auto px-4 py-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center">
-              <Button variant="ghost" size="sm" className="mr-4 p-2 hover:bg-gray-100 rounded-lg transition-colors">
+              <Button variant="ghost" size="sm" className="mr-2 hover:bg-gray-100 rounded-lg transition-colors">
                 <ArrowLeft className="w-5 h-5 text-gray-600" />
               </Button>
               <div>
@@ -403,69 +365,78 @@ export default function TextbookDetailPage() {
       </div>
       {/* 전체 레이아웃을 학습관리 크기(max-w-7xl)로 확장 */}
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* 책 정보/진도/챕터 프리뷰 카드형 분리 */}
-        <div className="flex flex-col md:flex-row gap-8 mb-8">
-          {/* 책 정보 카드 */}
-          <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 flex flex-col items-center md:items-start w-full md:w-1/3 min-w-[240px]">
-            <img
-              src={textbook.coverImage}
-              alt={textbook.title}
-              className="w-36 h-48 object-cover rounded-lg shadow mb-6"
-            />
-            <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center md:text-left">{textbook.title}</h2>
-            <p className="text-gray-600 mb-1 text-center md:text-left">저자: {textbook.author}</p>
-            <p className="text-gray-600 mb-1 text-center md:text-left">출판사: {textbook.publisher}</p>
-            <p className="text-gray-600 text-center md:text-left">총 {textbook.totalPages}페이지</p>
-            <div className="flex gap-3 mt-6 w-full justify-center md:justify-start">
-              <div className="text-center p-3 bg-blue-50 rounded-lg min-w-[70px]">
-                <div className="text-lg font-bold text-blue-600">{textbook.notes}</div>
-                <div className="text-xs text-gray-600">노트</div>
-              </div>
-              <div className="text-center p-3 bg-green-50 rounded-lg min-w-[70px]">
-                <div className="text-lg font-bold text-green-600">{textbook.bookmarks}</div>
-                <div className="text-xs text-gray-600">북마크</div>
-              </div>
-              <div className="text-center p-3 bg-purple-50 rounded-lg min-w-[70px]">
-                <div className="text-lg font-bold text-purple-600">12</div>
-                <div className="text-xs text-gray-600">학습일</div>
-              </div>
-            </div>
-          </div>
-          {/* 진도/목표 카드 */}
-          <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 flex-1 flex flex-col justify-between min-w-[240px]">
-            <div>
-              <div className="mb-3 flex items-center gap-2">
-                <span className="text-base font-medium text-gray-700">학습 진도</span>
-                <span className="text-sm text-gray-500">{textbook.currentPage} / {textbook.totalPages} 페이지</span>
-              </div>
-              <ProgressBar
-                current={textbook.currentPage}
-                total={textbook.totalPages}
-                percent={textbook.progress}
-                goal={30}
-                goalRate={80}
-                remain={6}
-                goalMessage="화이팅! 🎯"
+        {/* 책 정보/진도/챕터 프리뷰 카드형 분리 → 하나의 카드로 합치고 좌/우 2단 구조로 변경, 챕터 프리뷰 접기/펼치기 기능 추가 */}
+        <div className="mb-8">
+          <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 md:p-8 flex flex-col md:flex-row gap-8 md:gap-0">
+            {/* 좌측: 책 정보 */}
+            <div className="md:w-2/5 flex flex-col items-center md:items-start justify-center px-0 md:px-8">
+              <img
+                src={textbook.coverImage}
+                alt={textbook.title}
+                className="w-36 h-48 object-cover rounded-lg shadow mb-6 md:mb-4"
               />
-              <div className="mt-3 text-base font-bold text-blue-700 bg-blue-50 rounded px-4 py-2 inline-block shadow-sm">
-                목표까지 6일 남음 · 화이팅! 🎯
+              <h2 className="text-2xl font-bold text-gray-900 mb-2 text-center md:text-left">{textbook.title}</h2>
+              <div className="flex flex-wrap gap-4 text-gray-600 text-sm mb-2 justify-center md:justify-start">
+                <span>저자: {textbook.author}</span>
+                <span>출판사: {textbook.publisher}</span>
+                <span>총 {textbook.totalPages}페이지</span>
+              </div>
+              <div className="flex gap-3 mt-2 mb-2">
+                <div className="text-center p-3 bg-blue-50 rounded-lg min-w-[70px]">
+                  <div className="text-lg font-bold text-blue-600">{textbook.notes}</div>
+                  <div className="text-xs text-gray-600">노트</div>
+                </div>
+                <div className="text-center p-3 bg-green-50 rounded-lg min-w-[70px]">
+                  <div className="text-lg font-bold text-green-600">{textbook.bookmarks}</div>
+                  <div className="text-xs text-gray-600">북마크</div>
+                </div>
+                <div className="text-center p-3 bg-purple-50 rounded-lg min-w-[70px]">
+                  <div className="text-lg font-bold text-purple-600">12</div>
+                  <div className="text-xs text-gray-600">학습일</div>
+                </div>
               </div>
             </div>
-            {/* 챕터 프리뷰 접기/펼치기 */}
-            <div className="mt-8">
-              <button
-                className="text-xs text-blue-600 hover:underline mb-2"
-                onClick={() => setShowChapterPreview(v => !v)}
-              >
-                {showChapterPreview ? '챕터 프리뷰 접기' : '챕터 프리뷰 펼치기'}
-              </button>
-              {showChapterPreview && (
-                <ChapterPreview
-                  objectives={['PCB의 정의와 역할', '프로세스 상태와 전이', 'Context Switching의 원리']}
-                  aiSummary="PCB는 운영체제가 프로세스를 관리하기 위한 핵심 자료구조입니다."
-                  keywords={['PCB', 'Context Switching', '프로세스 상태']}
-                />
-              )}
+            {/* 연한 세로 구분선 (md 이상에서만 보임) */}
+            <div className="hidden md:block h-auto w-px bg-gray-200 mx-0" style={{opacity:0.6}} />
+            {/* 우측: 진도/목표/프리뷰 */}
+            <div className="md:w-3/5 flex flex-col justify-center px-0 md:px-8">
+              <div className="mb-4">
+                <div className="mb-3 flex items-center gap-2">
+                  <span className="text-base font-medium text-gray-700">학습 진도</span>
+                  <span className="text-sm text-gray-500">{textbook.currentPage} / {textbook.totalPages} 페이지</span>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-xs mb-1"><span className="text-gray-500">진행률</span><span className="font-semibold text-gray-800">{textbook.progress}%</span></div>
+                    <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-blue-500 h-2 rounded-full transition-all duration-300" style={{width: `${textbook.progress}%`}}></div></div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1"><span>{textbook.currentPage}p</span><span>{textbook.totalPages}p</span></div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-xs mb-1"><span className="text-gray-500">목표 달성률</span><span className="font-semibold text-gray-800">80%</span></div>
+                    <div className="w-full bg-gray-200 rounded-full h-2"><div className="bg-green-500 h-2 rounded-full transition-all duration-300" style={{width: `80%`}}></div></div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-1"><span>목표: 30%</span><span>남은 일수: 6일</span></div>
+                  </div>
+                  <div className="text-center text-xs text-blue-500 font-medium">화이팅! 🎯</div>
+                </div>
+                <div className="mt-3 text-base font-bold text-blue-700 bg-blue-50 rounded px-4 py-2 inline-block shadow-sm">목표까지 6일 남음 · 화이팅! 🎯</div>
+              </div>
+              {/* 챕터 프리뷰 접기/펼치기 */}
+              <div className="mt-4">
+                <button
+                  className="text-xs text-blue-600 hover:underline mb-2"
+                  onClick={() => setShowChapterPreview(v => !v)}
+                  aria-expanded={showChapterPreview}
+                >
+                  {showChapterPreview ? '챕터 프리뷰 접기' : '챕터 프리뷰 펼치기'}
+                </button>
+                {showChapterPreview && (
+                  <ChapterPreview 
+                    objectives={["PCB의 정의와 역할", "프로세스 상태와 전이", "Context Switching의 원리"]}
+                    aiSummary="PCB는 운영체제가 프로세스를 관리하기 위한 핵심 자료구조입니다."
+                    keywords={["PCB", "Context Switching", "프로세스 상태"]}
+                  />
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -474,7 +445,14 @@ export default function TextbookDetailPage() {
           <SlidingTabBar tabs={tabList} activeTab={activeTab} setActiveTab={setActiveTab} />
         </div>
         {/* 탭 콘텐츠 ... */}
-        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8 min-h-[300px]">
+        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-6 md:p-8 min-h-[300px]">
+          {/* 탭별 타이틀/구분선/여백 등 polish */}
+          <div className="mb-6">
+            <h2 className="text-xl font-bold text-gray-900">
+              {tabList.find(t => t.id === activeTab)?.label}
+            </h2>
+            <div className="h-px bg-gray-200 my-3" />
+          </div>
           {renderTabContent(activeTab)}
         </div>
       </div>
