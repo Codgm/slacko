@@ -174,57 +174,57 @@ export default function NoteSection({
               </div>
             ) : (
               // 편집 모드
-              <div className="h-full flex flex-col md:flex-row gap-4">
+              <div className="flex-1 min-h-0 h-full flex flex-col md:flex-row gap-4">
                 {/* 큐 */}
-                <div className="md:w-1/4 bg-amber-50 border-r border-amber-100 flex flex-col">
-                  <div className="p-4 bg-amber-100 border-b border-amber-200">
+                <div className="md:w-1/3 flex flex-col flex-1 min-h-0 h-full bg-amber-50 border-r border-amber-100">
+                  <div className="p-4 bg-amber-100 border-b border-amber-200 shrink-0">
                     <h4 className="font-semibold text-amber-800 text-sm flex items-center">
                       <Brain className="w-4 h-4 mr-2" />
                       질문 & 키워드
                     </h4>
                   </div>
-                  <div className="p-4 flex-1">
+                  <div className="p-4 flex-1 min-h-0 h-full flex flex-col">
                     <textarea
                       value={currentNote.cues}
                       onChange={(e) => setCurrentNote(prev => ({ ...prev, cues: e.target.value }))}
                       placeholder="• PCB란 무엇인가?\n• 왜 필요한가?\n• 주요 구성요소는?"
-                      className="w-full h-full border-none outline-none resize-none text-sm bg-transparent leading-relaxed placeholder-amber-500 text-amber-900"
+                      className="w-full h-full min-h-0 border-none outline-none resize-none text-sm bg-transparent leading-relaxed placeholder-amber-500 text-amber-900"
                     />
                   </div>
                 </div>
 
                 {/* 메인 노트 */}
-                <div className="flex-1 bg-white flex flex-col">
-                  <div className="p-4 bg-blue-50 border-b border-blue-100">
+                <div className="md:w-1/3 flex flex-col flex-1 min-h-0 h-full bg-white border-r border-gray-100">
+                  <div className="p-4 bg-blue-50 border-b border-blue-100 shrink-0">
                     <h4 className="font-semibold text-blue-800 text-sm flex items-center">
                       <FileText className="w-4 h-4 mr-2" />
                       메인 노트
                     </h4>
                   </div>
-                  <div className="p-4 flex-1">
+                  <div className="p-4 flex-1 min-h-0 h-full flex flex-col">
                     <textarea
                       value={currentNote.notes}
                       onChange={(e) => setCurrentNote(prev => ({ ...prev, notes: e.target.value }))}
                       placeholder="핵심 내용을 자유롭게 정리하세요"
-                      className="w-full h-full border-none outline-none resize-none text-sm leading-relaxed text-gray-900"
+                      className="w-full h-full min-h-0 border-none outline-none resize-none text-sm leading-relaxed text-gray-900"
                     />
                   </div>
                 </div>
 
                 {/* 요약 */}
-                <div className="md:w-1/4 bg-emerald-50 border-l border-emerald-100 flex flex-col">
-                  <div className="p-4 bg-emerald-100 border-b border-emerald-200">
+                <div className="md:w-1/3 flex flex-col flex-1 min-h-0 h-full bg-emerald-50">
+                  <div className="p-4 bg-emerald-100 border-b border-emerald-200 shrink-0">
                     <h4 className="font-semibold text-emerald-800 text-sm flex items-center">
                       <Target className="w-4 h-4 mr-2" />
                       핵심 요약
                     </h4>
                   </div>
-                  <div className="p-4 flex-1">
+                  <div className="p-4 flex-1 min-h-0 h-full flex flex-col">
                     <textarea
                       value={currentNote.summary}
                       onChange={(e) => setCurrentNote(prev => ({ ...prev, summary: e.target.value }))}
                       placeholder="학습한 내용을 한 문장으로 요약해보세요"
-                      className="w-full h-full border-none outline-none resize-none text-sm bg-transparent leading-relaxed placeholder-emerald-500 text-emerald-900"
+                      className="w-full h-full min-h-0 border-none outline-none resize-none text-sm bg-transparent leading-relaxed placeholder-emerald-500 text-emerald-900"
                     />
                   </div>
                 </div>
@@ -308,4 +308,4 @@ export default function NoteSection({
       </div>
     </div>
   );
-} 
+}

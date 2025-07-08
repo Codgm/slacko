@@ -131,7 +131,7 @@ const IntegratedStudyInterface = ({ textbook, onClose }) => {
           onNext={() => setCurrentPage(prev => prev + 1)}
         />
         {/* 오른쪽: 노트 영역 */}
-        <div className="w-full md:w-5/12 bg-gray-50 flex flex-col p-0 md:p-6">
+        <div className="w-full md:w-5/12 bg-gray-50 flex flex-col flex-1 min-h-0 h-full p-0 md:p-6">
             <NoteSection
               currentNote={currentNote}
               setCurrentNote={setCurrentNote}
@@ -250,6 +250,8 @@ export default function TextbookDetailPage() {
   const [existingNotes, setExistingNotes] = useState([]);
   const [selectedNote, setSelectedNote] = useState(null);
   const [hoveredNote, setHoveredNote] = useState(null);
+  const [selectedText, setSelectedText] = useState('');
+  const [showAddNoteOverlay, setShowAddNoteOverlay] = useState(false);
 
   const textbookContent = {
     chapter: 'Chapter 3',
@@ -320,6 +322,15 @@ export default function TextbookDetailPage() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const [showNoteToast, setShowNoteToast] = useState(false);
+
+  // ChapterPreview용 샘플 데이터
+  const chapterPreviewData = {
+    objectives: ['PCB의 정의', '주요 구성요소', 'Context Switching'],
+    aiSummary: 'PCB는 프로세스 관리의 핵심 자료구조입니다.',
+    keywords: ['PCB', '프로세스', 'Context Switching']
+  };
+
   if (isFullScreenStudy) {
     return (
       <IntegratedStudyInterface 
@@ -384,22 +395,70 @@ export default function TextbookDetailPage() {
         </div>
       </div>
       {/* 탭별 컨텐츠 */}
-      <div className="flex-1 flex flex-col bg-gray-50">
+      <div className="flex-1 flex flex-col bg-gray-50 min-h-0">
         {activeTab === 'content' && (
-          <div className="w-full max-w mx-auto px-4 py-6">
+          <div className="w-full max-w mx-auto px-4 py-6 flex flex-col gap-4 min-h-0">
+            {/* 2. ChapterPreview 카드 */}
+            <ChapterPreview {...chapterPreviewData} />
+            {/* 1. 본문 드래그 시 노트에 추가 */}
             <TextbookContentCard
               title={textbookContent.title}
               content={textbookContent.content}
               page={currentPage}
               onPrev={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               onNext={() => setCurrentPage(prev => prev + 1)}
+              onTextSelect={(text) => {
+                if (text) {
+                  setSelectedText(text);
+                  setShowAddNoteOverlay(true);
+                } else {
+                  setShowAddNoteOverlay(false);
+                  setSelectedText('');
+                }
+              }}
               className="w-full"
             />
+            {/* 오버레이/노트에 추가 버튼 */}
+            {showAddNoteOverlay && selectedText && (
+              <div className="fixed bottom-8 right-8 z-50 flex items-center space-x-2">
+                <button
+                  className="bg-blue-600 text-white px-5 py-3 rounded-lg shadow-lg font-bold hover:bg-blue-700 transition-colors"
+                  onClick={() => {
+                    setActiveTab('notes');
+                    setNoteMode('edit');
+                    setActiveNoteTab('write');
+                    setCurrentNote(prev => ({
+                      ...prev,
+                      notes: prev.notes + (prev.notes ? '\n' : '') + selectedText
+                    }));
+                    setShowAddNoteOverlay(false);
+                    setSelectedText('');
+                  }}
+                >
+                  노트에 추가
+                </button>
+                <button
+                  className="text-gray-400 hover:text-gray-700 px-3 py-2 rounded"
+                  onClick={() => {
+                    setShowAddNoteOverlay(false);
+                    setSelectedText('');
+                  }}
+                >
+                  취소
+                </button>
+              </div>
+            )}
+            {/* 오버레이/토스트 */}
+            {showNoteToast && (
+              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
+                선택한 텍스트가 노트에 추가되었습니다.
+              </div>
+            )}
           </div>
         )}
         {activeTab === 'concept' && (
-          <div className="p-6">
-            {/* 개념 정리: 핵심 개념 요약/정리만 보여줌 */}
+          <div className="p-6 flex flex-col gap-4 min-h-0">
+            {/* 개념 정리 */}
             <div className="bg-white rounded-xl shadow p-6 border border-blue-100">
               <h2 className="text-xl font-bold text-blue-900 mb-4">💡 개념 정리</h2>
               <ul className="list-disc pl-6 text-gray-800 space-y-2">
@@ -414,8 +473,8 @@ export default function TextbookDetailPage() {
           </div>
         )}
         {activeTab === 'review' && (
-          <div className="p-6">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100">
+          <div className="p-6 min-h-0 flex-1 flex flex-col">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100 flex flex-col gap-6 flex-1 min-h-0">
               <h3 className="text-lg font-semibold text-green-900 mb-4">🧠 복습 현황</h3>
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-white rounded-lg p-4 text-center">
@@ -427,14 +486,25 @@ export default function TextbookDetailPage() {
                   <div className="text-sm text-gray-600">복습 완료</div>
                 </div>
               </div>
+              {/* 복습 플래너/추천 영역 */}
+              <div className="bg-white rounded-lg p-4 mt-4 flex-1 min-h-0">
+                <h4 className="font-bold text-green-700 mb-2">오늘/이번주 복습 추천</h4>
+                <ul className="list-disc pl-6 text-gray-800 space-y-1">
+                  <li>Chapter 3: PCB 개념 복습</li>
+                  <li>노트 2개, 퀴즈 1개</li>
+                  <li>오답노트 1개</li>
+                </ul>
+              </div>
             </div>
           </div>
         )}
         {activeTab === 'plan' && (
-          <StudyPlanComponent />
+          <div className="flex-1 min-h-0 h-full flex flex-col">
+            <StudyPlanComponent />
+          </div>
         )}
         {activeTab === 'notes' && (
-          <div className="w-full">
+          <div className="flex-1 min-h-0 h-full flex flex-col">
             <NoteSection
               currentNote={currentNote}
               setCurrentNote={setCurrentNote}
@@ -454,17 +524,19 @@ export default function TextbookDetailPage() {
           </div>
         )}
         {activeTab === 'quiz' && (
-          <QuizSection
-            quizList={[
-              'PCB의 주요 구성요소를 3가지 이상 서술하시오.',
-              'Context Switching이 발생하는 상황을 예시와 함께 설명하시오.',
-              'Process State의 종류와 각 상태의 의미를 정리하시오.'
-            ]}
-            wrongNotes={[
-              'Context Switching의 오버헤드 설명이 부족함',
-              '프로세스 상태 전이 조건 미흡'
-            ]}
-          />
+          <div className="flex-1 min-h-0 h-full flex flex-col">
+            <QuizSection
+              quizList={[
+                'PCB의 주요 구성요소를 3가지 이상 서술하시오.',
+                'Context Switching이 발생하는 상황을 예시와 함께 설명하시오.',
+                'Process State의 종류와 각 상태의 의미를 정리하시오.'
+              ]}
+              wrongNotes={[
+                'Context Switching의 오버헤드 설명이 부족함',
+                '프로세스 상태 전이 조건 미흡'
+              ]}
+            />
+          </div>
         )}
       </div>
     </div>

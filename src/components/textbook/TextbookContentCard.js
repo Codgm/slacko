@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-export default function TextbookContentCard({ title, content, page, onPrev, onNext }) {
+export default function TextbookContentCard({ title, content, page, onPrev, onNext, onTextSelect }) {
   return (
     <div className="w-full bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col transition-all duration-300">
       {/* 페이지 네비게이션 */}
@@ -30,7 +30,15 @@ export default function TextbookContentCard({ title, content, page, onPrev, onNe
       <div className="flex-1 overflow-y-auto p-6 md:p-8">
         <div className="max-w-3xl mx-auto bg-white rounded-xl shadow p-6 border border-gray-100">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">{title}</h2>
-          <div className="prose prose-lg max-w-none">
+          <div
+            className="prose prose-lg max-w-none"
+            onMouseUp={() => {
+              if (!onTextSelect) return;
+              const selection = window.getSelection();
+              const text = selection ? selection.toString() : '';
+              if (text) onTextSelect(text);
+            }}
+          >
             {content.split('\n').map((paragraph, index) => {
               if (paragraph.trim() === '') return <br key={index} />;
               if (paragraph.startsWith('**') && paragraph.endsWith('**')) {
