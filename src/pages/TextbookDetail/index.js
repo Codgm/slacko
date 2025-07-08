@@ -8,6 +8,7 @@ import ProgressBar from '../../components/common/ProgressBar';
 import NoteSection from '../../components/notes/NoteSection';
 import QuizSection from '../../components/notes/QuizSection';
 import TextbookContentCard from '../../components/textbook/TextbookContentCard';
+import { useNavigate } from 'react-router-dom';
 
 // 집중 학습 모드(전체화면) 인터페이스
 const IntegratedStudyInterface = ({ textbook, onClose }) => {
@@ -231,6 +232,7 @@ function SlidingTabBar({ tabs, activeTab, setActiveTab }) {
 }
 
 export default function TextbookDetailPage() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('content');
   const [isFullScreenStudy, setIsFullScreenStudy] = useState(false);
   const [showChapterPreview, setShowChapterPreview] = useState(true);
@@ -329,6 +331,22 @@ export default function TextbookDetailPage() {
 
   return (
     <div className="flex-1 flex flex-col bg-gray-50">
+      <div className="w-full bg-white shadow-sm border-b border-gray-200">
+        <div className="max-w mx-auto px-4 py-2 flex items-center">
+          {/* 뒤로가기 버튼: 항상 보이게, onClose 없이 */}
+          <button
+            onClick={() => navigate(-1)}
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mr-3"
+            title="돌아가기"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">원서 상세</h1>
+            <p className="text-sm text-gray-600">원서 학습으로 목표를 달성하세요</p>
+          </div>
+        </div>
+      </div>
       {/* 상단: compact 요약 카드 + 챕터 네비게이터 */}
       <div className="flex flex-col md:flex-row items-center md:items-start gap-4 px-4 md:px-8 pt-6 pb-2">
         <div className="flex items-center gap-4">
@@ -352,19 +370,17 @@ export default function TextbookDetailPage() {
         </div>
       </div>
       {/* 탭 바 (모바일/데스크탑 모두) */}
-      <div className="w-full border-b bg-white sticky top-0 z-30">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex">
-            {tabList.map(tab => (
-              <button
-                key={tab.id}
-                className={`flex-1 py-3 text-sm md:text-base font-medium transition-all ${activeTab === tab.id ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-blue-700'}`}
-                onClick={() => setActiveTab(tab.id)}
-              >
-                <span className="mr-1">{tab.emoji}</span>{tab.label}
-              </button>
-            ))}
-          </div>
+      <div className="w-full border-b border-gray-200 bg-white sticky top-0 z-30">
+        <div className="flex px-0">
+          {tabList.map(tab => (
+            <button
+              key={tab.id}
+              className={`flex-1 py-5 text-sm md:text-base font-medium transition-all ${activeTab === tab.id ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-blue-700'}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              <span className="mr-1">{tab.emoji}</span>{tab.label}
+            </button>
+          ))}
         </div>
       </div>
       {/* 탭별 컨텐츠 */}
