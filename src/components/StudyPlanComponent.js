@@ -188,7 +188,7 @@ export default function StudyPlanComponent() {
   const progressPercentage = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="p-6">
       {/* 설정 섹션 */}
       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
         <h2 className="text-2xl font-bold text-blue-900 mb-6">📚 딥러닝 교재 학습 플랜 설정</h2>

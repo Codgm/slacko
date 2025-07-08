@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export default function TextbookContentCard({ title, content, page, onPrev, onNext }) {
   return (
-    <div className="w-full md:w-7/12 bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col transition-all duration-300">
+    <div className="w-full bg-white border-b md:border-b-0 md:border-r border-gray-200 flex flex-col transition-all duration-300">
       {/* 페이지 네비게이션 */}
       <div className="border-b border-gray-100 p-4 bg-gray-50">
         <div className="flex items-center justify-between">
