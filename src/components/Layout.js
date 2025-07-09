@@ -8,9 +8,7 @@ import {
   Calendar, 
   Book, 
   Menu, 
-  chevronsLeft,
   ChevronRight,
-  ChevronsRight,
   ChevronsLeft
 } from 'lucide-react';
 import FloatingCalendar from './FloatingCalender';

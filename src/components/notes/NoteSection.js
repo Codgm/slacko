@@ -1,12 +1,5 @@
 import React from 'react';
 import { FileText, Eye, PenTool, Save, Plus, Hash, Brain, Target, ChevronRight } from 'lucide-react';
-import Button from '../common/Button';
-
-const NOTE_TEMPLATE = {
-  cues: '• PCB란 무엇인가?\n• 왜 필요한가?\n• 주요 구성요소는?\n• Context Switching과 관계?',
-  notes: '📝 핵심 개념을 자유롭게 정리하세요.\n\n• 주요 개념\n• 예시\n• 내 생각',
-  summary: '핵심 요약을 한 문장으로 작성하세요.',
-};
 
 export default function NoteSection({
   currentNote,
@@ -31,15 +24,6 @@ export default function NoteSection({
       return;
     }
     saveNoteProp();
-  };
-
-  // 템플릿 적용
-  const applyTemplate = () => {
-    setCurrentNote(prev => ({
-      ...prev,
-      ...NOTE_TEMPLATE,
-      pageRange: prev.pageRange || ''
-    }));
   };
 
   return (

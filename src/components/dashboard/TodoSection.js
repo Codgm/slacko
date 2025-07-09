@@ -1,6 +1,6 @@
 import React from 'react';
 import Button from '../common/Button';
-import { Plus, X, ChevronUp, ChevronDown, AlarmClock, CheckCircle, Calendar } from 'lucide-react';
+import { Plus, X, CheckCircle, Calendar } from 'lucide-react';
 
 export default function TodoSection({
   todoList,

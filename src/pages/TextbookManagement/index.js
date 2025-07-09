@@ -108,7 +108,6 @@ export default function TextbookManagement() {
     currentPage: 0
   });
   const [addBookFile, setAddBookFile] = useState(null);
-  const [addBookPreview, setAddBookPreview] = useState(null);
   const [addBookDates, setAddBookDates] = useState({ start: '', end: '' });
   const [addBookDaysLeft, setAddBookDaysLeft] = useState(null);
 

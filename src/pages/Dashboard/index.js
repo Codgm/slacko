@@ -1,15 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
-  Calendar, Clock, Target, BookOpen, FileText, AlertCircle, CheckCircle, TrendingUp,
-  Plus, X, ChevronDown, ChevronUp, AlarmClock, Bell, Settings, User
+  Clock, Target, CheckCircle, User, Settings
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
 import TodoSection from '../../components/dashboard/TodoSection';
-import ChartSection from '../../components/dashboard/ChartSection';
 import ProjectSection from '../../components/dashboard/ProjectSection';
 import DeadlineSection from '../../components/dashboard/DeadlineSection';
 
@@ -79,9 +77,7 @@ const Dashboard = () => {
   const weeklyGoal = 85;
   const monthlyGoal = 72;
   const totalStudyTime = weeklyStudyData.reduce((sum, day) => sum + day.hours, 0);
-  const averageStudyTime = totalStudyTime / weeklyStudyData.length;
   const completedTodos = todoList.filter(todo => todo.completed).length;
-  const pendingTodos = todoList.filter(todo => !todo.completed).length;
 
   // 함수들
   const toggleTodo = (id) => {
@@ -228,7 +224,6 @@ const Dashboard = () => {
             <span role="img" aria-label="대시보드">📊</span> 학습 대시보드
           </h1>
           <div className="mt-4 md:mt-0 flex gap-2">
-          <Button variant="ghost" size="sm"><Bell className="w-5 h-5" /></Button>
           <Button variant="ghost" size="sm"><Settings className="w-5 h-5" /></Button>
           <Button variant="ghost" size="sm"><User className="w-5 h-5" /></Button>
         </div>

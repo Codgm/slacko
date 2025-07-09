@@ -1,19 +1,15 @@
-import { useState, useRef, useEffect } from 'react';
-import Button from '../../components/common/Button';
-import { ArrowLeft, BookOpen, Target, FileText, Settings, Brain, ChevronLeft, ChevronRight, Clock, Minimize2, Maximize2 } from 'lucide-react';
-import ConceptStudyComponent from '../../components/ConceptStudyComponent';
-import StudyPlanComponent from '../../components/StudyPlanComponent';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, BookOpen, Clock } from 'lucide-react';
 import ChapterPreview from '../../components/textbook/ChapterPreview';
-import ProgressBar from '../../components/common/ProgressBar';
 import NoteSection from '../../components/notes/NoteSection';
 import QuizSection from '../../components/notes/QuizSection';
 import TextbookContentCard from '../../components/textbook/TextbookContentCard';
 import { useNavigate } from 'react-router-dom';
+import StudyPlanComponent from '../../components/StudyPlanComponent';
 
 // 집중 학습 모드(전체화면) 인터페이스
 const IntegratedStudyInterface = ({ textbook, onClose }) => {
   const [currentPage, setCurrentPage] = useState(95);
-  const [isNoteCollapsed, setIsNoteCollapsed] = useState(false);
   const [activeNoteTab, setActiveNoteTab] = useState('write');
   const [noteMode, setNoteMode] = useState('view');
   const [currentNote, setCurrentNote] = useState({
@@ -52,9 +48,6 @@ const IntegratedStudyInterface = ({ textbook, onClose }) => {
   ]);
   const [selectedNote, setSelectedNote] = useState(null);
   const [hoveredNote, setHoveredNote] = useState(null);
-  const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState('');
-  const [toastType, setToastType] = useState('success');
 
   const textbookContent = {
     chapter: 'Chapter 3',
@@ -168,76 +161,10 @@ const IntegratedStudyInterface = ({ textbook, onClose }) => {
   );
 };
 
-function SlidingTabBar({ tabs, activeTab, setActiveTab }) {
-  const tabRefs = useRef([]);
-  const underlineRef = useRef(null);
-  const [underlineStyle, setUnderlineStyle] = useState({ left: 0, width: 0 });
-
-  useEffect(() => {
-    const idx = tabs.findIndex(tab => tab.id === activeTab);
-    const tabEl = tabRefs.current[idx];
-    if (tabEl) {
-      setUnderlineStyle({
-        left: tabEl.offsetLeft,
-        width: tabEl.clientWidth
-      });
-    }
-  }, [activeTab, tabs]);
-
-  // 윈도우 리사이즈 대응
-  useEffect(() => {
-    const handleResize = () => {
-      const idx = tabs.findIndex(tab => tab.id === activeTab);
-      const tabEl = tabRefs.current[idx];
-      if (tabEl) {
-        setUnderlineStyle({
-          left: tabEl.offsetLeft,
-          width: tabEl.clientWidth
-        });
-      }
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [activeTab, tabs]);
-
-  return (
-    <nav className="relative max-w-4xl mx-auto overflow-x-auto scrollbar-hide px-2 sm:px-4 md:px-0">
-      <div className="flex gap-2 sm:gap-4 md:gap-6 relative">
-        {/* underline */}
-        <span
-          ref={underlineRef}
-          className="absolute bottom-0 h-1 bg-blue-600 rounded-full transition-all duration-300 z-10"
-          style={{ left: underlineStyle.left, width: underlineStyle.width }}
-          aria-hidden="true"
-        />
-        {tabs.map((tab, i) => (
-          <button
-            key={tab.id}
-            ref={el => (tabRefs.current[i] = el)}
-            onClick={() => setActiveTab(tab.id)}
-            className={`w-full flex flex-col items-center py-3 px-2 sm:px-4 rounded-lg transition-all font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${
-              activeTab === tab.id
-                ? 'text-blue-700 font-bold' : 'text-gray-500 hover:text-blue-600'
-            }`}
-            aria-current={activeTab === tab.id ? 'page' : undefined}
-            tabIndex={0}
-          >
-            <span className="text-xl mb-1">{tab.emoji}</span>
-            <span className="text-xs sm:text-sm">{tab.label}</span>
-          </button>
-        ))}
-      </div>
-    </nav>
-  );
-}
-
 export default function TextbookDetailPage() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('content');
   const [isFullScreenStudy, setIsFullScreenStudy] = useState(false);
-  const [showChapterPreview, setShowChapterPreview] = useState(true);
-  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 768);
-
   const [currentPage, setCurrentPage] = useState(95);
   const [currentNote, setCurrentNote] = useState({
     cues: '• PCB란 무엇인가?\n• 왜 필요한가?\n• 주요 구성요소는?\n• Context Switching과 관계?',
@@ -317,12 +244,10 @@ export default function TextbookDetailPage() {
   ];
 
   useEffect(() => {
-    const handleResize = () => setIsDesktop(window.innerWidth >= 768);
+    const handleResize = () => setIsFullScreenStudy(window.innerWidth >= 768);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-
-  const [showNoteToast, setShowNoteToast] = useState(false);
 
   // ChapterPreview용 샘플 데이터
   const chapterPreviewData = {
@@ -449,11 +374,11 @@ export default function TextbookDetailPage() {
               </div>
             )}
             {/* 오버레이/토스트 */}
-            {showNoteToast && (
+            {/* showNoteToast && (
               <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
                 선택한 텍스트가 노트에 추가되었습니다.
               </div>
-            )}
+            ) */}
           </div>
         )}
         {activeTab === 'concept' && (
