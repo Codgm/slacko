@@ -358,6 +358,7 @@ export default function ProjectManagement() {
           {/* 새 프로젝트 추가 모달, Toast 등 기존 코드 유지 */}
           <Modal open={showAddModal} onClose={() => setShowAddModal(false)}>
             {/* ...기존 모달 코드... */}
+            <Button onClick={handleAddProject}>추가</Button>
           </Modal>
           <Toast open={showToast} onClose={() => setShowToast(false)} type={toastType}>{toastMessage}</Toast>
         </div>
