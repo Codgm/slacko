@@ -8,8 +8,8 @@ import {
   Calendar, 
   Book, 
   Menu, 
-  X,
-  ChevronRight
+  ChevronRight,
+  ChevronsLeft
 } from 'lucide-react';
 import FloatingCalendar from './FloatingCalender';
 
@@ -86,13 +86,13 @@ const Layout = () => {
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 hover:bg-gray-100 rounded-lg"
             >
-              {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
+              {sidebarOpen ? <ChevronsLeft size={20} /> : <Menu size={20} />}
             </button>
           </div>
         </div>
 
         {/* 메뉴 - 스크롤 가능 영역 */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y">
+        <nav className="flex-1 p-2 space-y-2 overflow-y">
           {menuItems.map(item => {
             const Icon = item.icon;
             const isActive = isActiveRoute(item);
@@ -136,7 +136,7 @@ const Layout = () => {
       {/* 메인 콘텐츠 - 스크롤 가능 영역 */}
       <div className="flex-1 flex flex-col min-w-0">
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6">
+          <div>
             <Outlet />
           </div>
         </div>
