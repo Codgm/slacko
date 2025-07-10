@@ -4,6 +4,7 @@ import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
 import { Book, Plus, X, FileText } from 'lucide-react';
 import FileUpload from '../../components/common/FileUpload';
+import AIPlanGenerator from '../../components/plan/AIPlanGenerator';
 
 export default function TextbookManagement() {
   const [books, setBooks] = useState([
@@ -110,6 +111,12 @@ export default function TextbookManagement() {
   const [addBookFile, setAddBookFile] = useState(null);
   const [addBookDates, setAddBookDates] = useState({ start: '', end: '' });
   const [addBookDaysLeft, setAddBookDaysLeft] = useState(null);
+  // 1. 상태 추가
+  const [studyPurpose, setStudyPurpose] = useState('');
+  const [studyIntensity, setStudyIntensity] = useState('보통');
+  const [planTasks, setPlanTasks] = useState([]);
+  // 1. 단계 상태 추가
+  const [addStep, setAddStep] = useState(1);
 
   const openBookDetail = (book) => {
     setSelectedBook(book);
@@ -383,31 +390,58 @@ export default function TextbookManagement() {
     }
   };
 
+  // 학습 강도 옵션 및 샘플 플랜 데이터 통일
+  const intensityOptions = ['낮음', '보통', '높음'];
+  const samplePlans = {
+    '낮음': [
+      { week: 1, task: '1~2장 읽기', date: '', done: false, memo: '' },
+      { week: 2, task: '3~4장 읽기', date: '', done: false, memo: '' },
+    ],
+    '보통': [
+      { week: 1, task: '1~3장 읽기', date: '', done: false, memo: '' },
+      { week: 2, task: '4~6장 읽고 문제풀이', date: '', done: false, memo: '' },
+      { week: 3, task: '7~9장 + 복습', date: '', done: false, memo: '' },
+    ],
+    '높음': [
+      { week: 1, task: '1~5장 읽기', date: '', done: false, memo: '' },
+      { week: 2, task: '6~10장 읽기', date: '', done: false, memo: '' },
+      { week: 3, task: '11~15장 읽기', date: '', done: false, memo: '' },
+      { week: 4, task: '16~20장 읽기', date: '', done: false, memo: '' },
+    ],
+  };
+
+  // 2단계에서 플랜 생성
+  const handleGeneratePlan = () => {
+    setPlanTasks(samplePlans[studyIntensity]);
+  };
+
+  // 저장 시 books에 목적/강도/플랜도 함께 저장, 상세페이지로 이동
   const handleAddBook = () => {
-    if (!addBookFile || !newBook.title || !newBook.totalPages || !addBookDates.start || !addBookDates.end) {
-      setToastMessage('모든 필드를 입력해주세요!');
+    if (!addBookFile || !newBook.title || !newBook.totalPages || !addBookDates.start || !addBookDates.end || !studyPurpose || planTasks.length === 0) {
+      setToastMessage('모든 필드와 플랜을 입력해주세요!');
       setToastType('error');
       setShowToast(true);
       return;
     }
-    setBooks([
-      ...books,
-      {
-        id: Date.now(),
-        title: newBook.title,
-        author: newBook.author,
-        publisher: newBook.publisher,
-        totalPages: parseInt(newBook.totalPages),
-        currentPage: 0,
-        targetDate: addBookDates.end,
-        status: '읽는 중',
-        startDate: addBookDates.start,
-        notes: [],
-        readingHistory: [],
-        file: addBookFile,
-        daysLeft: addBookDaysLeft
-      }
-    ]);
+    const newBookObj = {
+      id: Date.now(),
+      title: newBook.title,
+      author: newBook.author,
+      publisher: newBook.publisher,
+      totalPages: parseInt(newBook.totalPages),
+      currentPage: 0,
+      targetDate: addBookDates.end,
+      status: '읽는 중',
+      startDate: addBookDates.start,
+      notes: [],
+      readingHistory: [],
+      file: addBookFile,
+      daysLeft: addBookDaysLeft,
+      purpose: studyPurpose,
+      intensity: studyIntensity,
+      plan: planTasks,
+    };
+    setBooks([...books, newBookObj]);
     setShowAddModal(false);
     setToastMessage('새 원서가 추가되었습니다!');
     setToastType('success');
@@ -416,6 +450,11 @@ export default function TextbookManagement() {
     setAddBookFile(null);
     setAddBookDates({ start: '', end: '' });
     setAddBookDaysLeft(null);
+    setStudyPurpose('');
+    setStudyIntensity('보통');
+    setPlanTasks([]);
+    setSelectedBook(newBookObj);
+    setIsDetailOpen(true);
   };
 
   return (
@@ -463,67 +502,104 @@ export default function TextbookManagement() {
             </div>
           )}
           {/* 새 원서 추가 모달 */}
-          <Modal open={showAddModal} onClose={() => setShowAddModal(false)} title="새 원서 추가">
+          <Modal open={showAddModal} onClose={() => { setShowAddModal(false); setAddStep(1); }} title="새 원서 추가">
             <div className="flex flex-col gap-4 w-full max-w-md mx-auto">
-              <FileUpload
-                onFileChange={handleFileChange}
-                accept="application/pdf,image/*"
-                label="전공 원서 파일 업로드 (PDF, 이미지 등)"
-              />
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">원서 이름</label>
-                <input
-                  className="border rounded px-3 py-2"
-                  value={newBook.title}
-                  onChange={e => setNewBook(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="예: Operating Systems"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">출판사</label>
-                <input
-                  className="border rounded px-3 py-2"
-                  value={newBook.publisher}
-                  onChange={e => setNewBook(prev => ({ ...prev, publisher: e.target.value }))}
-                  placeholder="예: MIT Press"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">페이지 수</label>
-                <input
-                  className="border rounded px-3 py-2"
-                  type="number"
-                  value={newBook.totalPages}
-                  onChange={e => setNewBook(prev => ({ ...prev, totalPages: e.target.value }))}
-                  placeholder="예: 400"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <label className="font-semibold">기간 설정</label>
-                <div className="flex gap-2 items-center">
-                  <input
-                    type="date"
-                    name="start"
-                    className="border rounded px-3 py-2"
-                    value={addBookDates.start}
-                    onChange={handleDateChange}
+              {addStep === 1 && (
+                <>
+                  <FileUpload
+                    onFileChange={handleFileChange}
+                    accept="application/pdf,image/*"
+                    label="전공 원서 파일 업로드 (PDF, 이미지 등)"
                   />
-                  <span>~</span>
-                  <input
-                    type="date"
-                    name="end"
-                    className="border rounded px-3 py-2"
-                    value={addBookDates.end}
-                    onChange={handleDateChange}
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">원서 이름</label>
+                    <input
+                      className="border rounded px-3 py-2"
+                      value={newBook.title}
+                      onChange={e => setNewBook(prev => ({ ...prev, title: e.target.value }))}
+                      placeholder="예: Operating Systems"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">출판사</label>
+                    <input
+                      className="border rounded px-3 py-2"
+                      value={newBook.publisher}
+                      onChange={e => setNewBook(prev => ({ ...prev, publisher: e.target.value }))}
+                      placeholder="예: MIT Press"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">페이지 수</label>
+                    <input
+                      className="border rounded px-3 py-2"
+                      type="number"
+                      value={newBook.totalPages}
+                      onChange={e => setNewBook(prev => ({ ...prev, totalPages: e.target.value }))}
+                      placeholder="예: 400"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">기간 설정</label>
+                    <div className="flex gap-2 items-center">
+                      <input
+                        type="date"
+                        name="start"
+                        className="border rounded px-3 py-2"
+                        value={addBookDates.start}
+                        onChange={handleDateChange}
+                      />
+                      <span>~</span>
+                      <input
+                        type="date"
+                        name="end"
+                        className="border rounded px-3 py-2"
+                        value={addBookDates.end}
+                        onChange={handleDateChange}
+                      />
+                    </div>
+                    {addBookDaysLeft !== null && (
+                      <div className="text-xs text-gray-500 mt-1">남은 일수: {addBookDaysLeft}일</div>
+                    )}
+                  </div>
+                  <Button onClick={() => setAddStep(2)} className="mt-4 w-full">다음</Button>
+                </>
+              )}
+              {addStep === 2 && (
+                <>
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">학습 목적</label>
+                    <input
+                      className="border rounded px-3 py-2"
+                      value={studyPurpose}
+                      onChange={e => setStudyPurpose(e.target.value)}
+                      placeholder="예: 전공 심화, 자격증 대비 등"
+                    />
+                  </div>
+                  <div className="flex flex-col gap-2">
+                    <label className="font-semibold">학습 강도</label>
+                    <select
+                      className="border rounded px-3 py-2"
+                      value={studyIntensity}
+                      onChange={e => setStudyIntensity(e.target.value)}
+                    >
+                      {intensityOptions.map(opt => (
+                        <option key={opt} value={opt}>{opt}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <AIPlanGenerator
+                    studyIntensity={studyIntensity}
+                    onGenerate={handleGeneratePlan}
+                    planTasks={planTasks}
+                    setPlanTasks={setPlanTasks}
                   />
-                </div>
-                {addBookDaysLeft !== null && (
-                  <div className="text-xs text-gray-500 mt-1">남은 일수: {addBookDaysLeft}일</div>
-                )}
-              </div>
-              <Button onClick={handleAddBook} className="mt-4 w-full">
-                저장
-              </Button>
+                  <div className="flex gap-2 mt-4">
+                    <Button onClick={() => setAddStep(1)} variant="secondary" className="flex-1">이전</Button>
+                    <Button onClick={handleAddBook} className="flex-1" disabled={planTasks.length === 0}>저장</Button>
+                  </div>
+                </>
+              )}
             </div>
           </Modal>
           {/* Toast 알림 */}
