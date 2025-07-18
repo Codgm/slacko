@@ -175,6 +175,8 @@ export default function TextbookDetailPage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
+  const [showNoteSection, setShowNoteSection] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
   // URL 파라미터로 받은 ID를 사용하여 원서 정보를 가져오는 로직
   const [textbook, setTextbook] = useState(null);
@@ -224,12 +226,19 @@ export default function TextbookDetailPage() {
     }
   }, [id, navigate]);
 
-  const handleResize = () => setIsFullScreenStudy(window.innerWidth >= 768);
+  const handleResize = () => {
+    setIsDesktop(window.innerWidth >= 1024);
+  };
   
   useEffect(() => {
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // 노트에 추가 버튼 클릭 시 호출
+  const handleAddNote = () => {
+    if (isDesktop) setShowNoteSection(true);
+  };
 
   // ChapterPreview용 샘플 데이터
   const chapterPreviewData = {
@@ -256,6 +265,8 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
   };
 
   function saveNote(note) {
+    if (!note || typeof note !== 'object') return; // note가 undefined/null/비객체면 아무것도 하지 않음
+
     if (note.id) {
       setExistingNotes(prev => prev.map(n => n.id === note.id ? note : n));
     } else {
@@ -275,6 +286,11 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
     setActiveNoteTab('write');
   }
 
+  // 탭 변경 시 NoteSection 닫기
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    setShowNoteSection(false); // 탭 변경 시 NoteSection 닫기
+  };
 
 
   if (!textbook) {
@@ -313,7 +329,7 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
           {/* 뒤로가기 버튼: 항상 보이게, onClose 없이 */}
           <button
             onClick={() => navigate(-1)}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors mr-3"
+            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all duration-300 mr-4"
             title="돌아가기"
           >
             <ArrowLeft className="w-5 h-5" />
@@ -324,26 +340,44 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
           </div>
         </div>
       </div>
-      {/* 상단: compact 요약 카드 + 챕터 네비게이터 */}
-      <div className="bg-white border-b border-gray-200 px-4 py-3">
-        <div className="flex items-center gap-4">
-          <img src={textbook.coverImage} alt="cover" className="w-20 h-28 rounded-lg shadow border object-cover" />
-          <div>
-            <h1 className="text-lg font-bold text-gray-900">{textbook.title}</h1>
-            <p className="text-xs text-gray-600">저자: {textbook.author} · 출판사: {textbook.publisher}</p>
-            <div className="flex gap-2 mt-2">
-              <span className="bg-blue-50 text-blue-700 rounded px-2 py-1 text-xs">노트 {textbook.notes}</span>
-              <span className="bg-green-50 text-green-700 rounded px-2 py-1 text-xs">북마크 {textbook.bookmarks}</span>
-              <span className="bg-purple-50 text-purple-700 rounded px-2 py-1 text-xs">학습일 12</span>
+      
+      {/* 상단: compact 요약 카드 */}
+      <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center gap-6">
+          <div className="relative">
+            <img 
+              src={textbook.coverImage} 
+              alt="cover" 
+              className="w-24 h-32 rounded-2xl shadow-lg border-2 border-white object-cover" 
+            />
+            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+              {textbook.progress}%
             </div>
           </div>
-        </div>
-        <div className="flex-1 flex flex-col items-start md:items-end gap-1">
-          <span className="text-xs text-gray-500">진행률 {textbook.progress}%</span>
-          <div className="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-blue-500" style={{ width: `${textbook.progress}%` }}></div>
+          <div className="flex-1">
+            <h1 className="text-xl font-bold text-gray-900 mb-1">{textbook.title}</h1>
+            <p className="text-sm text-gray-600 mb-3">저자: {textbook.author} · 출판사: {textbook.publisher}</p>
+            <div className="flex gap-3">
+              <span className="bg-blue-50 text-blue-700 rounded-full px-3 py-1 text-xs font-medium border border-blue-200">
+                📝 노트 {textbook.notes}
+              </span>
+              <span className="bg-green-50 text-green-700 rounded-full px-3 py-1 text-xs font-medium border border-green-200">
+                🔖 북마크 {textbook.bookmarks}
+              </span>
+              <span className="bg-purple-50 text-purple-700 rounded-full px-3 py-1 text-xs font-medium border border-purple-200">
+                📅 학습일 12
+              </span>
+            </div>
           </div>
-          <span className="text-xs text-gray-500">{textbook.currentPage} / {textbook.totalPages}p</span>
+          <div className="text-right">
+            <div className="w-32 h-3 bg-gray-200 rounded-full overflow-hidden mb-2">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full transition-all duration-500"
+                style={{ width: `${textbook.progress}%` }}
+              ></div>
+            </div>
+            <span className="text-sm text-gray-600">{textbook.currentPage} / {textbook.totalPages}p</span>
+          </div>
         </div>
       </div>
       {/* 탭 바 (모바일/데스크탑 모두) */}
@@ -353,7 +387,7 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
             <button
               key={tab.id}
               className={`flex-1 py-5 text-sm md:text-base font-medium transition-all ${activeTab === tab.id ? 'text-blue-700 border-b-2 border-blue-600 bg-blue-50' : 'text-gray-500 hover:text-blue-700'}`}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleTabChange(tab.id)}
             >
               <span className="mr-1">{tab.emoji}</span>{tab.label}
             </button>
@@ -361,192 +395,218 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
         </div>
       </div>
       {/* 탭별 컨텐츠 */}
-      <div className="flex-1 flex flex-col bg-gray-50 min-h-0">
-        {activeTab === 'content' && (
-          <div className="w-full max-w mx-auto px-4 py-6 flex flex-col gap-4 min-h-0">
-            {/* 2. ChapterPreview 카드 */}
-            <ChapterPreview {...chapterPreviewData} />
-            {/* 1. 본문 드래그 시 노트에 추가 */}
-            <TextbookContentCard
-              title={textbookContent.title}
-              content={textbookContent.content}
-              page={currentPage}
-              onPrev={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-              onNext={() => setCurrentPage(prev => prev + 1)}
-              onTextSelect={(text) => {
-                if (text) {
-                  setSelectedText(text);
-                  setShowAddNoteOverlay(true);
-                } else {
-                  setShowAddNoteOverlay(false);
-                  setSelectedText('');
-                }
-              }}
-              className="w-full"
+      <div className="flex-1 flex flex-row bg-gray-50 min-h-0">
+        {/* 본문 영역 */}
+        <div className="flex-1 flex flex-col" style={{ flex: isDesktop && showNoteSection ? '0 0 60%' : '1 1 0%' }}>
+          {activeTab === 'content' && (
+            <div className="w-full max-w mx-auto px-4 py-6 flex flex-col gap-4 min-h-0">
+              {/* 2. ChapterPreview 카드
+              <ChapterPreview {...chapterPreviewData} /> */}
+              {/* 1. 본문 드래그 시 노트에 추가 */}
+              <TextbookContentCard
+                title={textbookContent.title}
+                content={textbookContent.content}
+                page={currentPage}
+                onPrev={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                onNext={() => setCurrentPage(prev => prev + 1)}
+                onTextSelect={(text) => {
+                  if (text) {
+                    setSelectedText(text);
+                    setShowAddNoteOverlay(true);
+                  } else {
+                    setShowAddNoteOverlay(false);
+                    setSelectedText('');
+                  }
+                }}
+                onAddNote={handleAddNote}
+                className="w-full"
+              />
+              {/* 오버레이/노트에 추가 버튼 */}
+              {showAddNoteOverlay && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                  <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                    <h3 className="text-lg font-semibold mb-4">선택한 텍스트를 노트에 추가</h3>
+                    <div className="bg-gray-50 p-3 rounded mb-4 text-sm">
+                      "{selectedText}"
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        onClick={() => {
+                          setCurrentNote(prev => ({
+                            ...prev,
+                            notes: prev.notes + '\n\n' + selectedText
+                          }));
+                          setShowAddNoteOverlay(false);
+                          setSelectedText('');
+                          handleAddNote(); // 노트에 추가 버튼 클릭 시 NoteSection 열기
+                        }}
+                        variant="primary"
+                        className="flex-1"
+                      >
+                        노트에 추가
+                      </Button>
+                      <Button
+                        onClick={() => {
+                          setShowAddNoteOverlay(false);
+                          setSelectedText('');
+                        }}
+                        variant="secondary"
+                        className="flex-1"
+                      >
+                        취소
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+          {activeTab === 'concept' && (
+            <div className="p-6 min-h-0 flex-1 flex flex-col">
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100 flex flex-col gap-6 flex-1 min-h-0">
+                <h3 className="text-lg font-semibold text-blue-900 mb-4">💡 개념 정리</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white rounded-lg p-4">
+                    <h4 className="font-semibold text-blue-700 mb-2">학습 목적</h4>
+                    <p className="text-gray-700">{textbook.purpose}</p>
+                  </div>
+                  <div className="bg-white rounded-lg p-4">
+                    <h4 className="font-semibold text-blue-700 mb-2">학습 강도</h4>
+                    <p className="text-gray-700">{textbook.intensity}</p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-lg p-4 flex-1 min-h-0">
+                  <h4 className="font-bold text-blue-700 mb-2">핵심 개념 요약</h4>
+                  <div className="space-y-3">
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <h5 className="font-semibold text-blue-800">Process Control Block (PCB)</h5>
+                      <p className="text-sm text-blue-700">운영체제가 각 프로세스를 관리하기 위한 핵심 자료구조</p>
+                    </div>
+                    <div className="p-3 bg-green-50 rounded-lg">
+                      <h5 className="font-semibold text-green-800">Context Switching</h5>
+                      <p className="text-sm text-green-700">프로세스 간 전환 시 상태 정보를 저장하고 복원하는 과정</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          {activeTab === 'review' && (
+            <div className="p-6 min-h-0 flex-1 flex flex-col">
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100 flex flex-col gap-6 flex-1 min-h-0">
+                <h3 className="text-lg font-semibold text-green-900 mb-4">🧠 복습 현황</h3>
+                <div className="grid grid-cols-2 gap-4 mb-6">
+                  <div className="bg-white rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-green-600">85%</div>
+                    <div className="text-sm text-gray-600">이해도</div>
+                  </div>
+                  <div className="bg-white rounded-lg p-4 text-center">
+                    <div className="text-2xl font-bold text-blue-600">12</div>
+                    <div className="text-sm text-gray-600">복습 완료</div>
+                  </div>
+                </div>
+                {/* 복습 플래너/추천 영역 */}
+                <div className="bg-white rounded-lg p-4 mt-4 flex-1 min-h-0">
+                  <h4 className="font-bold text-green-700 mb-2">오늘/이번주 복습 추천</h4>
+                  <ul className="list-disc pl-6 text-gray-800 space-y-1">
+                    <li>Chapter 3: PCB 개념 복습</li>
+                    <li>노트 2개, 퀴즈 1개</li>
+                    <li>오답노트 1개</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+          {activeTab === 'plan' && (
+            <div className="flex-1 min-h-0 h-full flex flex-col">
+              <div className="p-6">
+                <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100">
+                  <h3 className="text-lg font-semibold text-purple-900 mb-4">🧭 학습 플랜 관리</h3>
+                  {textbook.plan && textbook.plan.length > 0 ? (
+                    <AIPlanGenerator
+                      studyIntensity={textbook.intensity || '보통'}
+                      planTasks={textbook.plan}
+                      setPlanTasks={(newPlan) => {
+                        setTextbook(prev => ({ ...prev, plan: newPlan }));
+                        // 로컬 스토리지 업데이트
+                        const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+                        const updatedBooks = savedBooks.map(book => 
+                          book.id === textbook.id ? { ...book, plan: newPlan } : book
+                        );
+                        localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
+                      }}
+                      readOnly={false}
+                    />
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>아직 설정된 학습 플랜이 없습니다.</p>
+                      <p className="text-sm mt-2">새 원서 생성 시 학습 플랜을 설정할 수 있습니다.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          {activeTab === 'notes' && (
+            <div className="flex-1 min-h-0 h-full flex flex-col">
+              <div className="p-6">
+                <NoteSection
+                  currentNote={currentNote}
+                  setCurrentNote={setCurrentNote}
+                  noteMode={noteMode}
+                  setNoteMode={setNoteMode}
+                  activeNoteTab={activeNoteTab}
+                  setActiveNoteTab={setActiveNoteTab}
+                  saveNote={saveNote}
+                  startNewNote={startNewNote}
+                  existingNotes={existingNotes}
+                  setExistingNotes={setExistingNotes}
+                  selectedNote={selectedNote}
+                  setSelectedNote={setSelectedNote}
+                  setHoveredNote={setHoveredNote}
+                  hoveredNote={hoveredNote}
+                />
+              </div>
+            </div>
+          )}
+          {activeTab === 'quiz' && (
+            <div className="flex-1 min-h-0 h-full flex flex-col">
+              <div className="p-6">
+                <QuizSection 
+                  quizList={[
+                    "PCB의 주요 구성요소는 무엇인가요?",
+                    "Context Switching이 발생할 때 어떤 과정을 거치나요?",
+                    "프로세스 상태 중 WAITING 상태는 언제 발생하나요?",
+                    "PCB에서 Process ID의 역할은 무엇인가요?"
+                  ]}
+                  wrongNotes={[
+                    "Context Switching 오버헤드 계산",
+                    "PCB 메모리 구조 이해"
+                  ]}
+                />
+              </div>
+            </div>
+          )}
+        </div>
+        {/* NoteSection: 데스크탑에서 showNoteSection이 true일 때만 오른쪽에 표시 */}
+        {isDesktop && showNoteSection && (
+          <div className="flex flex-col shadow-lg border-l bg-white min-h-0" style={{ flex: '0 0 40%', maxWidth: '40%' }}>
+            <NoteSection
+              currentNote={currentNote}
+              setCurrentNote={setCurrentNote}
+              noteMode={noteMode}
+              setNoteMode={setNoteMode}
+              activeNoteTab={activeNoteTab}
+              setActiveNoteTab={setActiveNoteTab}
+              saveNote={saveNote}
+              startNewNote={startNewNote}
+              existingNotes={existingNotes}
+              setExistingNotes={setExistingNotes}
+              selectedNote={selectedNote}
+              setSelectedNote={setSelectedNote}
+              setHoveredNote={setHoveredNote}
+              hoveredNote={hoveredNote}
             />
-            {/* 오버레이/노트에 추가 버튼 */}
-            {showAddNoteOverlay && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-                  <h3 className="text-lg font-semibold mb-4">선택한 텍스트를 노트에 추가</h3>
-                  <div className="bg-gray-50 p-3 rounded mb-4 text-sm">
-                    "{selectedText}"
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      onClick={() => {
-                        setCurrentNote(prev => ({
-                          ...prev,
-                          notes: prev.notes + '\n\n' + selectedText
-                        }));
-                        setShowAddNoteOverlay(false);
-                        setSelectedText('');
-                      }}
-                      variant="primary"
-                      className="flex-1"
-                    >
-                      노트에 추가
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setShowAddNoteOverlay(false);
-                        setSelectedText('');
-                      }}
-                      variant="secondary"
-                      className="flex-1"
-                    >
-                      취소
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-        {activeTab === 'concept' && (
-          <div className="p-6 min-h-0 flex-1 flex flex-col">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100 flex flex-col gap-6 flex-1 min-h-0">
-              <h3 className="text-lg font-semibold text-blue-900 mb-4">💡 개념 정리</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div className="bg-white rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-700 mb-2">학습 목적</h4>
-                  <p className="text-gray-700">{textbook.purpose}</p>
-                </div>
-                <div className="bg-white rounded-lg p-4">
-                  <h4 className="font-semibold text-blue-700 mb-2">학습 강도</h4>
-                  <p className="text-gray-700">{textbook.intensity}</p>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg p-4 flex-1 min-h-0">
-                <h4 className="font-bold text-blue-700 mb-2">핵심 개념 요약</h4>
-                <div className="space-y-3">
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <h5 className="font-semibold text-blue-800">Process Control Block (PCB)</h5>
-                    <p className="text-sm text-blue-700">운영체제가 각 프로세스를 관리하기 위한 핵심 자료구조</p>
-                  </div>
-                  <div className="p-3 bg-green-50 rounded-lg">
-                    <h5 className="font-semibold text-green-800">Context Switching</h5>
-                    <p className="text-sm text-green-700">프로세스 간 전환 시 상태 정보를 저장하고 복원하는 과정</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-        {activeTab === 'review' && (
-          <div className="p-6 min-h-0 flex-1 flex flex-col">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl p-6 border border-green-100 flex flex-col gap-6 flex-1 min-h-0">
-              <h3 className="text-lg font-semibold text-green-900 mb-4">🧠 복습 현황</h3>
-              <div className="grid grid-cols-2 gap-4 mb-6">
-                <div className="bg-white rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-green-600">85%</div>
-                  <div className="text-sm text-gray-600">이해도</div>
-                </div>
-                <div className="bg-white rounded-lg p-4 text-center">
-                  <div className="text-2xl font-bold text-blue-600">12</div>
-                  <div className="text-sm text-gray-600">복습 완료</div>
-                </div>
-              </div>
-              {/* 복습 플래너/추천 영역 */}
-              <div className="bg-white rounded-lg p-4 mt-4 flex-1 min-h-0">
-                <h4 className="font-bold text-green-700 mb-2">오늘/이번주 복습 추천</h4>
-                <ul className="list-disc pl-6 text-gray-800 space-y-1">
-                  <li>Chapter 3: PCB 개념 복습</li>
-                  <li>노트 2개, 퀴즈 1개</li>
-                  <li>오답노트 1개</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        )}
-        {activeTab === 'plan' && (
-          <div className="flex-1 min-h-0 h-full flex flex-col">
-            <div className="p-6">
-              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100">
-                <h3 className="text-lg font-semibold text-purple-900 mb-4">🧭 학습 플랜 관리</h3>
-                {textbook.plan && textbook.plan.length > 0 ? (
-                  <AIPlanGenerator
-                    studyIntensity={textbook.intensity || '보통'}
-                    planTasks={textbook.plan}
-                    setPlanTasks={(newPlan) => {
-                      setTextbook(prev => ({ ...prev, plan: newPlan }));
-                      // 로컬 스토리지 업데이트
-                      const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
-                      const updatedBooks = savedBooks.map(book => 
-                        book.id === textbook.id ? { ...book, plan: newPlan } : book
-                      );
-                      localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
-                    }}
-                    readOnly={false}
-                  />
-                ) : (
-                  <div className="text-center py-8 text-gray-500">
-                    <p>아직 설정된 학습 플랜이 없습니다.</p>
-                    <p className="text-sm mt-2">새 원서 생성 시 학습 플랜을 설정할 수 있습니다.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-        {activeTab === 'notes' && (
-          <div className="flex-1 min-h-0 h-full flex flex-col">
-            <div className="p-6">
-              <NoteSection
-                currentNote={currentNote}
-                setCurrentNote={setCurrentNote}
-                noteMode={noteMode}
-                setNoteMode={setNoteMode}
-                activeNoteTab={activeNoteTab}
-                setActiveNoteTab={setActiveNoteTab}
-                saveNote={saveNote}
-                startNewNote={startNewNote}
-                existingNotes={existingNotes}
-                setExistingNotes={setExistingNotes}
-                selectedNote={selectedNote}
-                setSelectedNote={setSelectedNote}
-                setHoveredNote={setHoveredNote}
-                hoveredNote={hoveredNote}
-              />
-            </div>
-          </div>
-        )}
-        {activeTab === 'quiz' && (
-          <div className="flex-1 min-h-0 h-full flex flex-col">
-            <div className="p-6">
-              <QuizSection 
-                quizList={[
-                  "PCB의 주요 구성요소는 무엇인가요?",
-                  "Context Switching이 발생할 때 어떤 과정을 거치나요?",
-                  "프로세스 상태 중 WAITING 상태는 언제 발생하나요?",
-                  "PCB에서 Process ID의 역할은 무엇인가요?"
-                ]}
-                wrongNotes={[
-                  "Context Switching 오버헤드 계산",
-                  "PCB 메모리 구조 이해"
-                ]}
-              />
-            </div>
           </div>
         )}
       </div>

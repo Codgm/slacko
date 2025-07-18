@@ -133,14 +133,14 @@ export default function AddTextbook() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* 헤더 */}
       <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
         <div className="max-w mx-auto px-4 py-2 flex items-center">
           <div className="flex items-center gap-4">
             <button
               onClick={() => navigate('/textbook')}
-              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-xl transition-all duration-300"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -153,27 +153,31 @@ export default function AddTextbook() {
       </div>
 
       {/* 진행 단계 표시 */}
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        <div className="bg-white rounded-lg p-4 mb-6">
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 mb-8 shadow-lg border border-white/20">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                currentStep >= 1 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' : 'bg-gray-200 text-gray-500'
               }`}>
                 1
               </div>
-              <span className={`text-sm ${currentStep >= 1 ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+              <span className={`text-sm font-medium transition-colors ${currentStep >= 1 ? 'text-blue-600' : 'text-gray-500'}`}>
                 기본 정보
               </span>
             </div>
-            <div className="w-8 h-1 bg-gray-200 rounded"></div>
+            <div className="flex-1 h-1 bg-gray-200 rounded-full mx-6 relative">
+              <div className={`h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-500 ${
+                currentStep >= 2 ? 'w-full' : 'w-0'
+              }`}></div>
+            </div>
             <div className="flex items-center gap-4">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
-                currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-500'
+              <div className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold transition-all duration-300 ${
+                currentStep >= 2 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' : 'bg-gray-200 text-gray-500'
               }`}>
                 2
               </div>
-              <span className={`text-sm ${currentStep >= 2 ? 'text-blue-600 font-medium' : 'text-gray-500'}`}>
+              <span className={`text-sm font-medium transition-colors ${currentStep >= 2 ? 'text-blue-600' : 'text-gray-500'}`}>
                 학습 계획
               </span>
             </div>
@@ -181,107 +185,119 @@ export default function AddTextbook() {
         </div>
 
         {/* 단계별 컨텐츠 */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 overflow-hidden">
           {currentStep === 1 && (
-            <div className="p-6 space-y-6">
-              <div className="flex items-center gap-2 mb-6">
-                <Book className="w-6 h-6 text-blue-600" />
-                <h2 className="text-xl font-bold text-gray-900">기본 정보 입력</h2>
+            <div className="p-8 space-y-8">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center text-white">
+                  <Book className="w-6 h-6" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">기본 정보 입력</h2>
+                  <p className="text-gray-600">원서의 기본적인 정보를 입력해주세요</p>
+                </div>
               </div>
 
               {/* 파일 업로드 */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">전공 원서 파일</label>
-                <FileUpload
-                  onFileChange={handleFileChange}
-                  accept="application/pdf,image/*"
-                  label="PDF, 이미지 파일을 업로드하세요"
-                />
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-700">📁 전공 원서 파일</label>
+                <div className="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center hover:border-blue-400 transition-colors">
+                  <FileUpload
+                    onFileChange={handleFileChange}
+                    accept="application/pdf,image/*"
+                    label="PDF, 이미지 파일을 업로드하세요"
+                  />
+                </div>
               </div>
 
               {/* 원서 정보 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">원서 제목 *</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-gray-700">📖 원서 제목 *</label>
                   <input
                     type="text"
                     value={formData.title}
                     onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     placeholder="예: Operating Systems"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">저자</label>
+                <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-gray-700">✍️ 저자</label>
                   <input
                     type="text"
                     value={formData.author}
                     onChange={(e) => setFormData(prev => ({ ...prev, author: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     placeholder="예: Remzi H. Arpaci-Dusseau"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">출판사</label>
+                <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-gray-700">🏢 출판사</label>
                   <input
                     type="text"
                     value={formData.publisher}
                     onChange={(e) => setFormData(prev => ({ ...prev, publisher: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     placeholder="예: MIT Press"
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700">총 페이지 수 *</label>
+                <div className="space-y-3">
+                  <label className="block text-sm font-semibold text-gray-700">📄 총 페이지 수 *</label>
                   <input
                     type="number"
                     value={formData.totalPages}
                     onChange={(e) => setFormData(prev => ({ ...prev, totalPages: e.target.value }))}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     placeholder="예: 400"
                   />
                 </div>
               </div>
 
               {/* 학습 기간 */}
-              <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">학습 기간 *</label>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="flex-1">
-                    <label className="block text-xs text-gray-500 mb-1">시작일</label>
+              <div className="space-y-3">
+                <label className="block text-sm font-semibold text-gray-700">📅 학습 기간 *</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="space-y-2">
+                    <label className="block text-xs text-gray-500 font-medium">시작일</label>
                     <input
                       type="date"
                       name="startDate"
                       value={formData.startDate}
                       onChange={handleDateChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     />
                   </div>
-                  <div className="flex-1">
-                    <label className="block text-xs text-gray-500 mb-1">목표 완료일</label>
+                  <div className="space-y-2">
+                    <label className="block text-xs text-gray-500 font-medium">목표 완료일</label>
                     <input
                       type="date"
                       name="endDate"
                       value={formData.endDate}
                       onChange={handleDateChange}
-                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300"
                     />
                   </div>
                 </div>
                 {daysLeft !== null && (
-                  <div className="text-sm text-blue-600 font-medium">
-                    총 {daysLeft}일의 학습 기간이 설정되었습니다
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-blue-600">📊</span>
+                      <span className="text-sm font-medium text-blue-700">
+                        총 {daysLeft}일의 학습 기간이 설정되었습니다
+                      </span>
+                    </div>
                   </div>
                 )}
               </div>
 
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-end pt-6">
                 <Button
                   onClick={() => setCurrentStep(2)}
                   disabled={!formData.title || !formData.totalPages || !formData.startDate || !formData.endDate}
-                  className="px-8"
+                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  다음 단계
+                  다음 단계 →
                 </Button>
               </div>
             </div>

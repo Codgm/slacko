@@ -141,35 +141,108 @@ export default function TextbookManagement() {
     const progressPercentage = getProgressPercentage(book.currentPage, book.totalPages);
     const recommendedPages = getRecommendedDailyPages(book);
     const statusColor = {
-      '읽는 중': 'bg-blue-100 text-blue-800',
-      '완료': 'bg-green-100 text-green-800',
-      '미시작': 'bg-gray-100 text-gray-800'
+      '읽는 중': 'bg-blue-100 text-blue-800 border-blue-200',
+      '완료': 'bg-green-100 text-green-800 border-green-200',
+      '미시작': 'bg-gray-100 text-gray-800 border-gray-200'
+    }[book.status];
+
+    const statusIcon = {
+      '읽는 중': '📖',
+      '완료': '✅',
+      '미시작': '📚'
     }[book.status];
 
     return (
       <div 
-        className="bg-white rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow cursor-pointer border border-gray-200"
+        className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 overflow-hidden hover:border-blue-200"
         onClick={() => openBookDetail(book)}
       >
-        <div className="flex justify-between items-start mb-3">
-          <div className="flex items-center space-x-2">
-            <Book className="w-5 h-5 text-blue-600" />
-            <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">{book.title}</h3>
+        {/* 상단 이미지 영역 */}
+        <div className="relative h-48 bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/10 to-transparent"></div>
+          <div className="relative z-10 text-center">
+            <div className="text-4xl mb-2">📚</div>
+            <div className="text-xs text-gray-600 bg-white/80 backdrop-blur-sm rounded-full px-3 py-1">
+              {book.publisher}
+            </div>
           </div>
-          <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${statusColor}`}>
+          {/* 상태 배지 */}
+          <div className={`absolute top-3 right-3 px-3 py-1 rounded-full text-xs font-medium border ${statusColor}`}>
+            <span className="mr-1">{statusIcon}</span>
             {book.status}
-          </span>
+          </div>
         </div>
-        <p className="text-gray-600 text-sm mb-2">{book.author}</p>
-        <div className="mb-2 text-xs text-gray-500">{book.publisher}</div>
-        <div className="mb-2 text-xs text-gray-500">목표일: {formatDate(book.targetDate)}</div>
-        <div className="mb-2 text-xs text-gray-500">누적: {book.currentPage}/{book.totalPages}p ({progressPercentage}%)</div>
-        <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
-          <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${progressPercentage}%` }}></div>
-        </div>
-        <div className="flex items-center gap-2 text-xs text-gray-600">
-          <span>남은 일수: {getDaysRemaining(book.targetDate)}일</span>
-          <span>일일 권장: {recommendedPages}p</span>
+
+        {/* 콘텐츠 영역 */}
+        <div className="p-6">
+          {/* 제목과 저자 */}
+          <div className="mb-4">
+            <h3 className="text-lg font-bold text-gray-900 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
+              {book.title}
+            </h3>
+            <p className="text-sm text-gray-600 flex items-center">
+              <span className="mr-2">✍️</span>
+              {book.author}
+            </p>
+          </div>
+
+          {/* 진행률 */}
+          <div className="mb-4">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-sm font-medium text-gray-700">진행률</span>
+              <span className="text-sm text-gray-500">{progressPercentage}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full transition-all duration-500"
+                style={{ width: `${progressPercentage}%` }}
+              ></div>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>{book.currentPage}p</span>
+              <span>{book.totalPages}p</span>
+            </div>
+          </div>
+
+          {/* 학습 정보 */}
+          <div className="space-y-2 mb-4">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500">목표일</span>
+              <span className="font-medium text-gray-700">{formatDate(book.targetDate)}</span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500">남은 일수</span>
+              <span className={`font-medium ${getDaysRemaining(book.targetDate) < 7 ? 'text-red-600' : 'text-gray-700'}`}>
+                {getDaysRemaining(book.targetDate)}일
+              </span>
+            </div>
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-gray-500">일일 권장</span>
+              <span className="font-medium text-blue-600">{recommendedPages}p</span>
+            </div>
+          </div>
+
+          {/* 액션 버튼 */}
+          <div className="flex gap-2">
+            <button 
+              className="flex-1 bg-blue-50 text-blue-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                openBookDetail(book);
+              }}
+            >
+              📖 읽기
+            </button>
+            <button 
+              className="flex-1 bg-gray-50 text-gray-700 py-2 px-3 rounded-lg text-sm font-medium hover:bg-gray-100 transition-colors"
+              onClick={(e) => {
+                e.stopPropagation();
+                // 노트 보기 기능
+              }}
+            >
+              📝 노트
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -184,36 +257,61 @@ export default function TextbookManagement() {
             <h1 className="text-2xl font-bold text-gray-900">원서 관리</h1>
             <p className="text-sm text-gray-600">진행 중인 원서들을 한눈에 관리하세요!</p>
           </div>
-          <Button onClick={openAddBookPage} icon={<Plus />}>새 원서</Button>
+          <Button 
+            onClick={openAddBookPage} 
+            icon={<Plus />}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300"
+          >
+            새 원서
+          </Button>
         </div>
       </div>
+      
       {/* 메인 컨테이너 */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
+      <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8">
           {/* 필터 */}
-          <div className="mb-6 flex gap-2 flex-wrap">
-            {['전체', '읽는 중', '완료', '미시작'].map(status => (
-              <Button
-                key={status}
-                onClick={() => setFilterStatus(status)}
-                variant={filterStatus === status ? 'primary' : 'ghost'}
-                size="sm"
-              >
-                {status}
-              </Button>
-            ))}
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-sm font-medium text-gray-700">상태별 필터:</span>
+            </div>
+            <div className="flex gap-3 flex-wrap">
+              {['전체', '읽는 중', '완료', '미시작'].map(status => (
+                <button
+                  key={status}
+                  onClick={() => setFilterStatus(status)}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
+                    filterStatus === status 
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' 
+                      : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 hover:border-blue-300'
+                  }`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
           </div>
+          
           {/* 원서 카드 리스트 */}
           {filteredBooks.length === 0 ? (
-            <div className="text-center text-gray-400 py-12">아직 등록된 원서가 없습니다.</div>
+            <div className="text-center py-16">
+              <div className="text-6xl mb-4">📚</div>
+              <h3 className="text-xl font-semibold text-gray-700 mb-2">아직 등록된 원서가 없습니다</h3>
+              <p className="text-gray-500 mb-6">첫 번째 원서를 추가하고 학습을 시작해보세요!</p>
+              <Button 
+                onClick={openAddBookPage}
+                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+              >
+                첫 원서 추가하기
+              </Button>
+            </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredBooks.map(book => (
                 <BookCard key={book.id} book={book} />
               ))}
             </div>
           )}
-
         </div>
       </div>
     </div>
