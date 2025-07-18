@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, BookOpen, Clock } from 'lucide-react';
-import ChapterPreview from '../../components/textbook/ChapterPreview';
 import NoteSection from '../../components/notes/NoteSection';
 import QuizSection from '../../components/notes/QuizSection';
 import TextbookContentCard from '../../components/textbook/TextbookContentCard';
@@ -238,13 +237,6 @@ export default function TextbookDetailPage() {
   // 노트에 추가 버튼 클릭 시 호출
   const handleAddNote = () => {
     if (isDesktop) setShowNoteSection(true);
-  };
-
-  // ChapterPreview용 샘플 데이터
-  const chapterPreviewData = {
-    objectives: ['PCB의 정의', '주요 구성요소', 'Context Switching'],
-    aiSummary: 'PCB는 프로세스 관리의 핵심 자료구조입니다.',
-    keywords: ['PCB', '프로세스', 'Context Switching']
   };
 
   const textbookContent = {

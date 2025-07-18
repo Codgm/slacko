@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
-import { Book, Plus } from 'lucide-react';
+// import { Book, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 
 export default function TextbookManagement() {
   const navigate = useNavigate();
