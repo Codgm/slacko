@@ -7,6 +7,7 @@ import ProjectManagementSystem from './pages/ProjectManagement';
 import StudyCalendar from './pages/StudyCalendar/index';
 import StudyManagementSystem from './pages/StudyManagement';
 import TextbookManagementSystem from './pages/TextbookManagement';
+import AddTextbook from './pages/TextbookManagement/AddTextbook';
 import Layout from './components/Layout';
 import NotFound from './components/Notfound';
 import OnboardingLanding from './pages/Onboarding';
@@ -23,6 +24,7 @@ function App() {
           <Route path="/study" element={<StudyManagementSystem />} />
           <Route path="/project" element={<ProjectManagementSystem />} />
           <Route path="/textbook" element={<TextbookManagementSystem />} />
+          <Route path="/textbook/add" element={<AddTextbook />} />
           <Route path="/textbook/:id" element={<TextbookDetailPage />} />
           <Route path="/calendar" element={<StudyCalendar />} />
           <Route path="*" element={<NotFound />} />

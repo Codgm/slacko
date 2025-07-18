@@ -4,8 +4,10 @@ import ChapterPreview from '../../components/textbook/ChapterPreview';
 import NoteSection from '../../components/notes/NoteSection';
 import QuizSection from '../../components/notes/QuizSection';
 import TextbookContentCard from '../../components/textbook/TextbookContentCard';
-import { useNavigate } from 'react-router-dom';
-import StudyPlanComponent from '../../components/StudyPlanComponent';
+import AIPlanGenerator from '../../components/plan/AIPlanGenerator';
+import { useNavigate, useParams } from 'react-router-dom';
+import Button from '../../components/common/Button';
+import Toast from '../../components/common/Toast';
 
 // 집중 학습 모드(전체화면) 인터페이스
 const IntegratedStudyInterface = ({ textbook, onClose }) => {
@@ -21,59 +23,47 @@ const IntegratedStudyInterface = ({ textbook, onClose }) => {
   const [existingNotes, setExistingNotes] = useState([
     {
       id: 1,
-      title: 'Process 개념 정리',
-      pageRange: '90-94',
-      date: '2025-07-01',
+      title: 'PCB 개념 정리',
+      content: 'Process Control Block의 핵심 개념과 구성요소',
+      date: '2025-06-20',
       chapter: 'Chapter 3',
-      summary: '프로세스의 정의와 상태 변화 모델',
-      content: {
-        cues: '• 프로세스란?\n• 프로그램과 차이점?\n• 프로세스 상태',
-        notes: '프로세스는 실행 중인 프로그램을 의미한다.\n- 메모리에 로드된 상태\n- CPU 시간을 할당받을 수 있는 상태\n- 독립적인 메모리 공간 보유',
-        summary: '프로세스 = 실행 중인 프로그램 + 시스템 자원'
-      }
+      pageRange: '95-97'
     },
     {
       id: 2,
-      title: 'Context Switching',
-      pageRange: '88-89',
-      date: '2025-06-30',
+      title: 'Context Switching 과정',
+      content: '프로세스 전환 시 발생하는 Context Switching의 단계별 과정',
+      date: '2025-06-21',
       chapter: 'Chapter 3',
-      summary: '컨텍스트 스위칭의 필요성과 오버헤드',
-      content: {
-        cues: '• Context Switching이란?\n• 언제 발생?\n• 오버헤드는?',
-        notes: 'CPU를 한 프로세스에서 다른 프로세스로 넘겨주는 과정\n- 현재 상태 저장 (PCB에)\n- 새 프로세스 상태 복원\n- 시간이 많이 소요되는 작업',
-        summary: 'Context Switching = 프로세스 간 CPU 전환 과정'
-      }
+      pageRange: '98-102'
     }
   ]);
   const [selectedNote, setSelectedNote] = useState(null);
   const [hoveredNote, setHoveredNote] = useState(null);
 
   const textbookContent = {
+    title: 'Chapter 3: Process Management',
+    content: `Process Control Block (PCB)는 운영체제가 각 프로세스를 관리하기 위해 유지하는 자료구조입니다. PCB는 프로세스의 상태 정보를 체계적으로 저장하고 관리하는 역할을 합니다.
+
+주요 구성요소:
+1. Process ID (PID): 프로세스의 고유 식별자
+2. Process State: 프로세스의 현재 상태 (NEW, READY, RUNNING, WAITING, TERMINATED)
+3. Program Counter: 다음에 실행할 명령어의 주소
+4. CPU Registers: 프로세스 실행 중 사용된 레지스터 값들
+5. Memory Management Information: 메모리 할당 정보
+
+Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로세스의 상태를 PCB에 저장하고, 다음에 실행할 프로세스의 상태를 PCB에서 복원합니다.`,
+    pageInfo: '페이지 95-97',
     chapter: 'Chapter 3',
-    section: '3.2 Process Control Block',
-    title: 'Process Control Block (PCB)',
-    content: `\nProcess Control Block (PCB)는 운영체제가 프로세스를 관리하기 위해 유지하는 자료구조입니다.\n\n**PCB의 주요 구성요소:**\n\n1. **Process ID (PID)**\n   - 프로세스를 고유하게 식별하는 번호\n   - 시스템 내에서 중복되지 않는 정수값\n\n2. **Process State**\n   - NEW: 프로세스가 생성 중인 상태\n   - READY: CPU 할당을 기다리는 상태  \n   - RUNNING: 현재 CPU를 사용하고 있는 상태\n   - WAITING: I/O 완료 등을 기다리는 상태\n   - TERMINATED: 프로세스가 종료된 상태\n\n3. **Program Counter (PC)**\n   - 다음에 실행할 명령어의 주소를 저장\n   - Context switching 시 복원에 필요\n\n4. **CPU Registers**\n   - 프로세스 실행 중 사용된 레지스터 값들\n   - 인덱스 레지스터, 스택 포인터, 범용 레지스터 등\n\n5. **Memory Management Information**\n   - 베이스/리미트 레지스터 값\n   - 페이지 테이블 또는 세그먼트 테이블 정보\n    `,
-    pageInfo: '페이지 95-97'
+    section: 'Process Control Block'
   };
 
-  const saveNote = () => {
-    if (currentNote.notes.trim() || currentNote.cues.trim() || currentNote.summary.trim()) {
-      const newNote = {
-        id: existingNotes.length + 1,
-        title: currentNote.summary ? currentNote.summary.substring(0, 30) + '...' : '새 노트',
-        pageRange: currentNote.pageRange,
-        date: new Date().toISOString().split('T')[0],
-        chapter: 'Chapter 3',
-        summary: currentNote.summary || '요약 없음',
-        content: {
-          cues: currentNote.cues,
-          notes: currentNote.notes,
-          summary: currentNote.summary
-        }
-      };
-      setExistingNotes([newNote, ...existingNotes]);
-      setNoteMode('view');
+  const saveNote = (note) => {
+    if (note.id) {
+      setExistingNotes(prev => prev.map(n => n.id === note.id ? note : n));
+    } else {
+      const newNote = { ...note, id: Date.now() };
+      setExistingNotes(prev => [...prev, newNote]);
     }
   };
 
@@ -89,30 +79,32 @@ const IntegratedStudyInterface = ({ textbook, onClose }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-white bg-opacity-95 flex flex-col">
+    <div className="h-screen bg-gray-50 flex flex-col">
       {/* 전체화면 모달 헤더 */}
-      <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <button
-            onClick={onClose}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            title="돌아가기"
-            aria-label="돌아가기"
-          >
-            <ArrowLeft className="w-5 h-5" />
-          </button>
-          <div className="flex items-center space-x-2">
-            <BookOpen className="w-6 h-6 text-blue-600" />
-            <div>
-              <h1 className="text-lg font-bold text-gray-900">{textbook.title}</h1>
-              <p className="text-sm text-gray-600">집중 학습 모드</p>
+      <div className="bg-white border-b border-gray-200 px-6 py-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={onClose}
+              className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              title="돌아가기"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </button>
+            <div className="flex items-center space-x-2">
+              <BookOpen className="w-6 h-6 text-blue-600" />
+              <div>
+                <h1 className="text-lg font-bold text-gray-900">{textbook.title}</h1>
+                <p className="text-sm text-gray-600">{textbookContent.chapter} · {textbookContent.section}</p>
+              </div>
             </div>
           </div>
-        </div>
-        <div className="flex items-center space-x-3">
-          <span className="text-sm text-gray-500">진행 중</span>
+          <div className="flex items-center space-x-3">
+            <span className="text-sm text-gray-500">{textbookContent.pageInfo}</span>
+          </div>
         </div>
       </div>
+
       {/* 메인 컨텐츠 영역 */}
       <div className="flex-1 flex flex-col md:flex-row overflow-hidden bg-gray-50">
         {/* 왼쪽: 교재 내용 */}
@@ -163,6 +155,7 @@ const IntegratedStudyInterface = ({ textbook, onClose }) => {
 
 export default function TextbookDetailPage() {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [activeTab, setActiveTab] = useState('content');
   const [isFullScreenStudy, setIsFullScreenStudy] = useState(false);
   const [currentPage, setCurrentPage] = useState(95);
@@ -179,32 +172,95 @@ export default function TextbookDetailPage() {
   const [hoveredNote, setHoveredNote] = useState(null);
   const [selectedText, setSelectedText] = useState('');
   const [showAddNoteOverlay, setShowAddNoteOverlay] = useState(false);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
+  const [toastType, setToastType] = useState('success');
 
-  const textbookContent = {
-    chapter: 'Chapter 3',
-    section: '3.2 Process Control Block',
-    title: 'Process Control Block (PCB)',
-    content: `\nProcess Control Block (PCB)는 운영체제가 프로세스를 관리하기 위해 유지하는 자료구조입니다.\n\n**PCB의 주요 구성요소:**\n\n1. **Process ID (PID)**\n   - 프로세스를 고유하게 식별하는 번호\n   - 시스템 내에서 중복되지 않는 정수값\n\n2. **Process State**\n   - NEW: 프로세스가 생성 중인 상태\n   - READY: CPU 할당을 기다리는 상태  \n   - RUNNING: 현재 CPU를 사용하고 있는 상태\n   - WAITING: I/O 완료 등을 기다리는 상태\n   - TERMINATED: 프로세스가 종료된 상태\n\n3. **Program Counter (PC)**\n   - 다음에 실행할 명령어의 주소를 저장\n   - Context switching 시 복원에 필요\n\n4. **CPU Registers**\n   - 프로세스 실행 중 사용된 레지스터 값들\n   - 인덱스 레지스터, 스택 포인터, 범용 레지스터 등\n\n5. **Memory Management Information**\n   - 베이스/리미트 레지스터 값\n   - 페이지 테이블 또는 세그먼트 테이블 정보\n    `,
-    pageInfo: '페이지 95-97'
+  // URL 파라미터로 받은 ID를 사용하여 원서 정보를 가져오는 로직
+  const [textbook, setTextbook] = useState(null);
+
+  useEffect(() => {
+    // 로컬 스토리지에서 원서 데이터 가져오기
+    const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+    const foundBook = savedBooks.find(book => book.id === parseInt(id));
+    
+    if (foundBook) {
+      setTextbook(foundBook);
+    } else {
+      // 기본 데이터 (ID가 1인 경우)
+      const defaultBook = {
+        id: 1,
+        title: 'Operating Systems: Three Easy Pieces',
+        author: 'Remzi H. Arpaci-Dusseau',
+        publisher: 'CreateSpace',
+        totalPages: 400,
+        currentPage: 120,
+        targetDate: '2025-07-30',
+        status: '읽는 중',
+        startDate: '2025-06-01',
+        coverImage: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=400&fit=crop',
+        progress: 30,
+        notes: 23,
+        bookmarks: 8,
+        category: 'Computer Science',
+        purpose: '전공 심화 학습',
+        intensity: '보통',
+        plan: [
+          { week: 1, task: '1~3장 읽기', date: '', done: false, memo: '' },
+          { week: 2, task: '4~6장 읽고 문제풀이', date: '', done: false, memo: '' },
+          { week: 3, task: '7~9장 + 복습', date: '', done: false, memo: '' },
+        ]
+      };
+      
+      if (parseInt(id) === 1) {
+        setTextbook(defaultBook);
+      } else {
+        // 원서를 찾을 수 없는 경우
+        setToastMessage('원서를 찾을 수 없습니다.');
+        setToastType('error');
+        setShowToast(true);
+        setTimeout(() => navigate('/textbook'), 2000);
+      }
+    }
+  }, [id, navigate]);
+
+  const handleResize = () => setIsFullScreenStudy(window.innerWidth >= 768);
+  
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // ChapterPreview용 샘플 데이터
+  const chapterPreviewData = {
+    objectives: ['PCB의 정의', '주요 구성요소', 'Context Switching'],
+    aiSummary: 'PCB는 프로세스 관리의 핵심 자료구조입니다.',
+    keywords: ['PCB', '프로세스', 'Context Switching']
   };
 
-  function saveNote() {
-    if (currentNote.notes.trim() || currentNote.cues.trim() || currentNote.summary.trim()) {
-      const newNote = {
-        id: existingNotes.length + 1,
-        title: currentNote.summary ? currentNote.summary.substring(0, 30) + '...' : '새 노트',
-        pageRange: currentNote.pageRange,
-        date: new Date().toISOString().split('T')[0],
-        chapter: 'Chapter 3',
-        summary: currentNote.summary || '요약 없음',
-        content: {
-          cues: currentNote.cues,
-          notes: currentNote.notes,
-          summary: currentNote.summary
-        }
-      };
-      setExistingNotes([newNote, ...existingNotes]);
-      setNoteMode('view');
+  const textbookContent = {
+    title: 'Chapter 3: Process Management',
+    content: `Process Control Block (PCB)는 운영체제가 각 프로세스를 관리하기 위해 유지하는 자료구조입니다. PCB는 프로세스의 상태 정보를 체계적으로 저장하고 관리하는 역할을 합니다.
+
+주요 구성요소:
+1. Process ID (PID): 프로세스의 고유 식별자
+2. Process State: 프로세스의 현재 상태 (NEW, READY, RUNNING, WAITING, TERMINATED)
+3. Program Counter: 다음에 실행할 명령어의 주소
+4. CPU Registers: 프로세스 실행 중 사용된 레지스터 값들
+5. Memory Management Information: 메모리 할당 정보
+
+Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로세스의 상태를 PCB에 저장하고, 다음에 실행할 프로세스의 상태를 PCB에서 복원합니다.`,
+    pageInfo: '페이지 95-97',
+    chapter: 'Chapter 3',
+    section: 'Process Control Block'
+  };
+
+  function saveNote(note) {
+    if (note.id) {
+      setExistingNotes(prev => prev.map(n => n.id === note.id ? note : n));
+    } else {
+      const newNote = { ...note, id: Date.now() };
+      setExistingNotes(prev => [...prev, newNote]);
     }
   }
 
@@ -219,42 +275,18 @@ export default function TextbookDetailPage() {
     setActiveNoteTab('write');
   }
 
-  const textbook = {
-    id: 1,
-    title: 'Operating System Concepts',
-    author: 'Abraham Silberschatz',
-    publisher: 'Wiley',
-    totalPages: 944,
-    currentPage: 156,
-    coverImage: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=300&h=400&fit=crop',
-    progress: 16.5,
-    studyStartDate: '2025-06-01',
-    notes: 23,
-    bookmarks: 8,
-    category: 'Computer Science'
-  };
 
-  const tabList = [
-    { id: 'content', label: '원서 본문', emoji: '📖' },
-    { id: 'concept', label: '개념 정리', emoji: '💡' },
-    { id: 'review', label: '복습 현황', emoji: '🧠' },
-    { id: 'plan', label: '학습 플랜', emoji: '🧭' },
-    { id: 'notes', label: '노트/요약', emoji: '✍️' },
-    { id: 'quiz', label: '퀴즈', emoji: '📝' },
-  ];
 
-  useEffect(() => {
-    const handleResize = () => setIsFullScreenStudy(window.innerWidth >= 768);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  // ChapterPreview용 샘플 데이터
-  const chapterPreviewData = {
-    objectives: ['PCB의 정의', '주요 구성요소', 'Context Switching'],
-    aiSummary: 'PCB는 프로세스 관리의 핵심 자료구조입니다.',
-    keywords: ['PCB', '프로세스', 'Context Switching']
-  };
+  if (!textbook) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">원서 정보를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isFullScreenStudy) {
     return (
@@ -264,6 +296,15 @@ export default function TextbookDetailPage() {
       />
     );
   }
+
+  const tabList = [
+    { id: 'content', label: '원서 본문', emoji: '📖' },
+    { id: 'concept', label: '개념 정리', emoji: '💡' },
+    { id: 'review', label: '복습 현황', emoji: '🧠' },
+    { id: 'plan', label: '학습 플랜', emoji: '🧭' },
+    { id: 'notes', label: '노트/요약', emoji: '✍️' },
+    { id: 'quiz', label: '퀴즈', emoji: '📝' },
+  ];
 
   return (
     <div className="flex-1 flex flex-col bg-gray-50">
@@ -284,7 +325,7 @@ export default function TextbookDetailPage() {
         </div>
       </div>
       {/* 상단: compact 요약 카드 + 챕터 네비게이터 */}
-      <div className="flex flex-col md:flex-row items-center md:items-start gap-4 px-4 md:px-8 pt-6 pb-2">
+      <div className="bg-white border-b border-gray-200 px-4 py-3">
         <div className="flex items-center gap-4">
           <img src={textbook.coverImage} alt="cover" className="w-20 h-28 rounded-lg shadow border object-cover" />
           <div>
@@ -293,7 +334,7 @@ export default function TextbookDetailPage() {
             <div className="flex gap-2 mt-2">
               <span className="bg-blue-50 text-blue-700 rounded px-2 py-1 text-xs">노트 {textbook.notes}</span>
               <span className="bg-green-50 text-green-700 rounded px-2 py-1 text-xs">북마크 {textbook.bookmarks}</span>
-              <span className="bg-purple-50 text-purple-700 rounded px-2 py-1 text-xs">학습일 {textbook.studyDays}</span>
+              <span className="bg-purple-50 text-purple-700 rounded px-2 py-1 text-xs">학습일 12</span>
             </div>
           </div>
         </div>
@@ -306,7 +347,7 @@ export default function TextbookDetailPage() {
         </div>
       </div>
       {/* 탭 바 (모바일/데스크탑 모두) */}
-      <div className="w-full border-b border-gray-200 bg-white sticky top-0 z-30">
+      <div className="bg-white border-b border-gray-200">
         <div className="flex px-0">
           {tabList.map(tab => (
             <button
@@ -344,56 +385,71 @@ export default function TextbookDetailPage() {
               className="w-full"
             />
             {/* 오버레이/노트에 추가 버튼 */}
-            {showAddNoteOverlay && selectedText && (
-              <div className="fixed bottom-8 right-8 z-50 flex items-center space-x-2">
-                <button
-                  className="bg-blue-600 text-white px-5 py-3 rounded-lg shadow-lg font-bold hover:bg-blue-700 transition-colors"
-                  onClick={() => {
-                    setActiveTab('notes');
-                    setNoteMode('edit');
-                    setActiveNoteTab('write');
-                    setCurrentNote(prev => ({
-                      ...prev,
-                      notes: prev.notes + (prev.notes ? '\n' : '') + selectedText
-                    }));
-                    setShowAddNoteOverlay(false);
-                    setSelectedText('');
-                  }}
-                >
-                  노트에 추가
-                </button>
-                <button
-                  className="text-gray-400 hover:text-gray-700 px-3 py-2 rounded"
-                  onClick={() => {
-                    setShowAddNoteOverlay(false);
-                    setSelectedText('');
-                  }}
-                >
-                  취소
-                </button>
+            {showAddNoteOverlay && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+                <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+                  <h3 className="text-lg font-semibold mb-4">선택한 텍스트를 노트에 추가</h3>
+                  <div className="bg-gray-50 p-3 rounded mb-4 text-sm">
+                    "{selectedText}"
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={() => {
+                        setCurrentNote(prev => ({
+                          ...prev,
+                          notes: prev.notes + '\n\n' + selectedText
+                        }));
+                        setShowAddNoteOverlay(false);
+                        setSelectedText('');
+                      }}
+                      variant="primary"
+                      className="flex-1"
+                    >
+                      노트에 추가
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setShowAddNoteOverlay(false);
+                        setSelectedText('');
+                      }}
+                      variant="secondary"
+                      className="flex-1"
+                    >
+                      취소
+                    </Button>
+                  </div>
+                </div>
               </div>
             )}
-            {/* 오버레이/토스트 */}
-            {/* showNoteToast && (
-              <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg z-50 animate-fade-in">
-                선택한 텍스트가 노트에 추가되었습니다.
-              </div>
-            ) */}
           </div>
         )}
         {activeTab === 'concept' && (
-          <div className="p-6 flex flex-col gap-4 min-h-0">
-            {/* 개념 정리 */}
-            <div className="bg-white rounded-xl shadow p-6 border border-blue-100">
-              <h2 className="text-xl font-bold text-blue-900 mb-4">💡 개념 정리</h2>
-              <ul className="list-disc pl-6 text-gray-800 space-y-2">
-                <li>PCB(프로세스 제어 블록)의 정의와 목적</li>
-                <li>PCB의 주요 구성요소: PID, 상태, Program Counter, 레지스터, 메모리 정보 등</li>
-                <li>Context Switching과 PCB의 관계</li>
-                <li>운영체제에서 PCB가 왜 중요한지</li>
-                <li>멀티태스킹/프로세스 관리의 핵심 개념</li>
-              </ul>
-              <div className="mt-6 text-sm text-gray-500">※ 본 개념 정리는 원서 본문과 별도로, 시험/면접 대비 핵심만 요약한 내용입니다.</div>
+          <div className="p-6 min-h-0 flex-1 flex flex-col">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100 flex flex-col gap-6 flex-1 min-h-0">
+              <h3 className="text-lg font-semibold text-blue-900 mb-4">💡 개념 정리</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-white rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-700 mb-2">학습 목적</h4>
+                  <p className="text-gray-700">{textbook.purpose}</p>
+                </div>
+                <div className="bg-white rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-700 mb-2">학습 강도</h4>
+                  <p className="text-gray-700">{textbook.intensity}</p>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-4 flex-1 min-h-0">
+                <h4 className="font-bold text-blue-700 mb-2">핵심 개념 요약</h4>
+                <div className="space-y-3">
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <h5 className="font-semibold text-blue-800">Process Control Block (PCB)</h5>
+                    <p className="text-sm text-blue-700">운영체제가 각 프로세스를 관리하기 위한 핵심 자료구조</p>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <h5 className="font-semibold text-green-800">Context Switching</h5>
+                    <p className="text-sm text-green-700">프로세스 간 전환 시 상태 정보를 저장하고 복원하는 과정</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         )}
@@ -425,45 +481,68 @@ export default function TextbookDetailPage() {
         )}
         {activeTab === 'plan' && (
           <div className="flex-1 min-h-0 h-full flex flex-col">
-            <StudyPlanComponent />
+            <div className="p-6">
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl p-6 border border-purple-100">
+                <h3 className="text-lg font-semibold text-purple-900 mb-4">🧭 학습 플랜 관리</h3>
+                {textbook.plan && textbook.plan.length > 0 ? (
+                  <AIPlanGenerator
+                    studyIntensity={textbook.intensity || '보통'}
+                    planTasks={textbook.plan}
+                    setPlanTasks={(newPlan) => {
+                      setTextbook(prev => ({ ...prev, plan: newPlan }));
+                      // 로컬 스토리지 업데이트
+                      const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+                      const updatedBooks = savedBooks.map(book => 
+                        book.id === textbook.id ? { ...book, plan: newPlan } : book
+                      );
+                      localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
+                    }}
+                    readOnly={false}
+                  />
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>아직 설정된 학습 플랜이 없습니다.</p>
+                    <p className="text-sm mt-2">새 원서 생성 시 학습 플랜을 설정할 수 있습니다.</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
         )}
         {activeTab === 'notes' && (
           <div className="flex-1 min-h-0 h-full flex flex-col">
-            <NoteSection
-              currentNote={currentNote}
-              setCurrentNote={setCurrentNote}
-              noteMode={noteMode}
-              setNoteMode={setNoteMode}
-              activeNoteTab={activeNoteTab}
-              setActiveNoteTab={setActiveNoteTab}
-              saveNote={saveNote}
-              startNewNote={startNewNote}
-              existingNotes={existingNotes}
-              setExistingNotes={setExistingNotes}
-              selectedNote={selectedNote}
-              setSelectedNote={setSelectedNote}
-              setHoveredNote={setHoveredNote}
-              hoveredNote={hoveredNote}
-            />
+            <div className="p-6">
+              <NoteSection
+                currentNote={currentNote}
+                setCurrentNote={setCurrentNote}
+                noteMode={noteMode}
+                setNoteMode={setNoteMode}
+                activeNoteTab={activeNoteTab}
+                setActiveNoteTab={setActiveNoteTab}
+                saveNote={saveNote}
+                startNewNote={startNewNote}
+                existingNotes={existingNotes}
+                setExistingNotes={setExistingNotes}
+                selectedNote={selectedNote}
+                setSelectedNote={setSelectedNote}
+                setHoveredNote={setHoveredNote}
+                hoveredNote={hoveredNote}
+              />
+            </div>
           </div>
         )}
         {activeTab === 'quiz' && (
           <div className="flex-1 min-h-0 h-full flex flex-col">
-            <QuizSection
-              quizList={[
-                'PCB의 주요 구성요소를 3가지 이상 서술하시오.',
-                'Context Switching이 발생하는 상황을 예시와 함께 설명하시오.',
-                'Process State의 종류와 각 상태의 의미를 정리하시오.'
-              ]}
-              wrongNotes={[
-                'Context Switching의 오버헤드 설명이 부족함',
-                '프로세스 상태 전이 조건 미흡'
-              ]}
-            />
+            <div className="p-6">
+              <QuizSection />
+            </div>
           </div>
         )}
       </div>
+      {/* Toast 알림 */}
+      <Toast open={showToast} onClose={() => setShowToast(false)} type={toastType}>
+        {toastMessage}
+      </Toast>
     </div>
   );
 } 
