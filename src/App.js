@@ -3,15 +3,15 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 // 페이지 컴포넌트들 import (폴더 기반)
 import Dashboard from './pages/Dashboard/index';
-import ProjectManagementSystem from './pages/ProjectManagement';
+import ProjectManagementSystem from './pages/ProjectManagement/index';
 import StudyCalendar from './pages/StudyCalendar/index';
-import StudyManagementSystem from './pages/StudyManagement';
-import TextbookManagementSystem from './pages/TextbookManagement';
+import StudyManagementSystem from './pages/StudyManagement/index';
+import TextbookManagementSystem from './pages/TextbookManagement/index';
 import AddTextbook from './pages/TextbookManagement/AddTextbook';
 import Layout from './components/Layout';
 import NotFound from './components/Notfound';
 import OnboardingLanding from './pages/Onboarding';
-import TextbookDetailPage from './pages/TextbookDetail';
+import TextbookDetailPage from './pages/TextbookDetail/index';
 function App() {
   return (
     <Router>
