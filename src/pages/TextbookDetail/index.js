@@ -534,7 +534,18 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
         {activeTab === 'quiz' && (
           <div className="flex-1 min-h-0 h-full flex flex-col">
             <div className="p-6">
-              <QuizSection />
+              <QuizSection 
+                quizList={[
+                  "PCB의 주요 구성요소는 무엇인가요?",
+                  "Context Switching이 발생할 때 어떤 과정을 거치나요?",
+                  "프로세스 상태 중 WAITING 상태는 언제 발생하나요?",
+                  "PCB에서 Process ID의 역할은 무엇인가요?"
+                ]}
+                wrongNotes={[
+                  "Context Switching 오버헤드 계산",
+                  "PCB 메모리 구조 이해"
+                ]}
+              />
             </div>
           </div>
         )}
