@@ -446,7 +446,7 @@ const StudyCalendar = () => {
         </div>
       </div>
       {/* 메인 카드 */}
-      <div className="max-w-7xl mx-auto px-6 pb-12">
+      <div className="max-w-7xl mx-auto px-6 py-6 pb-12">
         <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
           {/* 캘린더 헤더/탭/네비게이션 등 */}
           <div className="mb-6">
