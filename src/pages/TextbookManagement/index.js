@@ -243,7 +243,7 @@ export default function TextbookManagement() {
             >
               📝 노트
             </button>
-          </div>
+        </div>
         </div>
       </div>
     );
@@ -277,19 +277,19 @@ export default function TextbookManagement() {
               <span className="text-sm font-medium text-gray-700">상태별 필터:</span>
             </div>
             <div className="flex gap-3 flex-wrap">
-              {['전체', '읽는 중', '완료', '미시작'].map(status => (
+            {['전체', '읽는 중', '완료', '미시작'].map(status => (
                 <button
-                  key={status}
-                  onClick={() => setFilterStatus(status)}
+                key={status}
+                onClick={() => setFilterStatus(status)}
                   className={`px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                     filterStatus === status 
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg' 
                       : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200 hover:border-blue-300'
                   }`}
-                >
-                  {status}
+              >
+                {status}
                 </button>
-              ))}
+            ))}
             </div>
           </div>
           

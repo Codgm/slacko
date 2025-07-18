@@ -2,7 +2,20 @@ import { useState } from 'react';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
-import { Calendar, CheckCircle, FileText, Link, Plus, X, Upload, Trash2} from 'lucide-react';
+import ProgressBar from '../../components/common/ProgressBar';
+import { Calendar, CheckCircle, FileText, Link, Plus, X, Upload, Trash2, Users, Settings, Filter, List, Layout, Clock, File, StickyNote } from 'lucide-react';
+import ProjectSettingsModal from '../../components/project/ProjectSettingsModal';
+import ProjectInviteModal from '../../components/project/ProjectInviteModal';
+import ProjectFilterModal from '../../components/project/ProjectFilterModal';
+import ProjectAddModal from '../../components/project/ProjectAddModal';
+
+// 팀원 샘플 데이터
+const sampleMembers = [
+  { id: 1, name: '홍길동', avatar: 'https://i.pravatar.cc/40?img=1' },
+  { id: 2, name: '김철수', avatar: 'https://i.pravatar.cc/40?img=2' },
+  { id: 3, name: '이영희', avatar: 'https://i.pravatar.cc/40?img=3' },
+  { id: 4, name: '박민수', avatar: 'https://i.pravatar.cc/40?img=4' },
+];
 
 export default function ProjectManagement() {
   const [projects, setProjects] = useState([
@@ -52,16 +65,64 @@ export default function ProjectManagement() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newProject, setNewProject] = useState({
-    name: '',
-    description: '',
-    startDate: '',
-    endDate: '',
-    status: '진행 중',
-    milestones: [],
-    files: [],
-    notes: ''
-  });
+  const [activeTab, setActiveTab] = useState('board'); // board, list, timeline, files, notes
+  const [showInvite, setShowInvite] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  const [showAdd, setShowAdd] = useState(false);
+  const [members, setMembers] = useState(sampleMembers);
+  const [filterState, setFilterState] = useState({});
+
+  // 프로젝트 정보 저장(수정)
+  const handleProjectSave = (updatedProject) => {
+    setProjects(projects.map(p => p.id === updatedProject.id ? updatedProject : p));
+    setToastMessage('프로젝트 정보가 저장되었습니다!');
+    setToastType('success');
+    setShowToast(true);
+  };
+  // 프로젝트 삭제
+  const handleProjectDelete = (project) => {
+    setProjects(projects.filter(p => p.id !== project.id));
+    setToastMessage('프로젝트가 삭제되었습니다!');
+    setToastType('success');
+    setShowToast(true);
+  };
+  // 프로젝트 아카이브
+  const handleProjectArchive = (project) => {
+    setProjects(projects.map(p => p.id === project.id ? { ...p, archived: true } : p));
+    setToastMessage('프로젝트가 아카이브되었습니다!');
+    setToastType('info');
+    setShowToast(true);
+  };
+  // 팀원 초대
+  const handleInvite = (emailOrName, role) => {
+    const newId = Date.now();
+    setMembers([...members, { id: newId, name: emailOrName, role }]);
+    setToastMessage(`${emailOrName}님을 초대했습니다!`);
+    setToastType('success');
+    setShowToast(true);
+  };
+  // 팀원 삭제
+  const handleRemoveMember = (id) => {
+    setMembers(members.filter(m => m.id !== id));
+    setToastMessage('팀원이 삭제되었습니다!');
+    setToastType('info');
+    setShowToast(true);
+  };
+  // 팀원 역할 변경
+  const handleRoleChange = (id, role) => {
+    setMembers(members.map(m => m.id === id ? { ...m, role } : m));
+    setToastMessage('팀원 역할이 변경되었습니다!');
+    setToastType('info');
+    setShowToast(true);
+  };
+  // 필터 적용
+  const handleFilter = (filterObj) => {
+    setFilterState(filterObj);
+    setToastMessage('필터가 적용되었습니다!');
+    setToastType('info');
+    setShowToast(true);
+  };
 
   const openProjectDetail = (project) => {
     setSelectedProject(project);
@@ -298,8 +359,8 @@ export default function ProjectManagement() {
   };
 
   // 새 프로젝트 추가
-  const handleAddProject = () => {
-    if (!newProject.name.trim() || !newProject.startDate || !newProject.endDate) {
+  const handleAddProject = (projectData) => {
+    if (!projectData.name.trim() || !projectData.startDate || !projectData.endDate) {
       setToastMessage('프로젝트명, 시작일, 종료일을 입력하세요.');
       setToastType('error');
       setShowToast(true);
@@ -307,59 +368,330 @@ export default function ProjectManagement() {
     }
     setProjects([
       {
-        ...newProject,
+        ...projectData,
         id: Date.now(),
         milestones: [],
         files: [],
-        notes: newProject.notes || ''
+        notes: projectData.notes || ''
       },
       ...projects
     ]);
     setShowAddModal(false);
-    setNewProject({ name: '', description: '', startDate: '', endDate: '', status: '진행 중', milestones: [], files: [], notes: '' });
     setToastMessage('새 프로젝트가 추가되었습니다!');
     setToastType('success');
     setShowToast(true);
   };
 
+  // 팀원 아바타 직접 구현
+  const TeamAvatars = ({ members }) => (
+    <div className="flex -space-x-2">
+      {members.slice(0, 3).map(m => (
+        <img key={m.id} src={m.avatar} alt={m.name} className="w-8 h-8 rounded-full border-2 border-white shadow" />
+      ))}
+      {members.length > 3 && (
+        <span className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-full text-xs font-bold border-2 border-white">+{members.length - 3}</span>
+      )}
+    </div>
+  );
+
+  // 전체 진행률 계산
+  const getTotalProgress = () => {
+    if (projects.length === 0) return 0;
+    const total = projects.reduce((acc, p) => acc + getProgressPercentage(p.milestones), 0);
+    return Math.round(total / projects.length);
+  };
+
+  // 탭바를 메인 컨텐츠 상단에 pill 스타일로 표시
+  const TabBar = () => (
+    <div className="max-w-7xl mx-auto px-4 py-4">
+      <div className="flex flex-row gap-2">
+        {[
+          { id: 'board', label: '보드', icon: <Layout className="w-4 h-4 mr-1" /> },
+          { id: 'list', label: '리스트', icon: <List className="w-4 h-4 mr-1" /> },
+          { id: 'timeline', label: '타임라인', icon: <Clock className="w-4 h-4 mr-1" /> },
+          { id: 'files', label: '파일', icon: <File className="w-4 h-4 mr-1" /> },
+          { id: 'notes', label: '노트', icon: <StickyNote className="w-4 h-4 mr-1" /> },
+        ].map(tab => (
+          <button
+            key={tab.id}
+            className={`flex items-center px-4 py-2 rounded-full border transition-all text-sm font-medium
+              ${activeTab === tab.id ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300 hover:bg-blue-50 hover:text-blue-700'}`}
+            onClick={() => setActiveTab(tab.id)}
+          >
+            {tab.icon}{tab.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+
+  // 보드(칸반) 뷰 구조 (상태별 컬럼, 카드, 빠른 할 일 추가)
+  const boardColumns = [
+    { id: 'todo', title: 'To Do', color: 'bg-gray-100' },
+    { id: 'inprogress', title: 'In Progress', color: 'bg-blue-50' },
+    { id: 'done', title: 'Done', color: 'bg-green-50' },
+  ];
+  // 프로젝트를 상태별로 분류(샘플: status 필드 활용)
+  const getColumnTasks = (colId) => {
+    if (colId === 'todo') return projects.filter(p => p.status === '진행 중');
+    if (colId === 'inprogress') return [];
+    if (colId === 'done') return projects.filter(p => p.status === '완료');
+    return [];
+  };
+  const BoardView = () => (
+    <div className="flex gap-6 overflow-x-auto py-8 min-h-[400px]">
+      {boardColumns.map(col => (
+        <div key={col.id} className={`w-80 flex-shrink-0 rounded-2xl shadow-md border border-gray-200 p-4 ${col.color} flex flex-col`}>
+          <div className="flex items-center gap-2 mb-4">
+            <span className="font-bold text-lg">{col.title}</span>
+            {col.id === 'todo' && <span className="text-xs text-gray-400">(진행 중)</span>}
+            {col.id === 'done' && <span className="text-xs text-gray-400">(완료)</span>}
+          </div>
+          <div className="flex-1 space-y-4">
+            {getColumnTasks(col.id).map(project => (
+              <ProjectCard key={project.id} project={project} />
+            ))}
+          </div>
+          <Button variant="ghost" className="mt-4 w-full">+ 할 일 추가</Button>
+        </div>
+      ))}
+    </div>
+  );
+
+  // 리스트 뷰
+  const ListView = () => (
+    <div className="overflow-x-auto">
+      <table className="min-w-full text-sm">
+        <thead>
+          <tr className="bg-gray-100">
+            <th className="px-4 py-2">프로젝트명</th>
+            <th className="px-4 py-2">상태</th>
+            <th className="px-4 py-2">담당자</th>
+            <th className="px-4 py-2">마감일</th>
+            <th className="px-4 py-2">진행률</th>
+          </tr>
+        </thead>
+        <tbody>
+          {projects.map(p => (
+            <tr key={p.id} className="border-b hover:bg-blue-50 transition">
+              <td className="px-4 py-2">{p.name}</td>
+              <td className="px-4 py-2">
+                <span className={`px-2 py-1 rounded-full text-xs font-medium
+                  ${p.status === '완료' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>
+                  {p.status}
+                </span>
+              </td>
+              <td className="px-4 py-2">{members[0]?.name || '-'}</td>
+              <td className="px-4 py-2">{p.endDate}</td>
+              <td className="px-4 py-2">{getProgressPercentage(p.milestones)}%</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  // 타임라인(간트차트) 뷰 - Linear/UXDesign 스타일
+  const TimelineView = () => (
+    <div className="py-6 px-2">
+      {projects.map(p => (
+        <div key={p.id} className="mb-10">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-bold text-lg">{p.name}</span>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium
+              ${p.status === '완료' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>{p.status}</span>
+          </div>
+          <div className="relative pl-6">
+            {/* 세로 타임라인 축 */}
+            <div className="absolute left-2 top-0 bottom-0 w-1 bg-gray-200 rounded-full" />
+            <ul className="space-y-6">
+              {p.milestones.map((m, idx) => (
+                <li key={m.id} className="relative flex items-center group">
+                  {/* 타임라인 점 */}
+                  <span className={`absolute left-[-10px] w-4 h-4 rounded-full border-2
+                    ${m.completed ? 'bg-green-500 border-green-500' : 'bg-white border-blue-400 group-hover:bg-blue-100'}`}></span>
+                  <div className="flex-1 flex items-center justify-between bg-white rounded-lg shadow-sm px-4 py-3 ml-4">
+                    <div>
+                      <span className={`font-medium ${m.completed ? 'line-through text-gray-400' : ''}`}>{m.title}</span>
+                      <span className="ml-2 text-xs text-gray-500">{m.dueDate}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-xs px-2 py-1 rounded-full
+                        ${m.completed ? 'bg-green-100 text-green-700' : (new Date(m.dueDate) < new Date() ? 'bg-red-100 text-red-700' : 'bg-blue-100 text-blue-700')}`}>{m.completed ? '완료' : (new Date(m.dueDate) < new Date() ? '지연' : '진행 중')}</span>
+                      <button
+                        className={`w-6 h-6 rounded-full border flex items-center justify-center
+                          ${m.completed ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-gray-400 hover:bg-blue-50'}`}
+                        title={m.completed ? '완료됨' : '완료로 체크'}
+                        // onClick={() => ...}
+                      >
+                        {m.completed ? <CheckCircle className="w-4 h-4" /> : <span className="w-2 h-2 bg-blue-400 rounded-full block" />}
+                      </button>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // 노트 뷰 
+  const NotesView = () => (
+    <div className="py-6 px-2">
+      {projects.map(p => (
+        <div key={p.id} className="mb-8">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-semibold text-base">{p.name}</span>
+            <span className="text-xs text-gray-400">{p.status}</span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {(p.notes ? [p.notes] : []).map((note, idx) => (
+              <div key={idx} className="bg-white border border-yellow-200 rounded-xl shadow-sm p-4 flex flex-col gap-2 hover:shadow-md transition">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">작성일: {new Date().toLocaleDateString()}</span>
+                  {/* <button className="text-gray-400 hover:text-red-500">삭제</button> */}
+                </div>
+                <div className="text-gray-800 text-sm whitespace-pre-line">{note}</div>
+                {/* 태그/담당자 등 추가 가능 */}
+              </div>
+            ))}
+            {!p.notes && (
+              <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-6 text-center text-gray-400">
+                노트가 없습니다.<br />새 노트를 추가해보세요!
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
+      {/* 플로팅 노트 추가 버튼 등도 추가 가능 */}
+    </div>
+  );
+
+  // 파일 뷰 (FilesView) 구현
+  const FilesView = () => (
+    <div className="py-6 px-2">
+      {projects.map(p => (
+        <div key={p.id} className="mb-10">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-bold text-lg">{p.name}</span>
+            <span className={`px-2 py-1 rounded-full text-xs font-medium
+              ${p.status === '완료' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}`}>{p.status}</span>
+          </div>
+          <div className="space-y-2 mb-4">
+            {p.files.length === 0 ? (
+              <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-6 text-center text-gray-400">
+                첨부된 파일이 없습니다.<br />자료를 추가해보세요!
+              </div>
+            ) : (
+              p.files.map(file => (
+                <div key={file.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100">
+                  {file.type === 'link' ? (
+                    <Link className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                  ) : file.type === 'image' ? (
+                    <span className="text-lg">🖼️</span>
+                  ) : (
+                    <FileText className="w-5 h-5 text-gray-600 flex-shrink-0" />
+                  )}
+                  <span className="flex-grow text-sm text-gray-700 truncate">{file.name}</span>
+                  <button className="text-red-600 hover:text-red-800" title="삭제">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))
+            )}
+          </div>
+          {/* 업로드 영역 (실제 업로드 기능은 추후 구현) */}
+          <div className="mt-4 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors cursor-pointer">
+            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-gray-500">파일을 드래그하거나 클릭하여 업로드</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* 해더 */}
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
+      {/* 해더 직접 작성 */}
       <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-0">
-        <div className="max-w mx-auto px-4 py-2 flex items-center justify-between">
-          <div>
+        <div className="max-w mx-auto px-4 py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+          {/* 좌측: 타이틀/설명 */}
+          <div className="flex flex-col min-w-[180px]">
             <h1 className="text-2xl font-bold text-gray-900">프로젝트 관리</h1>
             <p className="text-sm text-gray-600">진행 중인 프로젝트를 한눈에 관리하세요!</p>
           </div>
-          <Button variant="primary" className="flex items-center gap-2" onClick={() => setShowAddModal(true)}>
-            <Plus className="w-4 h-4" /> 새 프로젝트
-          </Button>
+          {/* 중앙: 진행률/팀원 */}
+          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 flex-1 justify-center md:justify-start">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500">전체 진행률</span>
+              <div className="w-28"><ProgressBar value={getTotalProgress()} /></div>
+              <span className="text-xs text-blue-700 font-bold ml-1">{getTotalProgress()}%</span>
+            </div>
+            <TeamAvatars members={members} />
+          </div>
+          {/* 우측: 액션 버튼/새 프로젝트 */}
+          <div className="flex gap-2 mt-2 md:mt-0">
+            <Button variant="ghost" className="flex items-center gap-1" onClick={() => { setSelectedProject(projects[0]); setShowSettings(true); }}><Settings className="w-4 h-4" />설정</Button>
+            <Button variant="ghost" className="flex items-center gap-1" onClick={() => setShowInvite(true)}><Users className="w-4 h-4" />팀원 초대</Button>
+            <Button variant="ghost" className="flex items-center gap-1" onClick={() => setShowFilter(true)}><Filter className="w-4 h-4" />필터</Button>
+            <Button variant="primary" className="flex items-center gap-2" onClick={() => setShowAdd(true)}>
+              <Plus className="w-4 h-4" /> 새 프로젝트
+            </Button>
+          </div>
         </div>
+        <ProjectSettingsModal
+          open={showSettings}
+          onClose={() => setShowSettings(false)}
+          onSave={handleProjectSave}
+          onDelete={handleProjectDelete}
+          onArchive={handleProjectArchive}
+          project={selectedProject}
+        />
+        <ProjectInviteModal
+          open={showInvite}
+          onClose={() => setShowInvite(false)}
+          onInvite={handleInvite}
+          members={members}
+          onRemove={handleRemoveMember}
+          onRoleChange={handleRoleChange}
+        />
+        <ProjectFilterModal
+          open={showFilter}
+          onClose={() => setShowFilter(false)}
+          onFilter={handleFilter}
+          filterState={filterState}
+          members={members}
+        />
+        <ProjectAddModal
+          open={showAdd}
+          onClose={() => setShowAdd(false)}
+          onAdd={handleAddProject}
+          members={members}
+        />
       </div>
-      {/* 메인 컨테이너 */}
+      {/* 탭바, 메인 컨텐츠 등 기존 구조 유지 */}
+      <TabBar />
       <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-white rounded-2xl shadow-md border border-gray-200 p-8">
-          {/* 프로젝트 카드 리스트 */}
-          {projects.length === 0 ? (
-            <div className="text-center text-gray-400 py-12">아직 등록된 프로젝트가 없습니다.</div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {projects.map(project => (
-                <ProjectCard key={project.id} project={project} />
-              ))}
-            </div>
-          )}
-          {/* 프로젝트 상세 슬라이드 */}
+          {/* 탭별 뷰 렌더링 */}
+          {activeTab === 'board' && <BoardView />}
+          {activeTab === 'list' && <ListView />}
+          {activeTab === 'timeline' && <TimelineView />}
+          {activeTab === 'files' && <FilesView />}
+          {activeTab === 'notes' && <NotesView />}
+          {/* 프로젝트 상세 슬라이드, Toast 등 기존 코드 유지 */}
           {selectedProject && (
             <div className="mt-8">
               <ProjectDetail project={selectedProject} />
             </div>
           )}
-          {/* 새 프로젝트 추가 모달, Toast 등 기존 코드 유지 */}
           <Modal open={showAddModal} onClose={() => setShowAddModal(false)}>
             {/* ...기존 모달 코드... */}
             <Button onClick={handleAddProject}>추가</Button>
           </Modal>
+          {/* <InviteModal /> */}
           <Toast open={showToast} onClose={() => setShowToast(false)} type={toastType}>{toastMessage}</Toast>
         </div>
       </div>
