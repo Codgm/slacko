@@ -1,8 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, Play } from 'lucide-react';
 import Breadcrumb from '../../components/common/Breadcrumb';
 import WeeklyProgress from '../../components/common/WeeklyProgress';
-import HighlightableText from '../../components/common/HighlightableText';
 import { useParams, useNavigate } from 'react-router-dom';
 
 // 원서 상세 페이지

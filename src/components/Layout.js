@@ -8,17 +8,9 @@ import {
   Calendar,
   Book,
   Menu,
-  ChevronRight,
   ChevronsLeft,
-  PenTool,
-  Lightbulb,
-  Zap,
-  GraduationCap,
   BarChart3,
-  BookMarked,
   NotebookPen,
-  BookmarkIcon,
-  X
 } from 'lucide-react';
 import FloatingCalender from './FloatingCalender';
 

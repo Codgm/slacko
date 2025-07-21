@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext, useParams } from 'react-router-dom';
-import {  Search, Settings, Home, Book, NotebookPen, Lightbulb, BarChart3, BookmarkIcon, Menu, X, Highlighter, MessageSquare, Eye, EyeOff } from 'lucide-react';
+import { Search, Settings, NotebookPen, X, MessageSquare, Eye } from 'lucide-react';
 import Breadcrumb from '../../components/common/Breadcrumb';
 import TextbookContentView from '../../components/textbook/TextbookContentView';
 import NoteBookView from '../../components/textbook/NoteBookView';
@@ -20,7 +20,7 @@ const TextbookStudyPage = () => {
   const [studyTimer, setStudyTimer] = useState(0);
   const [allNotes, setAllNotes] = useState([]);
 
-  // UI 상태 (누락되었던 부분 추가)
+  // UI 상태 
   const [selectedText, setSelectedText] = useState('');
   const [selectionPosition, setSelectionPosition] = useState(null);
   const [showNoteDialog, setShowNoteDialog] = useState(false);
@@ -74,7 +74,7 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
       })) : []);
       setStudyTimer(found.studyTime || 0);
     }
-  }, [id]);
+  }, [id, book]);
 
   // highlights -> allNotes 동기화 (노트 패널/뷰용 데이터)
   useEffect(() => {

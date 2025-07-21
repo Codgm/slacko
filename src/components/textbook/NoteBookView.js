@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Clock, BookOpen, Target, TrendingUp, Tag, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BookOpen, Tag, Calendar } from 'lucide-react';
 
 const NoteBookView = ({ notes }) => {
   const [page, setPage] = useState(0);

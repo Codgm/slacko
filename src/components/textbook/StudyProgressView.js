@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { ChevronLeft, ChevronRight, Clock, BookOpen, Target, TrendingUp, Tag, Calendar } from 'lucide-react';
 
 const StudyProgressView = ({ studyPlan, progress }) => {

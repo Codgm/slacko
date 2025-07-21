@@ -1,6 +1,5 @@
 import React from 'react';
 import { BookOpen, Target, BookmarkIcon, PenTool, ChevronLeft, ChevronRight, NotebookPen, MessageSquare, X } from 'lucide-react';
-import Breadcrumb from '../common/Breadcrumb';
 import HighlightableText from '../common/HighlightableText';
 import NotePanel from '../notes/NotePanel';
 
