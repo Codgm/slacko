@@ -13,9 +13,6 @@ const TextbookStudyPage = () => {
   const activeView = context ? context.activeView : 'content';
   const { textbookTitle } = location.state || {}; // 상세 페이지에서 전달받은 제목
 
-  // 원서 객체 상태
-  const [book, setBook] = useState(null);
-  
   // 데이터 상태 (원서 객체 기반)
   const [currentPage, setCurrentPage] = useState(1);
   const [plan, setPlan] = useState([]);
@@ -59,7 +56,6 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
     const books = JSON.parse(localStorage.getItem('textbooks') || '[]');
     const found = books.find(b => String(b.id) === String(id));
     if (found) {
-      setBook(found);
       setCurrentPage(found.currentPage || 1);
       setPlan(found.plan || []);
       // notes를 highlights 형식으로 변환하여 로드
@@ -98,7 +94,7 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
   
   // 주요 데이터 변경 시 localStorage 업데이트
   useEffect(() => {
-    if (!book || !id) return;
+    if (!id) return;
     
     const books = JSON.parse(localStorage.getItem('textbooks') || '[]');
     const idx = books.findIndex(b => String(b.id) === String(id));
@@ -134,7 +130,7 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isStudying, book]);
+  }, [isStudying]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -242,7 +238,7 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
       case 'notes':
         return <NoteBookView notes={allNotes} />;
       case 'progress':
-        return <StudyProgressView studyPlan={plan} progress={{ todayTime: studyTimer, percent: book ? (currentPage / book.totalPages * 100).toFixed(1) : 0 }} />;
+        return <StudyProgressView studyPlan={plan} progress={{ todayTime: studyTimer, percent: 0 }} />;
       case 'content':
       default:
         return (
@@ -288,12 +284,12 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
       <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-0">
         <div className="max-w mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex flex-col min-w-[180px]">
-            <h1 className="text-2xl font-bold text-gray-900">{book ? book.title : textbookTitle || "원서 학습"}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{textbookTitle || "원서 학습"}</h1>
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
               <Eye className="w-4 h-4" />
-              <span>페이지 {currentPage} / {book ? book.totalPages : 0}</span>
+              <span>페이지 {currentPage}</span>
             </div>
             <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
               <span>학습시간: {formatTime(studyTimer)}</span>
