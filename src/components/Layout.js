@@ -1,29 +1,56 @@
 // Layout.js - 스크롤 문제가 해결된 레이아웃 컴포넌트
 import { useState } from 'react';
 import { Link, useLocation, Outlet } from 'react-router-dom';
-import { 
-  Home, 
-  BookOpen, 
-  FolderOpen, 
-  Calendar, 
-  Book, 
-  Menu, 
+import {
+  Home,
+  BookOpen,
+  FolderOpen,
+  Calendar,
+  Book,
+  Menu,
   ChevronRight,
-  ChevronsLeft
+  ChevronsLeft,
+  PenTool,
+  Lightbulb,
+  Zap,
+  GraduationCap,
+  BarChart3,
+  BookMarked,
+  NotebookPen,
+  BookmarkIcon,
+  X
 } from 'lucide-react';
-import FloatingCalendar from './FloatingCalender';
+import FloatingCalender from './FloatingCalender';
+
+const studyNavItems = [
+  { id: 'content', label: '원서 본문', icon: BookOpen, path: 'content' },
+  { id: 'notes', label: '노트', icon: NotebookPen, path: 'notes' },
+  { id: 'progress', label: '학습 현황', icon: BarChart3, path: 'progress' },
+];
 
 const Layout = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true); // 일반 nav용
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false); // 학습 nav용
+  const [activeView, setActiveView] = useState('content'); // 학습 nav용
   const location = useLocation();
+  // /textbook/:id/study(및 하위) 경로 감지
+  const isStudyPage = /^\/textbook\/[^/]+\/study/.test(location.pathname);
+  // id 추출 (학습 nav 링크용)
+  let id = null;
+  if (isStudyPage) {
+    const match = location.pathname.match(/^\/textbook\/(\w+)\/study/);
+    id = match ? match[1] : null;
+  }
 
-  const menuItems = [
+  // 기존 메뉴
+  const mainMenuItems = [
     {
       id: 'dashboard',
       title: '대시보드',
       icon: Home,
       path: '/dashboard',
-      exact: true
+      exact: true,
+      color: 'blue'
     },
     {
       id: 'study',
@@ -37,108 +64,101 @@ const Layout = () => {
       title: '프로젝트 관리',
       icon: FolderOpen,
       path: '/project',
-      subPaths: ['/project/:id']
     },
     {
       id: 'textbook',
       title: '원서 관리',
       icon: Book,
       path: '/textbook',
-      subPaths: ['/textbook/:id']
     },
     {
       id: 'calendar',
-      title: '캘린더',
+      title: '학습 캘린더',
       icon: Calendar,
-      path: '/calendar'
-    }
+      path: '/calendar',
+    },
   ];
 
-  const isActiveRoute = (item) => {
-    if (item.exact) {
-      return location.pathname === item.path;
-    }
-    
-    if (location.pathname === item.path) return true;
-    
-    if (item.subPaths) {
-      return item.subPaths.some(subPath => {
-        const regex = new RegExp(subPath.replace(':id', '[^/]+'));
-        return regex.test(location.pathname);
-      });
-    }
-    
-    return location.pathname.startsWith(item.path);
+  // 학습 nav 클릭 시 activeView 변경
+  const handleStudyNavClick = (item) => {
+    setActiveView(item.id);
   };
 
   return (
-    // 전체 컨테이너: 고정 높이, 오버플로우 숨김
-    <div className="flex h-screen bg-gray-50 overflow-hidden">
+    <div className="flex h-screen bg-gradient-to-br from-gray-50 to-white overflow-hidden">
       {/* 사이드바 */}
-      <div className={`${sidebarOpen ? 'w-64' : 'w-16'} bg-white shadow-lg transition-all duration-300 flex flex-col flex-shrink-0`}>
+      <div className={`bg-white shadow-xl border-r border-gray-100 transition-all duration-300 flex flex-col flex-shrink-0
+        ${isStudyPage ? (sidebarCollapsed ? 'w-16' : 'w-72') : (sidebarOpen ? 'w-72' : 'w-16')}`}>
         {/* 헤더 */}
-        <div className="p-4 border-b flex-shrink-0">
+        <div className="p-4 border-b border-gray-100 flex-shrink-0">
           <div className="flex items-center justify-between">
-            {sidebarOpen && (
-              <h1 className="text-xl font-bold text-gray-800">학습 관리</h1>
+            {((isStudyPage && !sidebarCollapsed) || (!isStudyPage && sidebarOpen)) && (
+              <div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                  {isStudyPage ? '학습 집중 모드' : 'Slacko'}
+                </h1>
+              </div>
             )}
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 hover:bg-gray-100 rounded-lg"
-            >
-              {sidebarOpen ? <ChevronsLeft size={20} /> : <Menu size={20} />}
-            </button>
+            {isStudyPage ? (
+              <button
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-2 hover:bg-gray-50 rounded-xl transition-colors border border-gray-100 hover:border-gray-200 shadow-sm"
+              >
+                {sidebarCollapsed ? <Menu size={20} /> : <ChevronsLeft size={20} />}
+              </button>
+            ) : (
+              <button
+                onClick={() => setSidebarOpen(!sidebarOpen)}
+                className="p-2 hover:bg-gray-50 rounded-xl transition-colors border border-gray-100 hover:border-gray-200 shadow-sm"
+              >
+                {sidebarOpen ? <ChevronsLeft size={20} /> : <Menu size={20} />}
+              </button>
+            )}
           </div>
         </div>
-
-        {/* 메뉴 - 스크롤 가능 영역 */}
+        {/* nav 영역 */}
         <nav className="flex-1 p-2 space-y-2 overflow-y">
-          {menuItems.map(item => {
-            const Icon = item.icon;
-            const isActive = isActiveRoute(item);
-            
-            return (
-              <Link
-                key={item.id}
-                to={item.path}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
-                  isActive 
-                    ? 'bg-blue-50 text-blue-600 border border-blue-200' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
-              >
-                <Icon size={20} />
-                {sidebarOpen && (
-                  <>
-                    <span className="font-medium">{item.title}</span>
-                    {isActive && location.pathname !== item.path && (
-                      <ChevronRight size={16} className="ml-auto" />
-                    )}
-                  </>
-                )}
-              </Link>
-            );
-          })}
+          {isStudyPage && id ? (
+            <ul className="space-y-2">
+              {studyNavItems.map((item) => (
+                <li key={item.id}>
+                  <button
+                    onClick={() => handleStudyNavClick(item)}
+                    className={`flex items-center gap-3 px-4 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-blue-50 transition-colors w-full text-left
+                      ${activeView === item.id ? 'bg-blue-100 text-blue-700 font-bold' : ''}`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {!sidebarCollapsed && <span>{item.label}</span>}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <ul className="space-y-2">
+              {mainMenuItems.map((item) => (
+                <li key={item.id}>
+                  <Link
+                    to={item.path}
+                    className={`flex items-center gap-3 px-4 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-blue-50 transition-colors
+                      ${location.pathname.startsWith(item.path) ? 'bg-blue-100 text-blue-700 font-bold' : ''}`}
+                  >
+                    <item.icon className="w-5 h-5" />
+                    {sidebarOpen && <span>{item.title}</span>}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
         </nav>
-        
-        <FloatingCalendar />
-        
-        {/* 하단 정보 */}
-        {sidebarOpen && (
-          <div className="p-4 border-t flex-shrink-0">
-            <div className="text-xs text-gray-500 text-center">
-              <p>학습 관리 시스템 v1.0</p>
-            </div>
-          </div>
-        )}
+        {/* 캘린더 등 부가 영역 */}
+        <div className="px-2 pb-4">
+          {!isStudyPage && <FloatingCalender />}
+        </div>
       </div>
-
-      {/* 메인 콘텐츠 - 스크롤 가능 영역 */}
-      <div className="flex-1 flex flex-col min-w-0">
-        <div className="flex-1 overflow-y-auto">
-          <div>
-            <Outlet />
-          </div>
+      {/* 메인 컨텐츠 */}
+      <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <Outlet context={{ activeView }} />
         </div>
       </div>
     </div>
