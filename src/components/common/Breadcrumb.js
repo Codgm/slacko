@@ -1,61 +1,84 @@
-import { Link, useLocation, matchPath } from 'react-router-dom';
-
-const pathMap = [
-  { path: '/textbook', label: '원서 관리' },
-  { path: '/textbook/:id', label: '원서 상세' },
-  { path: '/textbook/:id/study', label: '원서 학습' },
-];
-
-function extractIdFromPath(pathname) {
-  const match = pathname.match(/\/textbook\/(\w+)/);
-  return match ? match[1] : null;
-}
-
-function getBreadcrumbs(pathname, bookTitle) {
-  const crumbs = [];
-  for (const map of pathMap) {
-    const match = matchPath({ path: map.path, end: false }, pathname);
-    if (match) {
-      let url = map.path;
-      if (map.path.includes(':id') && match.params.id) {
-        url = map.path.replace(':id', match.params.id);
-      }
-      let label = map.label;
-      // 원서 상세와 원서 학습에 원서 이름 반영
-      if (map.path === '/textbook/:id' && bookTitle) {
-        label = `${bookTitle} 상세`;
-      }
-      if (map.path === '/textbook/:id/study' && bookTitle) {
-        label = `${bookTitle} 학습`;
-      }
-      crumbs.push({ label, to: url });
-    }
-  }
-  return crumbs;
-}
+import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { ChevronRight, Home } from 'lucide-react';
 
 const Breadcrumb = () => {
   const location = useLocation();
-  // 원서 이름은 location.state?.title → localStorage 순서로 시도
-  let bookTitle = location.state?.title;
-  if (!bookTitle) {
-    const id = extractIdFromPath(location.pathname);
-    if (id) {
-      bookTitle = localStorage.getItem(`book-title-${id}`) || '';
+  const navigate = useNavigate();
+  const { textbookTitle } = location.state || {};
+  const pathnames = location.pathname.split('/').filter((x) => x);
+
+  const handleNavigate = (path) => {
+    navigate(path, { state: location.state });
+  };
+
+  const generateCrumbs = () => {
+    const homeCrumb = (
+      <li key="home">
+        <button type="button" onClick={() => handleNavigate('/dashboard')} className="text-gray-500 hover:text-indigo-600 flex items-center">
+          <Home className="h-4 w-4" />
+          <span className="sr-only">Home</span>
+        </button>
+      </li>
+    );
+
+    const crumbs = [homeCrumb];
+
+    if (pathnames[0] === 'textbook') {
+      const textbookManagementPath = '/textbook';
+      const isCurrentPage = pathnames.length === 1;
+
+      crumbs.push(<li key="separator-textbook" className="flex items-center"><ChevronRight className="h-4 w-4 text-gray-400 mx-2" /></li>);
+      crumbs.push(
+        <li key="textbook-management">
+          {isCurrentPage ? (
+            <span className="font-semibold text-gray-600">원서 관리</span>
+          ) : (
+            <button type="button" onClick={() => handleNavigate(textbookManagementPath)} className="text-gray-500 hover:text-indigo-600">
+              원서 관리
+            </button>
+          )}
+        </li>
+      );
     }
-  }
-  const crumbs = getBreadcrumbs(location.pathname, bookTitle);
-  if (crumbs.length === 0) return null;
+
+    if (pathnames.length >= 2 && pathnames[0] === 'textbook' && !isNaN(Number(pathnames[1]))) {
+      const textbookId = pathnames[1];
+      const textbookDetailPath = `/textbook/${textbookId}`;
+      const isCurrentPage = pathnames.length === 2;
+      const detailText = textbookTitle ? `${textbookTitle} 상세` : '원서 상세';
+
+      crumbs.push(<li key="separator-detail" className="flex items-center"><ChevronRight className="h-4 w-4 text-gray-400 mx-2" /></li>);
+      crumbs.push(
+        <li key="textbook-detail">
+          {isCurrentPage ? (
+            <span className="font-semibold text-gray-600">{detailText}</span>
+          ) : (
+            <button type="button" onClick={() => handleNavigate(textbookDetailPath)} className="text-gray-500 hover:text-indigo-600">
+              {detailText}
+            </button>
+          )}
+        </li>
+      );
+    }
+    
+    if (pathnames.length === 3 && pathnames[2] === 'study') {
+      crumbs.push(<li key="separator-study" className="flex items-center"><ChevronRight className="h-4 w-4 text-gray-400 mx-2" /></li>);
+      crumbs.push(
+        <li key="textbook-study" className="font-semibold text-gray-600">
+          원서 학습
+        </li>
+      );
+    }
+
+    return crumbs;
+  };
+
   return (
-    <nav className="flex items-center text-sm text-gray-500 space-x-2 mb-4" aria-label="Breadcrumb">
-      {crumbs.map((crumb, idx) => (
-        <span key={crumb.to} className="flex items-center">
-          <Link to={crumb.to} className="hover:underline hover:text-blue-600 transition-colors">
-            {crumb.label}
-          </Link>
-          {idx < crumbs.length - 1 && <span className="mx-2">&gt;</span>}
-        </span>
-      ))}
+    <nav className="mb-6" aria-label="Breadcrumb">
+      <ol className="list-none p-0 flex items-center text-sm">
+        {generateCrumbs()}
+      </ol>
     </nav>
   );
 };

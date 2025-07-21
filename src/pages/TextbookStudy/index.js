@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext, useParams } from 'react-router-dom';
+import { useOutletContext, useParams, useLocation } from 'react-router-dom';
 import { Search, Settings, NotebookPen, X, MessageSquare, Eye } from 'lucide-react';
 import Breadcrumb from '../../components/common/Breadcrumb';
 import TextbookContentView from '../../components/textbook/TextbookContentView';
@@ -8,7 +8,10 @@ import StudyProgressView from '../../components/textbook/StudyProgressView';
 
 const TextbookStudyPage = () => {
   const { id } = useParams();
-  const { activeView } = useOutletContext();
+  const location = useLocation();
+  const context = useOutletContext();
+  const activeView = context ? context.activeView : 'content';
+  const { textbookTitle } = location.state || {}; // 상세 페이지에서 전달받은 제목
 
   // 원서 객체 상태
   const [book, setBook] = useState(null);
@@ -29,7 +32,6 @@ const TextbookStudyPage = () => {
   const [highlightColor, setHighlightColor] = useState('bg-yellow-200');
   const [isStudying, setIsStudying] = useState(false);
   const [isNotePanelVisible, setIsNotePanelVisible] = useState(false);
-  const [hoveredHighlightId, setHoveredHighlightId] = useState(null);
 
   const textbookContent = `Process Control Block (PCB)는 운영체제가 각 프로세스를 관리하기 위해 유지하는 자료구조입니다. PCB는 프로세스의 상태 정보를 체계적으로 저장하고 관리하는 역할을 합니다.
 
@@ -74,12 +76,12 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
       })) : []);
       setStudyTimer(found.studyTime || 0);
     }
-  }, [id, book]);
+  }, [id]);
 
   // highlights -> allNotes 동기화 (노트 패널/뷰용 데이터)
   useEffect(() => {
     const notesFromHighlights = highlights
-      .filter(h => h.note)
+      .filter(h => h.note && h.note.trim() !== '') // 빈 노트 필터링
       .map(h => ({
         id: h.id,
         title: h.text,
@@ -96,15 +98,15 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
   
   // 주요 데이터 변경 시 localStorage 업데이트
   useEffect(() => {
-    if (!book) return;
+    if (!book || !id) return;
+    
     const books = JSON.parse(localStorage.getItem('textbooks') || '[]');
     const idx = books.findIndex(b => String(b.id) === String(id));
     if (idx !== -1) {
-      books[idx] = {
+      const updatedBook = {
         ...books[idx],
         currentPage,
         plan,
-        // highlights를 notes 형식으로 변환하여 저장
         notes: highlights.map(h => ({
           id: h.id,
           title: h.text,
@@ -114,14 +116,15 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
           createdAt: h.createdAt,
           updatedAt: h.updatedAt,
           type: h.type,
-          tags: h.tags
+          tags: h.tags,
         })),
-        studyTime: studyTimer
+        studyTime: studyTimer,
       };
+      
+      books[idx] = updatedBook;
       localStorage.setItem('textbooks', JSON.stringify(books));
-      setBook(books[idx]); // 로컬 book 상태도 동기화
     }
-  }, [currentPage, plan, highlights, studyTimer]);
+  }, [currentPage, plan, highlights, studyTimer, id]); // book 제외하여 무한루프 방지
 
   useEffect(() => {
     let interval;
@@ -131,7 +134,7 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isStudying]);
+  }, [isStudying, book]);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -162,78 +165,73 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
   };
 
   const handleAddNote = () => {
-    setShowQuickActions(false);
     setShowNoteDialog(true);
   };
 
   const handleOpenNotePanel = () => {
-    setShowQuickActions(false);
+    // 그냥 패널만 열 때는 selectedText가 없을 수 있음
+    // 텍스트 선택 후 '노트 추가' 액션을 통해 열 때는 selectedText가 있음
     setIsNotePanelVisible(true);
+    setShowQuickActions(false);
   };
 
-  const handleHighlightMouseEnter = (highlight) => {
-    setHoveredHighlightId(highlight.id);
+  const handleHighlightClick = (highlightId) => {
+    console.log('Clicked on highlight:', highlightId);
+    // 향후 하이라이트 클릭 시 노트 패널의 해당 노트로 스크롤하는 등의 기능 추가 가능
   };
 
-  const handleHighlightMouseLeave = () => {
-    setHoveredHighlightId(null);
-  };
-
-  const handleSaveNote = () => {
-    if (selectedText && noteContent) {
+  const handleSaveNote = () => { // 이건 메모 추가 다이얼로그 저장
+    if (!noteContent.trim()) {
+      alert('메모 내용을 입력해주세요.');
+      return;
+    }
+    if (selectedText) {
       const newHighlight = {
         id: Date.now(),
         text: selectedText,
-        color: highlightColor,
-        note: noteContent,
         page: currentPage,
+        note: noteContent,
+        color: highlightColor,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         type: 'memo',
         tags: [],
       };
-      setHighlights([...highlights, newHighlight]);
+      setHighlights(prev => [...prev, newHighlight]);
+      setShowNoteDialog(false);
+      setNoteContent('');
+      setSelectedText(''); // 메모 저장 후 선택된 텍스트 초기화
+      setShowQuickActions(false);
     }
-    setShowNoteDialog(false);
-    setSelectedText('');
-    setNoteContent('');
   };
 
   const handleNotePanelSave = (noteData) => {
-    if (!highlights.find(h => h.id === noteData.id)) {
-      const colorMap = {
-        'yellow': 'bg-yellow-200', 'blue': 'bg-blue-200', 'green': 'bg-green-200',
-        'red': 'bg-pink-200', 'purple': 'bg-purple-200', 'gray': 'bg-gray-200'
-      };
-      const newHighlight = {
-        id: noteData.id,
-        text: noteData.title,
-        color: colorMap[noteData.color] || 'bg-yellow-200',
-        note: noteData.content,
-        page: noteData.page,
-        createdAt: noteData.createdAt,
-        updatedAt: noteData.updatedAt,
-        type: noteData.type,
-        tags: noteData.tags
-      };
-      setHighlights([...highlights, newHighlight]);
-    } else {
-      const colorMap = {
-        'yellow': 'bg-yellow-200', 'blue': 'bg-blue-200', 'green': 'bg-green-200',
-        'red': 'bg-pink-200', 'purple': 'bg-purple-200', 'gray': 'bg-gray-200'
-      };
-      setHighlights(highlights.map(h => 
-        h.id === noteData.id 
-          ? { ...h, note: noteData.content, color: colorMap[noteData.color] || h.color, type: noteData.type, tags: noteData.tags, updatedAt: noteData.updatedAt }
-          : h
-      ));
-    }
-  };
+    const newHighlight = {
+      id: noteData.id || `highlight-${Date.now()}`,
+      text: noteData.title, // NotePanel의 title이 하이라이트된 텍스트
+      page: noteData.page,
+      note: noteData.content,
+      color: noteData.color,
+      createdAt: noteData.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      type: noteData.type,
+      tags: noteData.tags,
+    };
 
-  const handleHighlightClick = (highlight) => {
-    setSelectedText(highlight.text);
-    setNoteContent(highlight.note);
-    setShowNoteDialog(true);
+    setHighlights(prev => {
+        const existingIndex = prev.findIndex(h => h.id === newHighlight.id);
+        if (existingIndex > -1) {
+            const updatedHighlights = [...prev];
+            updatedHighlights[existingIndex] = newHighlight;
+            return updatedHighlights;
+        } else {
+            return [...prev, newHighlight];
+        }
+    });
+    
+    // NotePanel에서 저장 후 패널을 닫을지는 정책에 따라 결정
+    // setIsNotePanelVisible(false); 
+    setSelectedText(''); // 저장 후 선택된 텍스트 초기화
   };
 
   const toggleStudy = () => setIsStudying(!isStudying);
@@ -261,7 +259,11 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
             selectedText={selectedText}
             shouldOpenEditor={isNotePanelVisible && selectedText && selectedText.length > 0}
             handleNotePanelSave={handleNotePanelSave}
-            onEditorOpened={() => setSelectedText('')}
+            onEditorOpened={() => {
+              // 편집기가 열리고 나면 selectedText를 초기화해서
+              // 다음에 패널을 그냥 열 때 편집기가 또 열리는 것을 방지
+              setSelectedText('');
+            }}
             showQuickActions={showQuickActions}
             selectionPosition={selectionPosition}
             highlightColors={highlightColors}
@@ -286,7 +288,7 @@ Context Switching이 발생할 때, 운영체제는 현재 실행 중인 프로�
       <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-0">
         <div className="max-w mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex flex-col min-w-[180px]">
-            <h1 className="text-2xl font-bold text-gray-900">{book ? book.title : "원서 학습"}</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{book ? book.title : textbookTitle || "원서 학습"}</h1>
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">

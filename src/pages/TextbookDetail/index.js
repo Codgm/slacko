@@ -1,6 +1,7 @@
 import Breadcrumb from '../../components/common/Breadcrumb';
 import WeeklyProgress from '../../components/common/WeeklyProgress';
 import { useParams, useNavigate } from 'react-router-dom';
+import { Play } from 'lucide-react';
 
 // 원서 상세 페이지
 const TextbookDetailPage = () => {
@@ -8,7 +9,7 @@ const TextbookDetailPage = () => {
   const navigate = useNavigate();
 
   const handleStartStudy = () => {
-    navigate(`/textbook/${id}/study`);
+    navigate(`/textbook/${id}/study`, { state: { textbookTitle: textbook.title } });
   };
 
   const textbook = {
