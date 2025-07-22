@@ -36,7 +36,7 @@ const HighlightableText = ({ text, onTextSelect, highlights = [], onHighlightCli
           const offset = range.startOffset;
           let start = offset;
           let end = offset;
-          while (start > 0 && !/\s|[.,!?;:()\[\]{}=+\-*/]/.test(text[start - 1])) start--;
+          while (start > 0 && !/\s|[.,!?;:()[\]{}=+\-*/]/.test(text[start - 1])) start--;
           while (end < text.length && !/[.!?;\n]/.test(text[end])) end++;
           if (end < text.length && /[.!?;]/.test(text[end])) end++;
           const selectedText = text.substring(start, end).trim();

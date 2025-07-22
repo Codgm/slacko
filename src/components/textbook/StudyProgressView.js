@@ -1,5 +1,5 @@
 import React from 'react';
-import { ChevronLeft, ChevronRight, Clock, BookOpen, Target, TrendingUp, Tag, Calendar } from 'lucide-react';
+import { Clock, BookOpen, Target, TrendingUp } from 'lucide-react';
 
 const StudyProgressView = ({ studyPlan, progress }) => {
   const todayTime = progress?.todayTime || 3420; // 예시: 57분
