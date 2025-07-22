@@ -435,14 +435,32 @@ const StudyCalendar = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 해더 - 카드 바깥 */}
-      <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-0">
-        <div className="max-w mx-auto px-4 py-3.5 flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            <span role="img" aria-label="캘린더">📅</span> 학습 캘린더
-          </h1>
-          <div className="mt-4 md:mt-0 flex gap-2">
-          <Button variant="primary" size="md" onClick={() => setShowAddModal(true)}>+ 일정 추가</Button>
-        </div>
+      <div className="bg-white/95 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-20 shadow-sm">
+        <div className="max-w mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-pink-500 to-rose-600 rounded-xl shadow-lg">
+              <Calendar size={24} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+                학습 캘린더
+              </h1>
+              <p className="text-sm text-slate-600 mt-0.5">체계적인 일정 관리로 학습 효과를 극대화하세요</p>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-slate-50/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-200/50">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-slate-600">오늘 3개 일정</span>
+            </div>
+            <button 
+              className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:from-pink-600 hover:to-rose-700 transition-all duration-300 flex items-center gap-2 font-medium"
+              onClick={() => setShowAddModal(true)}
+            >
+              <Plus size={18} /> 일정 추가
+            </button>
+          </div>
         </div>
       </div>
       {/* 메인 카드 */}

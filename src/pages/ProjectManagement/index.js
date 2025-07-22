@@ -3,7 +3,7 @@ import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
 import ProgressBar from '../../components/common/ProgressBar';
-import { Calendar, CheckCircle, FileText, Link, Plus, X, Upload, Trash2, Users, Settings, Filter, List, Layout, Clock, File, StickyNote } from 'lucide-react';
+import { Calendar, CheckCircle, FileText, Link, Plus, X, Upload, Trash2, Users, Settings, Filter, List, Layout, Clock, File, StickyNote, FolderOpen } from 'lucide-react';
 import ProjectSettingsModal from '../../components/project/ProjectSettingsModal';
 import ProjectInviteModal from '../../components/project/ProjectInviteModal';
 import ProjectFilterModal from '../../components/project/ProjectFilterModal';
@@ -615,30 +615,57 @@ export default function ProjectManagement() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50">
       {/* 해더 직접 작성 */}
-      <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-0">
-        <div className="max-w mx-auto px-4 py-2 flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+      <div className="bg-white/95 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-20 shadow-sm">
+        <div className="max-w mx-auto px-6 py-0.5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           {/* 좌측: 타이틀/설명 */}
-          <div className="flex flex-col min-w-[180px]">
-            <h1 className="text-2xl font-bold text-gray-900">프로젝트 관리</h1>
-            <p className="text-sm text-gray-600">진행 중인 프로젝트를 한눈에 관리하세요!</p>
+          <div className="flex items-center gap-4 min-w-[200px]">
+            <div className="p-3 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl shadow-lg">
+              <FolderOpen size={24} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+                프로젝트 관리
+              </h1>
+              <p className="text-sm text-slate-600 mt-0.5">진행 중인 프로젝트를 한눈에 관리하세요!</p>
+            </div>
           </div>
           {/* 중앙: 진행률/팀원 */}
-          <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 flex-1 justify-center md:justify-start">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-500">전체 진행률</span>
-              <div className="w-28"><ProgressBar value={getTotalProgress()} /></div>
-              <span className="text-xs text-blue-700 font-bold ml-1">{getTotalProgress()}%</span>
+          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-6 flex-1 justify-center md:justify-start">
+            <div className="flex items-center gap-3 bg-slate-50/80 backdrop-blur px-4 py-2.5 rounded-xl border border-slate-200/50">
+              <span className="text-xs font-medium text-slate-600">전체 진행률</span>
+              <div className="w-32"><ProgressBar value={getTotalProgress()} /></div>
+              <span className="text-sm font-bold text-violet-600 bg-violet-50 px-2 py-1 rounded-lg">
+                {getTotalProgress()}%
+              </span>
             </div>
             <TeamAvatars members={members} />
           </div>
           {/* 우측: 액션 버튼/새 프로젝트 */}
-          <div className="flex gap-2 mt-2 md:mt-0">
-            <Button variant="ghost" className="flex items-center gap-1" onClick={() => { setSelectedProject(projects[0]); setShowSettings(true); }}><Settings className="w-4 h-4" />설정</Button>
-            <Button variant="ghost" className="flex items-center gap-1" onClick={() => setShowInvite(true)}><Users className="w-4 h-4" />팀원 초대</Button>
-            <Button variant="ghost" className="flex items-center gap-1" onClick={() => setShowFilter(true)}><Filter className="w-4 h-4" />필터</Button>
-            <Button variant="primary" className="flex items-center gap-2" onClick={() => setShowAdd(true)}>
-              <Plus className="w-4 h-4" /> 새 프로젝트
-            </Button>
+          <div className="flex gap-2">
+            <button 
+              className="p-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all duration-200"
+              onClick={() => { setSelectedProject(projects[0]); setShowSettings(true); }}
+            >
+              <Settings size={18} />
+            </button>
+            <button 
+              className="p-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all duration-200"
+              onClick={() => setShowInvite(true)}
+            >
+              <Users size={18} />
+            </button>
+            <button 
+              className="p-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all duration-200"
+              onClick={() => setShowFilter(true)}
+            >
+              <Filter size={18} />
+            </button>
+            <button 
+              className="px-4 py-2.5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:from-violet-600 hover:to-purple-700 transition-all duration-300 flex items-center gap-2 font-medium"
+              onClick={() => setShowAdd(true)}
+            >
+              <Plus size={18} /> 새 프로젝트
+            </button>
           </div>
         </div>
         <ProjectSettingsModal

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Clock, Target, CheckCircle, User, Settings
+  Clock, Target, CheckCircle, User, Settings, Bell 
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Button from '../../components/common/Button';
@@ -217,16 +217,36 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* 해더 - 카드 바깥 */}
-      <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-0">
-        <div className="max-w mx-auto px-4 py-4 flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-2">
-            <span role="img" aria-label="대시보드">📊</span> 학습 대시보드
-          </h1>
-          <div className="mt-4 md:mt-0 flex gap-2">
-          <Button variant="ghost" size="sm"><Settings className="w-5 h-5" /></Button>
-          <Button variant="ghost" size="sm"><User className="w-5 h-5" /></Button>
-        </div>
+      <div className="flex-1 flex flex-col min-h-0 relative">
+        {/* 모던 상단 바 */}
+        <div className="bg-white/90 backdrop-blur-xl border-b border-slate-200/60 px-6 py-4 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold bg-gradient-to-r from-slate-900 via-blue-600 to-violet-600 bg-clip-text text-transparent">
+                📊
+              </span>
+              <h1 className="text-xl font-bold text-slate-900">학습 대시보드</h1>
+            </div>
+            {/* 브레드크럼 */}
+            <div className="hidden md:flex items-center gap-2 text-sm text-slate-500">
+              <span>홈</span>
+              <span>•</span>
+              <span className="text-slate-700 font-medium">대시보드</span>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <button className="p-2.5 hover:bg-slate-100 rounded-xl transition-all duration-200 relative group">
+              <Bell size={18} className="text-slate-600 group-hover:text-slate-800" />
+              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full animate-pulse"></div>
+            </button>
+            <button className="p-2.5 hover:bg-slate-100 rounded-xl transition-all duration-200 group">
+              <Settings size={18} className="text-slate-600 group-hover:text-slate-800" />
+            </button>
+            <button className="p-2.5 hover:bg-slate-100 rounded-xl transition-all duration-200 group">
+              <User size={18} className="text-slate-600 group-hover:text-slate-800" />
+            </button>
+          </div>
         </div>
       </div>
       {/* 메인 카드/콘텐츠 - Dashboard.js 구조 반영 */}

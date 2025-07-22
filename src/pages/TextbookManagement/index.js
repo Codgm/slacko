@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
-// import { Book, Plus } from 'lucide-react';
-import { Plus } from 'lucide-react';
+import { Plus, Book, Library } from 'lucide-react';
 
 export default function TextbookManagement() {
   const navigate = useNavigate();
@@ -153,6 +152,17 @@ export default function TextbookManagement() {
       '미시작': '📚'
     }[book.status];
 
+    // 원서 삭제 핸들러
+    const handleDelete = (e) => {
+      e.stopPropagation();
+      if (window.confirm('정말 이 원서를 삭제하시겠습니까?')) {
+        const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+        const updatedBooks = savedBooks.filter(b => b.id !== book.id);
+        localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
+        setBooks(updatedBooks);
+      }
+    };
+
     return (
       <div 
         className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 cursor-pointer border border-gray-100 overflow-hidden hover:border-blue-200"
@@ -172,6 +182,14 @@ export default function TextbookManagement() {
             <span className="mr-1">{statusIcon}</span>
             {book.status}
           </div>
+          {/* 삭제 버튼 */}
+          <button
+            className="absolute top-3 left-3 bg-red-100 text-red-600 rounded-full px-2 py-1 text-xs font-semibold shadow hover:bg-red-200 transition"
+            onClick={handleDelete}
+            title="원서 삭제"
+          >
+            삭제
+          </button>
         </div>
 
         {/* 콘텐츠 영역 */}
@@ -252,19 +270,32 @@ export default function TextbookManagement() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 해더 */}
-      <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-0">
-        <div className="max-w mx-auto px-4 py-2 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">원서 관리</h1>
-            <p className="text-sm text-gray-600">진행 중인 원서들을 한눈에 관리하세요!</p>
+      <div className="bg-white/95 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-20 shadow-sm">
+        <div className="max-w mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+              <Book size={24} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+                원서 관리
+              </h1>
+              <p className="text-sm text-slate-600 mt-0.5">진행 중인 원서들을 한눈에 관리하세요!</p>
+            </div>
           </div>
-          <Button 
-            onClick={openAddBookPage} 
-            icon={<Plus />}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            새 원서
-          </Button>
+          
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-slate-50/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-200/50">
+              <Library size={16} className="text-blue-500" />
+              <span className="text-sm text-slate-600">총 12권</span>
+            </div>
+            <button 
+              className="px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-red-700 transition-all duration-300 flex items-center gap-2 font-medium"
+              onClick={openAddBookPage}
+            >
+              <Plus size={18} /> 새 원서
+            </button>
+          </div>
         </div>
       </div>
       

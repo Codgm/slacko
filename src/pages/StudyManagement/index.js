@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
-import { Plus, Play, Pause, Square, CheckCircle } from 'lucide-react';
+import { Plus, Play, Pause, Square, CheckCircle, BookOpen, Trophy } from 'lucide-react';
 
 export default function StudyManagement() {
   // 상태 관리
@@ -181,15 +181,32 @@ export default function StudyManagement() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 해더 */}
-      <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
-        <div className="max-w mx-auto px-4 py-2 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">📚 학습 관리</h1>
-            <p className="text-sm text-gray-600">체계적인 학습으로 목표를 달성하세요</p>
+      <div className="bg-white/95 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-20 shadow-sm">
+        <div className="max-w mx-auto px-6 py-3 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl shadow-lg">
+              <BookOpen size={24} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+                학습 관리
+              </h1>
+              <p className="text-sm text-slate-600 mt-0.5">체계적인 학습으로 목표를 달성하세요</p>
+            </div>
           </div>
-          <Button onClick={() => setShowAddForm(true)} variant="primary" className="flex items-center gap-2">
-            <Plus className="w-4 h-4" /> 새 과목 추가
-          </Button>
+          
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-slate-50/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-200/50">
+              <Trophy size={16} className="text-amber-500" />
+              <span className="text-sm text-slate-600">진행중 4과목</span>
+            </div>
+            <button 
+              className="px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:from-emerald-600 hover:to-teal-700 transition-all duration-300 flex items-center gap-2 font-medium"
+              onClick={() => setShowAddForm(true)}
+            >
+              <Plus size={18} /> 새 과목 추가
+            </button>
+          </div>
         </div>
       </div>
       {/* 메인 컨테이너 */}
