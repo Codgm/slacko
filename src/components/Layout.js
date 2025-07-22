@@ -11,10 +11,6 @@ import {
   ChevronsLeft,
   BarChart3,
   NotebookPen,
-  Settings,
-  User,
-  Search,
-  Bell,
   Sparkles,
 } from 'lucide-react';
 import FloatingCalender from './FloatingCalender';

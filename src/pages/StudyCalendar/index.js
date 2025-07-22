@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { Calendar, Clock, Plus, ChevronLeft, ChevronRight, BookOpen, Code, Check, RotateCcw, Flag, Trash2, X } from 'lucide-react';
-import Button from '../../components/common/Button';
 
 const StudyCalendar = () => {
   const [currentDate, setCurrentDate] = useState(new Date());

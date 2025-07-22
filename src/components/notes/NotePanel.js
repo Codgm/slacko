@@ -54,8 +54,6 @@ const NoteEditor = ({ note, onSave, onCancel, isNew = false, currentPage = 1, se
     };
   
     const selectedColor = noteColors.find(c => c.value === color) || noteColors[0];
-    const selectedType = noteTypes.find(t => t.value === noteType) || noteTypes[0];
-    const TypeIcon = selectedType.icon;
   
     return (
       <div className={`${selectedColor.bg} ${selectedColor.border} border rounded-xl p-4 mb-4`}>

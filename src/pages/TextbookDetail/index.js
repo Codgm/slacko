@@ -1,7 +1,7 @@
 import Breadcrumb from '../../components/common/Breadcrumb';
 import WeeklyProgress from '../../components/common/WeeklyProgress';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Play, ArrowLeft, Book, BarChart3, MoreHorizontal } from 'lucide-react';
+import { Play, Book, BarChart3, MoreHorizontal } from 'lucide-react';
 
 // 원서 상세 페이지
 const TextbookDetailPage = () => {
