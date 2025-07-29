@@ -1,65 +1,21 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, BookOpen, Tag, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, BookOpen, Tag, Calendar, Plus, Save, X } from 'lucide-react';
 
-const NoteBookView = ({ notes }) => {
+const NoteBookView = ({ textbookData, allNotes, setAllNotes, currentPage, highlights }) => {
   const [page, setPage] = useState(0);
   const [isFlipping, setIsFlipping] = useState(false);
+  const [showAddNote, setShowAddNote] = useState(false);
+  // const [editingNote, setEditingNote] = useState(null);
+  const [newNote, setNewNote] = useState({
+    title: '',
+    content: '',
+    page: currentPage,
+    color: 'blue',
+    tags: []
+  });
   
-  // 예시 데이터
-  const defaultNotes = [
-    {
-      id: 1,
-      title: "JavaScript 변수와 스코프",
-      content: `var, let, const의 차이점을 명확히 이해하자.
-
-- var: 함수 스코프, 호이스팅 발생
-- let: 블록 스코프, 호이스팅 발생하지만 초기화 전까지 접근 불가
-- const: 블록 스코프, 재할당 불가능
-
-실제 프로젝트에서는 const를 기본으로 사용하고, 재할당이 필요한 경우만 let을 사용하는 것이 좋다.`,
-      page: 15,
-      color: "blue",
-      tags: ["JavaScript", "기초", "변수"],
-      date: "2024-07-20"
-    },
-    {
-      id: 2,
-      title: "React Hook 사용 패턴",
-      content: `useState와 useEffect의 효율적 사용법
-
-1. useState는 관련된 상태들을 객체로 묶어서 관리
-2. useEffect는 의존성 배열을 정확히 설정
-3. 커스텀 훅으로 로직을 재사용 가능하게 만들기
-
-성능 최적화를 위해 useMemo, useCallback도 적절히 활용하자.`,
-      page: 87,
-      color: "green",
-      tags: ["React", "Hook", "최적화"],
-      date: "2024-07-19"
-    },
-    {
-      id: 3,
-      title: "비동기 처리 패턴 정리",
-      content: `Promise와 async/await의 차이점
-
-Promise 체이닝:
-- .then(), .catch(), .finally() 사용
-- 콜백 지옥 문제 해결
-
-async/await:
-- 동기 코드처럼 작성 가능
-- try-catch로 에러 처리
-- Promise보다 직관적
-
-실무에서는 async/await를 주로 사용하되, Promise.all() 같은 유틸리티는 적절히 활용하자.`,
-      page: 142,
-      color: "purple",
-      tags: ["JavaScript", "비동기", "Promise"],
-      date: "2024-07-18"
-    }
-  ];
-
-  const noteData = notes || defaultNotes;
+  // 실제 노트 데이터 사용
+  const noteData = allNotes || [];
   
   const handlePageChange = (newPage) => {
     if (newPage === page || isFlipping) return;
@@ -69,6 +25,87 @@ async/await:
       setTimeout(() => setIsFlipping(false), 300);
     }, 150);
   };
+
+  const handleAddNote = () => {
+    setNewNote({
+      title: '',
+      content: '',
+      page: currentPage,
+      color: 'blue',
+      tags: []
+    });
+    setShowAddNote(true);
+  };
+
+  const handleSaveNote = () => {
+    if (!newNote.title.trim() || !newNote.content.trim()) return;
+
+    const noteToAdd = {
+      id: `note-${Date.now()}-${Math.random()}`,
+      title: newNote.title,
+      content: newNote.content,
+      page: newNote.page,
+      color: newNote.color,
+      tags: newNote.tags,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      type: 'note'
+    };
+
+    setAllNotes(prev => [...prev, noteToAdd]);
+    setShowAddNote(false);
+    setNewNote({ title: '', content: '', page: currentPage, color: 'blue', tags: [] });
+  };
+
+  // const handleEditNote = (note) => {
+  //   setEditingNote(note);
+  //   setNewNote({
+  //     title: note.title,
+  //     content: note.content,
+  //     page: note.page,
+  //     color: note.color,
+  //     tags: note.tags || []
+  //   });
+  // };
+
+  // const handleUpdateNote = () => {
+  //   if (!editingNote || !newNote.title.trim() || !newNote.content.trim()) return;
+
+  //   const updatedNote = {
+  //     ...editingNote,
+  //     title: newNote.title,
+  //     content: newNote.content,
+  //     page: newNote.page,
+  //     color: newNote.color,
+  //     tags: newNote.tags,
+  //     updatedAt: new Date().toISOString()
+  //   };
+
+  //   setAllNotes(prev => prev.map(note => 
+  //     note.id === editingNote.id ? updatedNote : note
+  //   ));
+  //   setEditingNote(null);
+  //   setNewNote({ title: '', content: '', page: currentPage, color: 'blue', tags: [] });
+  // };
+
+  // const handleDeleteNote = (noteId) => {
+  //   if (window.confirm('이 노트를 삭제하시겠습니까?')) {
+  //     setAllNotes(prev => prev.filter(note => note.id !== noteId));
+  //   }
+  // };
+
+  const colorOptions = [
+    { name: '파랑', value: 'blue', class: 'bg-blue-200' },
+    { name: '초록', value: 'green', class: 'bg-green-200' },
+    { name: '보라', value: 'purple', class: 'bg-purple-200' },
+    { name: '노랑', value: 'yellow', class: 'bg-yellow-200' },
+    { name: '빨강', value: 'red', class: 'bg-red-200' }
+  ];
+
+  // const getColorClass = (color) => {
+  //   const colorOption = colorOptions.find(c => c.value === color);
+  //   return colorOption ? colorOption.class : 'bg-blue-200';
+  // };
   
   if (!noteData || noteData.length === 0) {
     return (
@@ -92,12 +129,99 @@ async/await:
             <h3 className="text-2xl font-bold text-amber-800 mb-3" style={{fontFamily: 'cursive'}}>
               My Learning Notebook
             </h3>
-            <p className="text-amber-600" style={{fontFamily: 'cursive'}}>
+            <p className="text-amber-600 mb-6" style={{fontFamily: 'cursive'}}>
               아직 작성된 노트가 없습니다<br/>
               학습하면서 중요한 내용들을 노트로 정리해보세요!
             </p>
+            <button
+              onClick={handleAddNote}
+              className="px-6 py-3 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors flex items-center space-x-2 mx-auto"
+            >
+              <Plus className="w-5 h-5" />
+              <span>첫 번째 노트 작성하기</span>
+            </button>
           </div>
         </div>
+
+        {/* 노트 추가 모달 */}
+        {showAddNote && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-6 w-full max-w-2xl mx-4">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">새 노트 작성</h3>
+                <button onClick={() => setShowAddNote(false)} className="p-2 hover:bg-gray-100 rounded-lg">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">제목</label>
+                  <input
+                    type="text"
+                    value={newNote.title}
+                    onChange={(e) => setNewNote(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    placeholder="노트 제목을 입력하세요"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">페이지</label>
+                  <input
+                    type="number"
+                    value={newNote.page}
+                    onChange={(e) => setNewNote(prev => ({ ...prev, page: parseInt(e.target.value) || 1 }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    min="1"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">색상</label>
+                  <div className="flex space-x-2">
+                    {colorOptions.map(color => (
+                      <button
+                        key={color.value}
+                        onClick={() => setNewNote(prev => ({ ...prev, color: color.value }))}
+                        className={`w-8 h-8 rounded-full ${color.class} border-2 ${
+                          newNote.color === color.value ? 'border-gray-800' : 'border-transparent'
+                        }`}
+                        title={color.name}
+                      />
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">내용</label>
+                  <textarea
+                    value={newNote.content}
+                    onChange={(e) => setNewNote(prev => ({ ...prev, content: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent h-32 resize-none"
+                    placeholder="노트 내용을 입력하세요..."
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button
+                  onClick={() => setShowAddNote(false)}
+                  className="px-4 py-2 text-gray-600 hover:text-gray-800"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleSaveNote}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>저장</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Button from '../../components/common/Button';
 import Modal from '../../components/common/Modal';
 import Toast from '../../components/common/Toast';
@@ -88,11 +88,12 @@ export default function StudyManagement() {
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState('success');
 
+  const intervalRef = useRef(null);
+
   // 타이머 기능
   useEffect(() => {
-    let interval = null;
     if (timer.isRunning) {
-      interval = setInterval(() => {
+      intervalRef.current = setInterval(() => {
         setTimer(prev => {
           if (prev.seconds === 59) {
             return { ...prev, minutes: prev.minutes + 1, seconds: 0 };
@@ -101,11 +102,12 @@ export default function StudyManagement() {
           }
         });
       }, 1000);
-    } else if (!timer.isRunning && timer.seconds !== 0) {
-      clearInterval(interval);
+    } else {
+      clearInterval(intervalRef.current);
     }
-    return () => clearInterval(interval);
-  }, [timer.isRunning, timer.seconds]);
+
+    return () => clearInterval(intervalRef.current);
+  }, [timer.isRunning]);
 
   // 색상 매핑
   const colorMap = {

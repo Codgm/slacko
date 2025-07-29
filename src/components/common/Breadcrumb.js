@@ -8,6 +8,22 @@ const Breadcrumb = () => {
   const { textbookTitle } = location.state || {};
   const pathnames = location.pathname.split('/').filter((x) => x);
 
+  // 제목을 간단하게 표시하는 함수
+  const getShortTitle = (title) => {
+    if (!title) return '원서 상세';
+    
+    // 파일명에서 추출된 긴 제목을 간단하게 처리
+    // 첫 번째 하이픈이나 대시 이전의 부분만 사용
+    const shortTitle = title.split(/[-–—]/)[0].trim();
+    
+    // 15자 이상이면 "..." 추가
+    if (shortTitle.length > 15) {
+      return shortTitle.substring(0, 15) + '...';
+    }
+    
+    return shortTitle;
+  };
+
   const handleNavigate = (path) => {
     navigate(path, { state: location.state });
   };
@@ -46,7 +62,7 @@ const Breadcrumb = () => {
       const textbookId = pathnames[1];
       const textbookDetailPath = `/textbook/${textbookId}`;
       const isCurrentPage = pathnames.length === 2;
-      const detailText = textbookTitle ? `${textbookTitle} 상세` : '원서 상세';
+      const detailText = textbookTitle ? `${getShortTitle(textbookTitle)} 상세` : '원서 상세';
 
       crumbs.push(<li key="separator-detail" className="flex items-center"><ChevronRight className="h-4 w-4 text-gray-400 mx-2" /></li>);
       crumbs.push(

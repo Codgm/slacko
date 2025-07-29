@@ -7,93 +7,33 @@ export default function TextbookManagement() {
   const navigate = useNavigate();
   const [books, setBooks] = useState([]);
 
+  // 제목을 간단하게 표시하는 함수
+  const getShortTitle = (title) => {
+    if (!title) return '';
+    
+    // 파일명에서 추출된 긴 제목을 간단하게 처리
+    // 첫 번째 하이픈이나 대시 이전의 부분만 사용
+    const shortTitle = title.split(/[-–—]/)[0].trim();
+    
+    // 25자 이상이면 "..." 추가
+    if (shortTitle.length > 25) {
+      return shortTitle.substring(0, 25) + '...';
+    }
+    
+    return shortTitle;
+  };
+
   // 컴포넌트 마운트 시 로컬 스토리지에서 데이터 로드
   useEffect(() => {
     const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
-    if (savedBooks.length === 0) {
-      // 기본 데이터 설정
-      const defaultBooks = [
-        {
-          id: 1,
-          title: 'Operating Systems: Three Easy Pieces',
-          author: 'Remzi H. Arpaci-Dusseau',
-          publisher: 'CreateSpace',
-          totalPages: 400,
-          currentPage: 120,
-          targetDate: '2025-07-30',
-          status: '읽는 중',
-          startDate: '2025-06-01',
-          notes: [
-            {
-              id: 1,
-              pageRange: '120-125',
-              content: '컨텍스트 스위칭 설명 중요! CPU 상태 저장과 복원 과정 정리',
-              date: '2025-06-20',
-              keywords: ['컨텍스트 스위칭', 'CPU 상태']
-            },
-            {
-              id: 2,
-              pageRange: '126-135',
-              content: 'CPU 스케줄링 정책 - FIFO, SJF, STCF 비교 분석',
-              date: '2025-06-21',
-              keywords: ['스케줄링', 'FIFO', 'SJF']
-            }
-          ],
-          readingHistory: [
-            { date: '2025-06-20', startPage: 100, endPage: 125, pagesRead: 25 },
-            { date: '2025-06-21', startPage: 126, endPage: 135, pagesRead: 9 }
-          ]
-        },
-        {
-          id: 2,
-          title: 'Deep Learning',
-          author: 'Ian Goodfellow',
-          publisher: 'MIT Press',
-          totalPages: 775,
-          currentPage: 245,
-          targetDate: '2025-08-15',
-          status: '읽는 중',
-          startDate: '2025-05-15',
-          notes: [
-            {
-              id: 1,
-              pageRange: '200-245',
-              content: 'Regularization 기법들 - L1, L2, Dropout의 차이점과 적용 사례',
-              date: '2025-06-22',
-              keywords: ['Regularization', 'L1', 'L2', 'Dropout']
-            }
-          ],
-          readingHistory: [
-            { date: '2025-06-22', startPage: 200, endPage: 245, pagesRead: 45 }
-          ]
-        },
-        {
-          id: 3,
-          title: 'Introduction to Algorithms',
-          author: 'Thomas H. Cormen',
-          publisher: 'MIT Press',
-          totalPages: 1312,
-          currentPage: 1312,
-          targetDate: '2025-06-01',
-          status: '완료',
-          startDate: '2025-01-01',
-          notes: [
-            {
-              id: 1,
-              pageRange: '전체',
-              content: '알고리즘 기초부터 고급까지 완독 완료. 특히 동적 프로그래밍 파트가 유용했음',
-              date: '2025-06-01',
-              keywords: ['동적 프로그래밍', '그래프', '정렬']
-            }
-          ],
-          readingHistory: []
-        }
-      ];
-      setBooks(defaultBooks);
-      localStorage.setItem('textbooks', JSON.stringify(defaultBooks));
-    } else {
-      setBooks(savedBooks);
+    
+    // 고아 청크 데이터 자동 정리
+    const deletedCount = cleanupOrphanedChunks();
+    if (deletedCount > 0) {
+      console.log(`자동 정리: ${deletedCount}개의 고아 청크 데이터 삭제됨`);
     }
+    
+    setBooks(savedBooks);
   }, []);
 
   const [filterStatus, setFilterStatus] = useState('전체');
@@ -155,11 +95,39 @@ export default function TextbookManagement() {
     // 원서 삭제 핸들러
     const handleDelete = (e) => {
       e.stopPropagation();
-      if (window.confirm('정말 이 원서를 삭제하시겠습니까?')) {
-        const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
-        const updatedBooks = savedBooks.filter(b => b.id !== book.id);
-        localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
-        setBooks(updatedBooks);
+      if (window.confirm('정말 이 원서를 삭제하시겠습니까?\n\n삭제된 원서는 복구할 수 없습니다.')) {
+        try {
+          const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+          const updatedBooks = savedBooks.filter(b => b.id !== book.id);
+          
+          // 메인 데이터 삭제
+          localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
+          
+          // 청크 데이터 삭제 (있는 경우)
+          if (book.file && book.file.isChunked && book.file.totalChunks) {
+            console.log('청크 데이터 삭제 시작:', {
+              bookId: book.id,
+              totalChunks: book.file.totalChunks
+            });
+            
+            for (let i = 0; i < book.file.totalChunks; i++) {
+              const chunkKey = `textbook_${book.id}_chunk_${i}`;
+              localStorage.removeItem(chunkKey);
+              console.log('청크 삭제:', chunkKey);
+            }
+            
+            console.log('청크 데이터 삭제 완료');
+          }
+          
+          setBooks(updatedBooks);
+          
+          // 성공 메시지
+          alert('원서가 성공적으로 삭제되었습니다.');
+          
+        } catch (error) {
+          console.error('원서 삭제 중 오류:', error);
+          alert('원서 삭제 중 오류가 발생했습니다.');
+        }
       }
     };
 
@@ -196,8 +164,8 @@ export default function TextbookManagement() {
         <div className="p-6">
           {/* 제목과 저자 */}
           <div className="mb-4">
-            <h3 className="text-lg font-bold text-gray-900 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors">
-              {book.title}
+            <h3 className="text-lg font-bold text-gray-900 line-clamp-2 mb-2 group-hover:text-blue-600 transition-colors" title={book.title}>
+              {getShortTitle(book.title)}
             </h3>
             <p className="text-sm text-gray-600 flex items-center">
               <span className="mr-2">✍️</span>
@@ -267,6 +235,63 @@ export default function TextbookManagement() {
     );
   };
 
+  // 전체 원서 삭제 핸들러
+  const handleDeleteAll = () => {
+    try {
+      console.log('즉시 정리 시작');
+      
+      // localStorage 완전 초기화
+      localStorage.clear();
+      console.log('localStorage 완전 초기화 완료');
+      
+      // 상태 업데이트
+      setBooks([]);
+      
+      console.log('즉시 정리 완료');
+      alert('모든 데이터가 즉시 정리되었습니다.\nlocalStorage가 완전히 초기화되었습니다.');
+      
+    } catch (error) {
+      console.error('즉시 정리 중 오류:', error);
+      alert('즉시 정리 중 오류가 발생했습니다.');
+    }
+  };
+
+  // localStorage 정리 (고아 청크 데이터 삭제)
+  const cleanupOrphanedChunks = () => {
+    try {
+      console.log('고아 청크 데이터 정리 시작');
+      
+      // 현재 원서 ID 목록
+      const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+      const bookIds = savedBooks.map(book => book.id);
+      
+      // 모든 localStorage 키 확인
+      const allKeys = Object.keys(localStorage);
+      const chunkKeys = allKeys.filter(key => key.startsWith('textbook_') && key.includes('chunk_'));
+      
+      // 고아 청크 찾기 및 삭제
+      let deletedCount = 0;
+      chunkKeys.forEach(key => {
+        const match = key.match(/textbook_(\d+)_chunk_(\d+)/);
+        if (match) {
+          const bookId = parseInt(match[1]);
+          if (!bookIds.includes(bookId)) {
+            localStorage.removeItem(key);
+            deletedCount++;
+            console.log('고아 청크 삭제:', key);
+          }
+        }
+      });
+      
+      console.log(`고아 청크 ${deletedCount}개 삭제 완료`);
+      return deletedCount;
+      
+    } catch (error) {
+      console.error('고아 청크 정리 중 오류:', error);
+      return 0;
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* 해더 */}
@@ -287,8 +312,34 @@ export default function TextbookManagement() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-slate-50/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-200/50">
               <Library size={16} className="text-blue-500" />
-              <span className="text-sm text-slate-600">총 12권</span>
+              <span className="text-sm text-slate-600">총 {books.length}권</span>
             </div>
+            
+            {/* 정리 버튼 */}
+            <button 
+              className="px-3 py-2.5 bg-gray-100 text-gray-600 rounded-xl hover:bg-gray-200 transition-all duration-300 flex items-center gap-2 text-sm font-medium"
+              onClick={() => {
+                const deletedCount = cleanupOrphanedChunks();
+                if (deletedCount > 0) {
+                  alert(`${deletedCount}개의 고아 청크 데이터가 정리되었습니다.`);
+                } else {
+                  alert('정리할 고아 데이터가 없습니다.');
+                }
+              }}
+              title="고아 청크 데이터 정리"
+            >
+              🧹 정리
+            </button>
+            
+            {/* 즉시 정리 버튼 */}
+            <button 
+              className="px-3 py-2.5 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-all duration-300 flex items-center gap-2 text-sm font-medium"
+              onClick={handleDeleteAll}
+              title="모든 데이터 즉시 정리"
+            >
+              🗑️ 즉시 정리
+            </button>
+            
             <button 
               className="px-4 py-2.5 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:from-orange-600 hover:to-red-700 transition-all duration-300 flex items-center gap-2 font-medium"
               onClick={openAddBookPage}

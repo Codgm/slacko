@@ -30,6 +30,7 @@ function App() {
         <Route path="/textbook/:id" element={<TextbookDetailPage />} />
         <Route path="/textbook" element={<TextbookManagementSystem />} />
         <Route path="/textbook/add" element={<AddTextbook />} />
+        <Route path="/textbook-study/:id" element={<TextbookStudyPage />} />
         <Route path="/project" element={<ProjectManagementPage />} />
         <Route path="/calendar" element={<StudyCalendarPage />} />
         
