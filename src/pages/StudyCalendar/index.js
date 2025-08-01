@@ -1,8 +1,11 @@
 import { useState } from 'react';
-import { Calendar, Clock, Plus, ChevronLeft, ChevronRight, BookOpen, Code, Check, RotateCcw, Flag, Trash2, X } from 'lucide-react';
+import { Calendar, Clock, Plus, ChevronLeft, ChevronRight, BookOpen, Code, Check, RotateCcw, Flag, Trash2, X, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useProjectContext } from '../../context/ProjectContext';
+import { getCurrentDate, formatDate as formatDateUtil, isToday as isTodayUtil } from '../../utils/dateUtils';
 
 const StudyCalendar = () => {
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const { projects } = useProjectContext();
+  const [currentDate, setCurrentDate] = useState(getCurrentDate());
   const [view, setView] = useState('month'); // month, week, day
   const [showAddModal, setShowAddModal] = useState(false);
   const [events, setEvents] = useState([
@@ -10,7 +13,7 @@ const StudyCalendar = () => {
       id: 1,
       title: '알고리즘 6강 듣기',
       type: 'study',
-      date: '2024-12-28',
+      date: '2025-08-01',
       time: '14:00',
       duration: 2,
       repeat: 'none',
@@ -21,36 +24,26 @@ const StudyCalendar = () => {
       id: 2,
       title: 'OS 100~130p 읽기',
       type: 'reading',
-      date: '2024-12-29',
-      time: '19:00',
+      date: '2025-08-02',
+      time: '10:00',
       duration: 1.5,
       repeat: 'none',
-      memo: '',
-      completed: true
+      memo: '프로세스 스케줄링 부분',
+      completed: false
     },
     {
       id: 3,
-      title: '캡스톤 중간발표',
-      type: 'project',
-      date: '2024-12-30',
-      time: '14:00',
-      duration: 1,
+      title: 'React 프로젝트 리팩토링',
+      type: 'coding',
+      date: '2025-08-03',
+      time: '15:00',
+      duration: 3,
       repeat: 'none',
-      memo: '발표자료 준비 완료',
-      completed: false
-    },
-    {
-      id: 4,
-      title: '복습: 자료구조',
-      type: 'review',
-      date: '2024-12-31',
-      time: '10:00',
-      duration: 1,
-      repeat: 'weekly',
-      memo: '지난 주 학습 내용 복습',
+      memo: '컴포넌트 분리 및 최적화',
       completed: false
     }
   ]);
+
   const [newEvent, setNewEvent] = useState({
     title: '',
     type: 'study',
@@ -62,10 +55,13 @@ const StudyCalendar = () => {
   });
 
   const eventTypes = {
-    study: { label: '학습', color: 'bg-blue-500', icon: BookOpen },
-    review: { label: '복습', color: 'bg-green-500', icon: RotateCcw },
-    project: { label: '프로젝트', color: 'bg-purple-500', icon: Flag },
-    reading: { label: '원서읽기', color: 'bg-orange-500', icon: Code },
+    study: { label: '학습', icon: BookOpen, color: 'bg-blue-100 text-blue-800 border-blue-200' },
+    reading: { label: '독서', icon: BookOpen, color: 'bg-green-100 text-green-800 border-green-200' },
+    coding: { label: '코딩', icon: Code, color: 'bg-purple-100 text-purple-800 border-purple-200' },
+    milestone: { label: '마일스톤', icon: Flag, color: 'bg-orange-100 text-orange-800 border-orange-200' },
+    task: { label: '작업', icon: CheckCircle2, color: 'bg-indigo-100 text-indigo-800 border-indigo-200' },
+    project: { label: '프로젝트', icon: Flag, color: 'bg-pink-100 text-pink-800 border-pink-200' },
+    deadline: { label: '마감', icon: AlertCircle, color: 'bg-red-100 text-red-800 border-red-200' }
   };
 
   const repeatOptions = {
@@ -75,40 +71,121 @@ const StudyCalendar = () => {
     monthly: '매월'
   };
 
+  // 프로젝트 데이터를 캘린더 이벤트로 변환
+  const getProjectEvents = () => {
+    const projectEvents = [];
+    
+    projects.forEach(project => {
+      // 마일스톤 이벤트 추가
+      project.milestones?.forEach(milestone => {
+        projectEvents.push({
+          id: `milestone-${milestone.id}`,
+          title: `${project.name}: ${milestone.title}`,
+          type: 'milestone',
+          date: milestone.date,
+          time: '',
+          duration: 0,
+          repeat: 'none',
+          memo: `프로젝트: ${project.name}`,
+          completed: milestone.completed,
+          projectColor: project.color,
+          projectIcon: project.icon
+        });
+      });
+      
+      // 작업 마감일 이벤트 추가
+      project.tasks?.forEach(task => {
+        if (task.dueDate) {
+          projectEvents.push({
+            id: `task-${task.id}`,
+            title: `${project.name}: ${task.title}`,
+            type: 'task',
+            date: task.dueDate,
+            time: '',
+            duration: 0,
+            repeat: 'none',
+            memo: '',
+            completed: task.status === 'completed',
+            projectColor: project.color,
+            projectIcon: project.icon,
+            priority: task.priority
+          });
+        }
+      });
+      
+      // 프로젝트 시작/종료일 이벤트 추가
+      if (project.startDate) {
+        projectEvents.push({
+          id: `project-start-${project.id}`,
+          title: `${project.name} 시작`,
+          type: 'project',
+          date: project.startDate,
+          time: '',
+          duration: 0,
+          repeat: 'none',
+          memo: project.description,
+          completed: false,
+          projectColor: project.color,
+          projectIcon: project.icon
+        });
+      }
+      
+      if (project.endDate) {
+        projectEvents.push({
+          id: `project-end-${project.id}`,
+          title: `${project.name} 마감`,
+          type: 'deadline',
+          date: project.endDate,
+          time: '',
+          duration: 0,
+          repeat: 'none',
+          memo: project.description,
+          completed: project.status === 'completed',
+          projectColor: project.color,
+          projectIcon: project.icon
+        });
+      }
+    });
+    
+    return projectEvents;
+  };
+
+  const allEvents = [...events, ...getProjectEvents()];
+
   // 날짜 관련 유틸리티 함수들
   const formatDate = (date) => {
-    return date.toISOString().split('T')[0];
+    return formatDateUtil(date);
   };
 
   const getMonthCalendar = (date) => {
     const year = date.getFullYear();
     const month = date.getMonth();
     const firstDay = new Date(year, month, 1);
-    const lastDay = new Date(year, month + 1, 0);
     const startDate = new Date(firstDay);
     startDate.setDate(startDate.getDate() - firstDay.getDay());
     
     const calendar = [];
-    const current = new Date(startDate);
+    let currentWeek = [];
     
-    for (let week = 0; week < 6; week++) {
-      const weekDays = [];
-      for (let day = 0; day < 7; day++) {
-        weekDays.push(new Date(current));
-        current.setDate(current.getDate() + 1);
+    for (let i = 0; i < 42; i++) {
+      const currentDate = new Date(startDate);
+      currentDate.setDate(startDate.getDate() + i);
+      currentWeek.push(currentDate);
+      
+      if (currentWeek.length === 7) {
+        calendar.push(currentWeek);
+        currentWeek = [];
       }
-      calendar.push(weekDays);
-      if (current > lastDay && current.getDay() === 0) break;
     }
     
     return calendar;
   };
 
   const getWeekDays = (date) => {
+    const weekDays = [];
     const startOfWeek = new Date(date);
     startOfWeek.setDate(date.getDate() - date.getDay());
     
-    const weekDays = [];
     for (let i = 0; i < 7; i++) {
       const day = new Date(startOfWeek);
       day.setDate(startOfWeek.getDate() + i);
@@ -119,7 +196,7 @@ const StudyCalendar = () => {
 
   const getEventsForDate = (date) => {
     const dateStr = formatDate(date);
-    return events.filter(event => event.date === dateStr);
+    return allEvents.filter(event => event.date === dateStr);
   };
 
   const navigateDate = (direction) => {
@@ -182,7 +259,6 @@ const StudyCalendar = () => {
   // 월간 보기 렌더링
   const renderMonthView = () => {
     const calendar = getMonthCalendar(currentDate);
-    const today = new Date();
     
     return (
       <div className="bg-white rounded-lg shadow-sm border">
@@ -198,7 +274,7 @@ const StudyCalendar = () => {
           <div key={weekIndex} className="grid grid-cols-7 border-b last:border-b-0">
             {week.map((date, dayIndex) => {
               const dayEvents = getEventsForDate(date);
-              const isToday = formatDate(date) === formatDate(today);
+              const isToday = isTodayUtil(date);
               const isCurrentMonth = date.getMonth() === currentDate.getMonth();
               
               return (
@@ -223,15 +299,22 @@ const StudyCalendar = () => {
                       return (
                         <div 
                           key={event.id}
-                          className={`text-xs px-1 py-0.5 rounded flex items-center gap-1 ${typeConfig.color} text-white ${
-                            event.completed ? 'opacity-60 line-through' : ''
-                          }`}
+                          className={`text-xs px-1 py-0.5 rounded flex items-center gap-1 ${
+                            event.projectColor ? 'text-white' : `${typeConfig.color} text-white`
+                          } ${event.completed ? 'opacity-60 line-through' : ''}`}
+                          style={event.projectColor ? { backgroundColor: event.projectColor } : {}}
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleEventComplete(event.id);
+                            if (!event.id.toString().includes('project') && !event.id.toString().includes('milestone') && !event.id.toString().includes('task')) {
+                              toggleEventComplete(event.id);
+                            }
                           }}
                         >
-                          <Icon size={10} />
+                          {event.projectIcon ? (
+                            <span className="text-xs">{event.projectIcon}</span>
+                          ) : (
+                            <Icon size={10} />
+                          )}
                           <span className="truncate">{event.title}</span>
                         </div>
                       );
@@ -254,14 +337,13 @@ const StudyCalendar = () => {
   // 주간 보기 렌더링
   const renderWeekView = () => {
     const weekDays = getWeekDays(currentDate);
-    const today = new Date();
     
     return (
       <div className="bg-white rounded-lg shadow-sm border">
         <div className="grid grid-cols-8 border-b">
           <div className="p-3 border-r"></div>
           {weekDays.map((date, index) => {
-            const isToday = formatDate(date) === formatDate(today);
+            const isToday = isTodayUtil(date);
             return (
               <div key={index} className="p-3 text-center border-r last:border-r-0">
                 <div className="font-medium text-gray-600">
@@ -301,15 +383,22 @@ const StudyCalendar = () => {
                     return (
                       <div 
                         key={event.id}
-                        className={`text-xs px-2 py-1 rounded flex items-center gap-1 ${typeConfig.color} text-white mb-1 ${
-                          event.completed ? 'opacity-60 line-through' : ''
-                        }`}
+                        className={`text-xs px-2 py-1 rounded flex items-center gap-1 mb-1 ${
+                          event.projectColor ? 'text-white' : `${typeConfig.color} text-white`
+                        } ${event.completed ? 'opacity-60 line-through' : ''}`}
+                        style={event.projectColor ? { backgroundColor: event.projectColor } : {}}
                         onClick={(e) => {
                           e.stopPropagation();
-                          toggleEventComplete(event.id);
+                          if (!event.id.toString().includes('project') && !event.id.toString().includes('milestone') && !event.id.toString().includes('task')) {
+                            toggleEventComplete(event.id);
+                          }
                         }}
                       >
-                        <Icon size={10} />
+                        {event.projectIcon ? (
+                          <span className="text-xs">{event.projectIcon}</span>
+                        ) : (
+                          <Icon size={10} />
+                        )}
                         <span className="truncate">{event.title}</span>
                       </div>
                     );
@@ -362,19 +451,26 @@ const StudyCalendar = () => {
                 return (
                   <div 
                     key={event.id}
-                    className={`p-4 rounded-lg border-l-4 ${typeConfig.color.replace('bg-', 'border-')} bg-gray-50 ${
+                    className={`p-4 rounded-lg border-l-4 ${
+                      event.projectColor ? 'border-l-4' : typeConfig.color.replace('bg-', 'border-')
+                    } bg-gray-50 ${
                       event.completed ? 'opacity-60' : ''
                     }`}
+                    style={event.projectColor ? { borderLeftColor: event.projectColor } : {}}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-2">
-                          <Icon size={16} className={typeConfig.color.replace('bg-', 'text-')} />
+                          {event.projectIcon ? (
+                            <span className="text-lg">{event.projectIcon}</span>
+                          ) : (
+                            <Icon size={16} className={typeConfig.color.replace('bg-', 'text-')} />
+                          )}
                           <h4 className={`font-medium ${event.completed ? 'line-through' : ''}`}>
                             {event.title}
                           </h4>
                           <span className="text-xs px-2 py-1 bg-gray-200 rounded">
-                            {eventTypes[event.type].label}
+                            {typeConfig.label}
                           </span>
                         </div>
                         
@@ -403,22 +499,26 @@ const StudyCalendar = () => {
                       </div>
                       
                       <div className="flex items-center gap-2 ml-4">
-                        <button
-                          onClick={() => toggleEventComplete(event.id)}
-                          className={`p-1 rounded ${
-                            event.completed 
-                              ? 'bg-green-500 text-white' 
-                              : 'border-2 border-gray-300 hover:border-green-500'
-                          }`}
-                        >
-                          <Check size={16} />
-                        </button>
-                        <button
-                          onClick={() => deleteEvent(event.id)}
-                          className="p-1 text-red-500 hover:bg-red-50 rounded"
-                        >
-                          <Trash2 size={16} />
-                        </button>
+                        {!event.id.toString().includes('project') && !event.id.toString().includes('milestone') && !event.id.toString().includes('task') && (
+                          <>
+                            <button
+                              onClick={() => toggleEventComplete(event.id)}
+                              className={`p-1 rounded ${
+                                event.completed 
+                                  ? 'bg-green-500 text-white' 
+                                  : 'border-2 border-gray-300 hover:border-green-500'
+                              }`}
+                            >
+                              <Check size={16} />
+                            </button>
+                            <button
+                              onClick={() => deleteEvent(event.id)}
+                              className="p-1 text-red-500 hover:bg-red-50 rounded"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -451,7 +551,7 @@ const StudyCalendar = () => {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2 bg-slate-50/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-200/50">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-slate-600">오늘 3개 일정</span>
+              <span className="text-sm text-slate-600">오늘 {getEventsForDate(new Date()).length}개 일정</span>
             </div>
             <button 
               className="px-4 py-2.5 bg-gradient-to-r from-pink-500 to-rose-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:from-pink-600 hover:to-rose-700 transition-all duration-300 flex items-center gap-2 font-medium"

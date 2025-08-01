@@ -14,6 +14,9 @@ import AddTextbook from './pages/TextbookManagement/AddTextbook';
 import ProjectManagementPage from './pages/ProjectManagement/index';
 import StudyCalendarPage from './pages/StudyCalendar/index';
 
+// Context import
+import { ProjectProvider } from './context/ProjectContext';
+
 // 임시 학습 하위 컴포넌트
 const StudyContent = () => <div>원서 본문 내용</div>;
 const StudyNotes = () => <div>노트 내용</div>;
@@ -23,31 +26,33 @@ const StudyBookmarks = () => <div>북마크 내용</div>;
 
 function App() {
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/study" element={<StudyManagementSystem />} />
-        <Route path="/textbook/:id" element={<TextbookDetailPage />} />
-        <Route path="/textbook" element={<TextbookManagementSystem />} />
-        <Route path="/textbook/add" element={<AddTextbook />} />
-        <Route path="/textbook-study/:id" element={<TextbookStudyPage />} />
-        <Route path="/project" element={<ProjectManagementPage />} />
-        <Route path="/calendar" element={<StudyCalendarPage />} />
-        
-        {/* 원서 학습 중첩 라우트 */}
-        <Route path="/textbook/:id/study" element={<TextbookStudyPage />}>
-          <Route index element={<StudyContent />} />
-          <Route path="content" element={<StudyContent />} />
-          <Route path="notes" element={<StudyNotes />} />
-          <Route path="concepts" element={<StudyConcepts />} />
-          <Route path="progress" element={<StudyProgress />} />
-          <Route path="bookmarks" element={<StudyBookmarks />} />
+    <ProjectProvider>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/study" element={<StudyManagementSystem />} />
+          <Route path="/textbook/:id" element={<TextbookDetailPage />} />
+          <Route path="/textbook" element={<TextbookManagementSystem />} />
+          <Route path="/textbook/add" element={<AddTextbook />} />
+          <Route path="/textbook-study/:id" element={<TextbookStudyPage />} />
+          <Route path="/project" element={<ProjectManagementPage />} />
+          <Route path="/calendar" element={<StudyCalendarPage />} />
+          
+          {/* 원서 학습 중첩 라우트 */}
+          <Route path="/textbook/:id/study" element={<TextbookStudyPage />}>
+            <Route index element={<StudyContent />} />
+            <Route path="content" element={<StudyContent />} />
+            <Route path="notes" element={<StudyNotes />} />
+            <Route path="concepts" element={<StudyConcepts />} />
+            <Route path="progress" element={<StudyProgress />} />
+            <Route path="bookmarks" element={<StudyBookmarks />} />
+          </Route>
         </Route>
-      </Route>
-      {/* 기타 라우트 */}
-      <Route path="*" element={<NotFound />} />
-      <Route path="/" element={<OnboardingLanding />} />
-    </Routes>
+        {/* 기타 라우트 */}
+        <Route path="*" element={<NotFound />} />
+        <Route path="/" element={<OnboardingLanding />} />
+      </Routes>
+    </ProjectProvider>
   );
 }
 
