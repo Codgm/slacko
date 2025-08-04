@@ -2,9 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
 import { Plus, Book, Library } from 'lucide-react';
+import { useStudyContext } from '../../context/StudyContext';
 
 export default function TextbookManagement() {
   const navigate = useNavigate();
+  const { textbooks, deleteTextbook } = useStudyContext();
   const [books, setBooks] = useState([]);
 
   // 제목을 간단하게 표시하는 함수
@@ -23,18 +25,10 @@ export default function TextbookManagement() {
     return shortTitle;
   };
 
-  // 컴포넌트 마운트 시 로컬 스토리지에서 데이터 로드
+  // 컴포넌트 마운트 시 StudyContext의 textbooks 데이터 사용
   useEffect(() => {
-    const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
-    
-    // 고아 청크 데이터 자동 정리
-    const deletedCount = cleanupOrphanedChunks();
-    if (deletedCount > 0) {
-      console.log(`자동 정리: ${deletedCount}개의 고아 청크 데이터 삭제됨`);
-    }
-    
-    setBooks(savedBooks);
-  }, []);
+    setBooks(textbooks);
+  }, [textbooks]);
 
   const [filterStatus, setFilterStatus] = useState('전체');
 
@@ -97,11 +91,8 @@ export default function TextbookManagement() {
       e.stopPropagation();
       if (window.confirm('정말 이 원서를 삭제하시겠습니까?\n\n삭제된 원서는 복구할 수 없습니다.')) {
         try {
-          const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
-          const updatedBooks = savedBooks.filter(b => b.id !== book.id);
-          
-          // 메인 데이터 삭제
-          localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
+          // StudyContext의 deleteTextbook 함수 사용
+          deleteTextbook(book.id);
           
           // 청크 데이터 삭제 (있는 경우)
           if (book.file && book.file.isChunked && book.file.totalChunks) {
@@ -118,8 +109,6 @@ export default function TextbookManagement() {
             
             console.log('청크 데이터 삭제 완료');
           }
-          
-          setBooks(updatedBooks);
           
           // 성공 메시지
           alert('원서가 성공적으로 삭제되었습니다.');
@@ -293,26 +282,26 @@ export default function TextbookManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* 해더 */}
       <div className="bg-white/95 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-20 shadow-sm">
         <div className="max-w mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
               <Book size={24} className="text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
                 원서 관리
               </h1>
-              <p className="text-sm text-slate-600 mt-0.5">진행 중인 원서들을 한눈에 관리하세요!</p>
+              <p className="text-xs text-slate-600 mt-0.5">진행 중인 원서들을 한눈에 관리하세요!</p>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-slate-50/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-200/50">
+            <div className="flex items-center gap-2 bg-slate-50/80 backdrop-blur px-3 py-2 rounded-lg border border-slate-200/50">
               <Library size={16} className="text-blue-500" />
-              <span className="text-sm text-slate-600">총 {books.length}권</span>
+              <span className="text-xs text-slate-600">총 {books.length}권</span>
             </div>
             
             {/* 정리 버튼 */}

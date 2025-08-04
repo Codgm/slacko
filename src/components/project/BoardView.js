@@ -5,9 +5,9 @@ import ProjectCard from './ProjectCard';
 const BoardView = ({ filteredProjects, setSelectedProject }) => {
   const statusColumns = [
     { id: 'not-started', title: '시작 전', color: 'border-slate-300 bg-slate-50', accent: 'bg-slate-500' },
-    { id: 'in-progress', title: '진행 중', color: 'border-blue-300 bg-blue-50', accent: 'bg-blue-500' },
-    { id: 'completed', title: '완료', color: 'border-emerald-300 bg-emerald-50', accent: 'bg-emerald-500' },
-    { id: 'on-hold', title: '보류', color: 'border-amber-300 bg-amber-50', accent: 'bg-amber-500' }
+    { id: 'in-progress', title: '진행 중', color: 'border-blue-300 bg-blue-100', accent: 'bg-blue-500' },
+    { id: 'completed', title: '완료', color: 'border-emerald-300 bg-emerald-100', accent: 'bg-emerald-500' },
+    { id: 'on-hold', title: '보류', color: 'border-amber-300 bg-amber-100', accent: 'bg-amber-500' }
   ];
 
   const getColumnProjects = (status) => filteredProjects.filter(p => p.status === status);

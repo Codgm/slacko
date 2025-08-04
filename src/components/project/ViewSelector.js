@@ -36,7 +36,7 @@ const ViewSelector = ({ activeView, setActiveView, filteredProjectsCount }) => {
         </div>
 
         {/* Desktop: Horizontal Layout */}
-        <div className="hidden sm:flex items-center gap-1 bg-slate-100 rounded-xl p-1">
+        <div className="hidden sm:flex items-center gap-1 bg-gray-200 rounded-xl p-1">
           {views.map(view => {
             const Icon = view.icon;
             return (

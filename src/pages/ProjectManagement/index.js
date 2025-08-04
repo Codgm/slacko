@@ -79,22 +79,22 @@ export default function AdvancedProjectManagement() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Responsive Header */}
       <div className="bg-white/95 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-20 shadow-sm">
         <div className="w-full px-4 sm:px-6 py-3">
           {/* Mobile and Desktop Header Layout */}
-          <div className="flex items-center justify-between gap-2 sm:gap-4">
+          <div className="flex items-center justify-between gap-2 sm:gap-3">
             {/* Left side - Logo and Title */}
-            <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
-              <div className="p-2 sm:p-3 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-lg sm:rounded-xl shadow-lg flex-shrink-0">
+            <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+              <div className="p-2 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 rounded-lg shadow-lg flex-shrink-0">
                 <Briefcase size={20} className="text-white sm:w-6 sm:h-6" />
               </div>
               <div className="min-w-0 flex-1">
                 <h1 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent truncate">
                   프로젝트 관리
                 </h1>
-                <p className="text-xs sm:text-sm text-slate-600 mt-0.5 truncate hidden sm:block">
+                <p className="text-xs text-slate-600 mt-0.5 truncate hidden sm:block">
                   팀 협업과 프로젝트 진행을 관리하세요
                 </p>
               </div>

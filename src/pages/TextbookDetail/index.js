@@ -181,26 +181,26 @@ const TextbookDetailPage = () => {
   const weeklyProgress = getWeeklyProgress();
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* 해더 */}
       <div className="bg-white/95 backdrop-blur-xl border-b border-slate-200/60 sticky top-0 z-20 shadow-sm">
         <div className="max-w mx-auto px-6 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl shadow-lg">
               <Book size={24} className="text-white" />
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
                 원서 상세
               </h1>
-              <p className="text-sm text-slate-600 mt-0.5">원서 학습 현황을 한눈에 확인하세요!</p>
+              <p className="text-xs text-slate-600 mt-0.5">원서 학습 현황을 한눈에 확인하세요!</p>
             </div>
           </div>
           
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-slate-50/80 backdrop-blur px-3 py-2 rounded-xl border border-slate-200/50">
+            <div className="flex items-center gap-2 bg-slate-50/80 backdrop-blur px-3 py-2 rounded-lg border border-slate-200/50">
               <BarChart3 size={16} className="text-blue-500" />
-              <span className="text-sm text-slate-600">{progress}% 완료</span>
+              <span className="text-xs text-slate-600">{progress}% 완료</span>
             </div>
             <button className="p-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all duration-200">
               <MoreHorizontal size={18} />

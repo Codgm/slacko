@@ -764,17 +764,17 @@ const TextbookStudyPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex flex-col">
       {/* 헤더 */}
       <div className="w-full bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10 mb-0">
         <div className="max-w mx-auto px-4 py-2.5 flex items-center justify-between">
           <div className="flex flex-col min-w-[180px] flex-1 min-w-0">
-            <h1 className="text-2xl font-bold text-gray-900 truncate" title={textbookData.title}>
+            <h1 className="text-xl font-bold text-gray-900 truncate" title={textbookData.title}>
               {getShortTitle(textbookData.title)}
             </h1>
             <div className="flex items-center gap-2 mt-1">
               {textbookData.author && (
-                <span className="text-sm text-gray-600 truncate" title={textbookData.author}>
+                <span className="text-xs text-gray-600 truncate" title={textbookData.author}>
                   by {getShortAuthor(textbookData.author)}
                 </span>
               )}
@@ -785,19 +785,19 @@ const TextbookStudyPage = () => {
               )}
             </div>
           </div>
-          <div className="flex items-center space-x-4 flex-shrink-0 ml-4">
-            <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+          <div className="flex items-center space-x-3 flex-shrink-0 ml-4">
+            <div className="flex items-center space-x-2 text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
               <Eye className="w-4 h-4" />
               <span>페이지 {currentPage}</span>
               {textbookData.totalPages > 0 && (
                 <span className="text-gray-400">/ {textbookData.totalPages}</span>
               )}
             </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+            <div className="flex items-center space-x-2 text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
               <BookOpen className="w-4 h-4" />
               <span>진도율: {textbookData.progress || Math.round((currentPage / textbookData.totalPages) * 100) || 0}%</span>
             </div>
-            <div className="flex items-center space-x-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
+            <div className="flex items-center space-x-2 text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg">
               <span>학습시간: {formatTime(studyTimer)}</span>
               <button
                 onClick={toggleStudy}
