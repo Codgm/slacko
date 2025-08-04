@@ -91,9 +91,6 @@ const StudyAnalytics = ({
             const avgTimePerChapter = subject.completedChapters > 0 
               ? Math.round(subject.totalStudyTime / subject.completedChapters) 
               : 0;
-            const efficiency = subject.completedChapters > 0 
-              ? Math.round((subject.completedChapters / subject.totalChapters) * 100) 
-              : 0;
             
             return (
               <div key={subject.id} className={`${colors.bg} rounded-xl p-6 border ${colors.border}`}>
