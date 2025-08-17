@@ -1,30 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { Clock, Target, CheckCircle, Bell, BookOpen, TrendingUp, Flame, Calendar, Plus, Zap, Brain, Timer, BarChart3, BookMarked, CheckCircle2, Play, Pause, RotateCcw, Sparkles, Sun, Moon, Sunrise, Settings, User, LogOut, MoreHorizontal } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Clock, Target, Bell, BookOpen, TrendingUp, Flame, Calendar, Plus, Zap, Brain, Timer, BarChart3, BookMarked, CheckCircle2, Play, Pause, RotateCcw, Sparkles, Sun, Moon, Sunrise, Settings, User, LogOut } from 'lucide-react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
 const Dashboard = () => {
   // Mock data - 실제로는 context에서 가져올 데이터
-  const subjects = [
+  const subjects = useMemo(() => [
     { id: 1, name: '알고리즘', completedChapters: 8, totalChapters: 12, priority: 'high', color: '#3b82f6' },
     { id: 2, name: '데이터베이스', completedChapters: 6, totalChapters: 10, priority: 'medium', color: '#10b981' },
     { id: 3, name: '운영체제', completedChapters: 4, totalChapters: 8, priority: 'medium', color: '#f59e0b' }
-  ];
+  ], []);
 
-  const projects = [
+  const projects = useMemo(() => [
     { id: 1, name: '캡스톤 프로젝트', description: 'AI 기반 학습 관리 시스템', progress: 75, status: 'in-progress', priority: 'high', icon: '🚀' },
     { id: 2, name: '웹 포트폴리오', description: '개인 포트폴리오 웹사이트 제작', progress: 45, status: 'in-progress', priority: 'medium', icon: '💼' }
-  ];
+  ], []);
 
-  const textbooks = [
+  const textbooks = useMemo(() => [
     { id: 1, title: 'Clean Code', author: 'Robert Martin', currentPage: 120, totalPages: 400, priority: 'high' },
     { id: 2, title: 'System Design Interview', author: 'Alex Xu', currentPage: 80, totalPages: 300, priority: 'medium' }
-  ];
-
-  const studyLogs = [];
-  const goals = [
+  ], []);
+  
+  const goals = useMemo(() => [
     { id: 1, title: '알고리즘 마스터', progress: 80 },
     { id: 2, title: '프로젝트 완성', progress: 75 }
-  ];
+  ], []);
 
   // 실제 데이터에서 Todo 목록 생성
   const [todoList, setTodoList] = useState([]);
@@ -56,7 +55,7 @@ const Dashboard = () => {
       }))
     ];
     setTodoList(todos);
-  }, []);
+  }, [subjects, projects, textbooks]);
 
   // 모달 상태
   const [showAddTodoModal, setShowAddTodoModal] = useState(false);

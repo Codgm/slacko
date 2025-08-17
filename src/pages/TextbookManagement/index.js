@@ -10,7 +10,6 @@ export default function TextbookManagement() {
   const [books, setBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('전체');
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
 
   // 제목을 간단하게 표시하는 함수
   const getShortTitle = (title) => {

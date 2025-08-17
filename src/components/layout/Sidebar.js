@@ -11,10 +11,7 @@ import {
   ChevronsLeft,
   Settings,
   User,
-  Bell,
   Search,
-  Plus,
-  MoreHorizontal
 } from 'lucide-react';
 
 const Sidebar = ({ isOpen, onToggle }) => {

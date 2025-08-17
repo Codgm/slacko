@@ -1,8 +1,7 @@
 import Breadcrumb from '../../components/common/Breadcrumb';
-import WeeklyProgress from '../../components/common/WeeklyProgress';
 import WeeklyGoalsWidget from '../../components/plan/WeeklyGoalsWidget';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Play, BarChart3, MoreHorizontal, Calendar, CheckCircle, Plus, Target, Clock, BookOpen, TrendingUp, Save, X, Settings } from 'lucide-react';
+import { Play, BarChart3, MoreHorizontal, Calendar, CheckCircle, Target, Clock, BookOpen, TrendingUp } from 'lucide-react';
 import { PdfThumbnail } from '../../utils/pdfAnalyzer';
 import { useState, useEffect } from 'react';
 
@@ -109,7 +108,7 @@ const TextbookDetailPage = () => {
   // 노트와 하이라이트 개수
   const notes = textbook.notes || [];
   const noteCount = notes.filter(n => n.content && n.content.trim() !== '').length;
-  const highlightCount = notes.filter(n => n.type === 'highlight' || (n.color && !n.content)).length;
+  // const highlightCount = notes.filter(n => n.type === 'highlight' || (n.color && !n.content)).length;
 
   // 제목을 간단하게 표시하는 함수
   const getShortTitle = (title) => {
@@ -157,30 +156,30 @@ const TextbookDetailPage = () => {
   const noteSummaries = getRecentNoteSummaries();
 
   // 주간 진도 계산
-  const getWeeklyProgress = () => {
-    const today = new Date();
-    const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
+  // const getWeeklyProgress = () => {
+  //   const today = new Date();
+  //   const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
     
-    const weekDays = [];
-    const completedDays = [];
+  //   const weekDays = [];
+  //   const completedDays = [];
     
-    for (let i = 0; i < 7; i++) {
-      const day = new Date(startOfWeek);
-      day.setDate(startOfWeek.getDate() + i);
-      const dayStr = day.toISOString().split('T')[0];
+  //   for (let i = 0; i < 7; i++) {
+  //     const day = new Date(startOfWeek);
+  //     day.setDate(startOfWeek.getDate() + i);
+  //     const dayStr = day.toISOString().split('T')[0];
       
-      weekDays.push(i);
+  //     weekDays.push(i);
       
-      const dayPlan = studyPlans.find(p => p.date === dayStr && p.completed);
-      if (dayPlan) {
-        completedDays.push(i);
-      }
-    }
+  //     const dayPlan = studyPlans.find(p => p.date === dayStr && p.completed);
+  //     if (dayPlan) {
+  //       completedDays.push(i);
+  //     }
+  //   }
     
-    return { selectedDays: weekDays, completedDays };
-  };
+  //   return { selectedDays: weekDays, completedDays };
+  // };
 
-  const weeklyProgress = getWeeklyProgress();
+  // const weeklyProgress = getWeeklyProgress();
 
   return (
     <div className="min-h-screen bg-slate-50">
