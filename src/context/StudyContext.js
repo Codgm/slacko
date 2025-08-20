@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import apiService from '../api/Textbook_Api';
 
 const StudyContext = createContext();
 
@@ -11,7 +12,7 @@ export const useStudyContext = () => {
 };
 
 export const StudyProvider = ({ children }) => {
-  // 학습 과목 데이터
+  // 학습 과목 데이터 (기존 유지)
   const [subjects, setSubjects] = useState([
     {
       id: 1,
@@ -157,8 +158,11 @@ export const StudyProvider = ({ children }) => {
     }
   ]);
 
-  // 원서 학습 데이터 - localStorage의 'textbooks' 키와 동일하게 사용
+  // 원서 학습 데이터 - API와 연동하되 PDF 파일은 로컬에 보관
   const [textbooks, setTextbooks] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [startingSoonBooks, setStartingSoonBooks] = useState([]);
 
   // 통계 계산 함수들
   const getTotalStudyTime = () => {
@@ -323,37 +327,226 @@ export const StudyProvider = ({ children }) => {
     setSubjects(prev => prev.filter(subject => subject.id !== subjectId));
   };
 
-  // 원서 학습 관련 함수들 - TextbookManagement와 호환
-  const addTextbook = (textbook) => {
-    const newTextbook = { ...textbook, id: Date.now() };
-    setTextbooks(prev => [...prev, newTextbook]);
-    // TextbookManagement와 동기화
-    const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
-    localStorage.setItem('textbooks', JSON.stringify([...savedBooks, newTextbook]));
+  // 원서 학습 관련 함수들 - API 연동
+  const loadTextbooks = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      console.log('📚 서버에서 원서 목록 로드 중...');
+      const apiBooks = await apiService.getAllBooks();
+      console.log('📚 API 응답:', apiBooks);
+      
+      // API 데이터를 프론트엔드 형식으로 변환
+      const transformedBooks = apiBooks.map(apiBook => {
+        const frontendBook = apiService.transformFromApiFormat(apiBook);
+        
+        // 로컬 스토리지에서 추가 데이터 복원 (PDF 파일, 노트 등)
+        const localData = getLocalBookData(frontendBook.id);
+        
+        return {
+          ...frontendBook,
+          ...localData // PDF 파일과 로컬 데이터 병합
+        };
+      });
+      
+      setTextbooks(transformedBooks);
+      console.log('✅ 원서 목록 로드 완료:', transformedBooks.length);
+      
+    } catch (error) {
+      console.error('❌ 원서 목록 로드 실패:', error);
+      setError(error.message);
+      
+      // 실패 시 로컬 스토리지에서 복원
+      const localBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+      setTextbooks(localBooks);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const updateTextbook = (textbookId, updates) => {
-    setTextbooks(prev => prev.map(textbook => 
-      textbook.id === textbookId ? { ...textbook, ...updates } : textbook
-    ));
-    // TextbookManagement와 동기화
-    const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
-    const updatedBooks = savedBooks.map(book => 
-      book.id === textbookId ? { ...book, ...updates } : book
-    );
-    localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
+  const addTextbook = async (textbook) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      console.log('📚 서버에 원서 등록 중...', textbook.title);
+      
+      // 프론트엔드 데이터를 API 형식으로 변환
+      const apiData = apiService.transformToApiFormat(textbook);
+      console.log('🔄 API 형식 변환:', apiData);
+      
+      // 서버에 등록
+      const apiResponse = await apiService.createBook(apiData);
+      console.log('✅ 서버 등록 완료:', apiResponse);
+      
+      // API 응답을 프론트엔드 형식으로 변환
+      const frontendBook = apiService.transformFromApiFormat(apiResponse);
+      
+      // PDF 파일과 로컬 데이터는 로컬 스토리지에 저장
+      const fullBook = {
+        ...frontendBook,
+        file: textbook.file,
+        pdfId: textbook.pdfId,
+        notes: textbook.notes || [],
+        readingHistory: textbook.readingHistory || [],
+        plan: textbook.plan || frontendBook.plan // 기존 플랜 데이터 보존
+      };
+      
+      // 로컬 데이터 저장
+      saveLocalBookData(fullBook.id, {
+        file: textbook.file,
+        pdfId: textbook.pdfId,
+        notes: textbook.notes || [],
+        readingHistory: textbook.readingHistory || [],
+        plan: textbook.plan || fullBook.plan
+      });
+      
+      setTextbooks(prev => [...prev, fullBook]);
+      console.log('📚 원서 추가 완료 (하이브리드):', fullBook.title);
+      
+      return fullBook;
+      
+    } catch (error) {
+      console.error('❌ 원서 등록 실패:', error);
+      setError(error.message);
+      
+      // 실패 시 로컬에만 저장
+      const localBook = { ...textbook, id: Date.now(), isLocalOnly: true };
+      setTextbooks(prev => [...prev, localBook]);
+      
+      // 로컬 스토리지에도 백업
+      const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+      localStorage.setItem('textbooks', JSON.stringify([...savedBooks, localBook]));
+      
+      return localBook;
+    }
   };
 
-  const deleteTextbook = (textbookId) => {
-    setTextbooks(prev => prev.filter(textbook => textbook.id !== textbookId));
-    // TextbookManagement와 동기화
-    const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
-    const updatedBooks = savedBooks.filter(book => book.id !== textbookId);
-    localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
+  const updateTextbook = async (textbookId, updates) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const existingBook = textbooks.find(book => book.id === textbookId);
+      
+      if (existingBook && !existingBook.isLocalOnly && existingBook.apiId) {
+        // 서버 데이터 업데이트
+        console.log('🔄 서버에서 원서 업데이트 중...', textbookId);
+        
+        // 업데이트할 데이터를 API 형식으로 변환
+        const mergedBook = { ...existingBook, ...updates };
+        const apiData = apiService.transformToApiFormat(mergedBook);
+        
+        const apiResponse = await apiService.updateBook(existingBook.apiId, apiData);
+        const updatedFrontendBook = apiService.transformFromApiFormat(apiResponse);
+        
+        // 로컬 데이터와 병합
+        const localData = getLocalBookData(textbookId);
+        const fullUpdatedBook = {
+          ...updatedFrontendBook,
+          ...localData,
+          ...updates // 최신 업데이트 적용
+        };
+        
+        setTextbooks(prev => prev.map(book => 
+          book.id === textbookId ? fullUpdatedBook : book
+        ));
+        
+        // 로컬 데이터 업데이트
+        saveLocalBookData(textbookId, {
+          file: fullUpdatedBook.file,
+          pdfId: fullUpdatedBook.pdfId,
+          notes: fullUpdatedBook.notes || [],
+          readingHistory: fullUpdatedBook.readingHistory || [],
+          plan: fullUpdatedBook.plan || []
+        });
+        
+        console.log('✅ 서버 업데이트 완료');
+        
+      } else {
+        // 로컬 전용 업데이트
+        setTextbooks(prev => prev.map(book => 
+          book.id === textbookId ? { ...book, ...updates } : book
+        ));
+        
+        // 로컬 스토리지 동기화
+        const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+        const updatedBooks = savedBooks.map(book => 
+          book.id === textbookId ? { ...book, ...updates } : book
+        );
+        localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
+      }
+      
+    } catch (error) {
+      console.error('❌ 원서 업데이트 실패:', error);
+      setError(error.message);
+      
+      // 실패 시 로컬만 업데이트
+      setTextbooks(prev => prev.map(book => 
+        book.id === textbookId ? { ...book, ...updates } : book
+      ));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deleteTextbook = async (textbookId) => {
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const existingBook = textbooks.find(book => book.id === textbookId);
+      
+      if (existingBook && !existingBook.isLocalOnly && existingBook.apiId) {
+        // 서버에서 삭제
+        console.log('🗑️ 서버에서 원서 삭제 중...', textbookId);
+        await apiService.deleteBook(existingBook.apiId);
+        console.log('✅ 서버 삭제 완료');
+      }
+      
+      // 로컬에서 삭제
+      setTextbooks(prev => prev.filter(book => book.id !== textbookId));
+      
+      // 로컬 스토리지에서 삭제
+      const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+      const updatedBooks = savedBooks.filter(book => book.id !== textbookId);
+      localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
+      
+      // 로컬 데이터 삭제
+      removeLocalBookData(textbookId);
+      
+      console.log('🗑️ 원서 삭제 완료 (하이브리드)');
+      
+    } catch (error) {
+      console.error('❌ 원서 삭제 실패:', error);
+      setError(error.message);
+      
+      // 실패 시에도 로컬에서는 삭제
+      setTextbooks(prev => prev.filter(book => book.id !== textbookId));
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getTextbookProgress = (textbook) => {
     return Math.round((textbook.currentPage / textbook.totalPages) * 100);
+  };
+
+  const loadStartingSoonBooks = async (days) => {
+    setLoading(true);
+    setError(null);
+    try {
+      console.log(`⏳ ${days}일 내 시작 예정인 원서 목록 로드 중...`);
+      const apiBooks = await apiService.getBooksStartingSoon(days);
+      const transformedBooks = apiBooks.map(apiBook => apiService.transformFromApiFormat(apiBook));
+      setStartingSoonBooks(transformedBooks);
+      console.log('✅ 임박 책 목록 로드 완료:', transformedBooks.length);
+    } catch (err) {
+      console.error('❌ 임박 책 목록 로드 실패:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getTextbookDaysRemaining = (textbook) => {
@@ -370,19 +563,63 @@ export const StudyProvider = ({ children }) => {
     return Math.ceil(remainingPages / daysRemaining);
   };
 
-  // 로컬 스토리지 동기화
+  // 로컬 데이터 관리 함수들
+  const getLocalBookData = (bookId) => {
+    try {
+      const localData = localStorage.getItem(`book_local_${bookId}`);
+      return localData ? JSON.parse(localData) : {};
+    } catch (error) {
+      console.error('로컬 데이터 읽기 실패:', error);
+      return {};
+    }
+  };
+
+  const saveLocalBookData = (bookId, data) => {
+    try {
+      localStorage.setItem(`book_local_${bookId}`, JSON.stringify(data));
+    } catch (error) {
+      console.error('로컬 데이터 저장 실패:', error);
+    }
+  };
+
+  const removeLocalBookData = (bookId) => {
+    try {
+      localStorage.removeItem(`book_local_${bookId}`);
+      
+      // PDF 청크 데이터도 삭제
+      const allKeys = Object.keys(localStorage);
+      const chunkKeys = allKeys.filter(key => key.startsWith(`textbook_${bookId}_chunk_`));
+      chunkKeys.forEach(key => localStorage.removeItem(key));
+      
+    } catch (error) {
+      console.error('로컬 데이터 삭제 실패:', error);
+    }
+  };
+
+  // 서버 연결 상태 확인
+  const checkServerConnection = async () => {
+    try {
+      const result = await apiService.testConnection();
+      return result;
+    } catch (error) {
+      return { success: false, message: error.message };
+    }
+  };
+
+  // 로컬 스토리지 동기화 (기존 subjects, studyLogs, goals, studyEvents만)
   useEffect(() => {
     const savedSubjects = localStorage.getItem('studySubjects');
     const savedStudyLogs = localStorage.getItem('studyLogs');
     const savedGoals = localStorage.getItem('studyGoals');
     const savedEvents = localStorage.getItem('studyEvents');
-    const savedTextbooks = localStorage.getItem('textbooks'); // TextbookManagement와 동일한 키 사용
 
     if (savedSubjects) setSubjects(JSON.parse(savedSubjects));
     if (savedStudyLogs) setStudyLogs(JSON.parse(savedStudyLogs));
     if (savedGoals) setGoals(JSON.parse(savedGoals));
     if (savedEvents) setStudyEvents(JSON.parse(savedEvents));
-    if (savedTextbooks) setTextbooks(JSON.parse(savedTextbooks));
+    
+    // 원서 데이터는 API에서 로드
+    loadTextbooks();
   }, []);
 
   useEffect(() => {
@@ -401,10 +638,6 @@ export const StudyProvider = ({ children }) => {
     localStorage.setItem('studyEvents', JSON.stringify(studyEvents));
   }, [studyEvents]);
 
-  useEffect(() => {
-    localStorage.setItem('textbooks', JSON.stringify(textbooks)); // TextbookManagement와 동일한 키 사용
-  }, [textbooks]);
-
   const value = {
     // 데이터
     subjects,
@@ -412,6 +645,8 @@ export const StudyProvider = ({ children }) => {
     goals,
     studyEvents,
     textbooks,
+    loading,
+    error,
     
     // 상태 업데이트 함수들
     setSubjects,
@@ -429,6 +664,8 @@ export const StudyProvider = ({ children }) => {
     getTextbookProgress,
     getTextbookDaysRemaining,
     getRecommendedDailyPages,
+    startingSoonBooks,
+    loadStartingSoonBooks,
     
     // 업데이트 함수들
     updateStudyTime,
@@ -439,9 +676,13 @@ export const StudyProvider = ({ children }) => {
     addSubject,
     updateSubject,
     deleteSubject,
+    
+    // API 연동 원서 함수들
     addTextbook,
     updateTextbook,
-    deleteTextbook
+    deleteTextbook,
+    loadTextbooks,
+    checkServerConnection
   };
 
   return (
@@ -449,4 +690,4 @@ export const StudyProvider = ({ children }) => {
       {children}
     </StudyContext.Provider>
   );
-}; 
+};

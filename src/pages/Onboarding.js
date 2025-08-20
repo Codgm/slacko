@@ -1,7 +1,14 @@
 import { useEffect } from 'react';
 import { BookOpen, Target, Users, CheckCircle, Star,BarChart3, Zap, Clock, Trophy, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const OnboardingLanding = () => {
+  const navigate = useNavigate();
+
+  const handleStartAuth = () => {
+    navigate('/auth');
+  };
+
   useEffect(() => {
     // ⚡ 개선된 구조화된 데이터
     const structuredData = {
@@ -85,7 +92,7 @@ const OnboardingLanding = () => {
     document.head.appendChild(script);
 
   }, []);
-
+  
   return (
     <div className="min-h-screen">
       {/* 네비게이션 */}
@@ -93,8 +100,16 @@ const OnboardingLanding = () => {
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="text-2xl font-bold text-gray-900">과탑</div>
           <div className="flex items-center space-x-4">
-            <button className="text-gray-600 hover:text-gray-900 transition-colors">로그인</button>
-            <button className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+            <button 
+              onClick={handleStartAuth}
+              className="text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              로그인
+            </button>
+            <button 
+              onClick={handleStartAuth}
+              className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
               바로 시작하기
             </button>
           </div>
@@ -174,7 +189,10 @@ const OnboardingLanding = () => {
                     </div>
                   </div>
                   
-                  <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all shadow-xl">
+                  <button 
+                    onClick={handleStartAuth}
+                    className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:from-blue-700 hover:to-purple-700 transform hover:scale-105 transition-all shadow-xl"
+                  >
                     지금 바로 무료로 시작하기 →
                   </button>
                 </div>

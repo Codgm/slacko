@@ -1,5 +1,7 @@
 // Sidebar.js - 메인 사이드바 컴포넌트
 import { useState } from 'react';
+import { useUser } from '../../context/UserContext';
+import { LogOut } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   Home, 
@@ -16,7 +18,9 @@ import {
 
 const Sidebar = ({ isOpen, onToggle }) => {
   const location = useLocation();
+  const { user, setUser } = useUser(); // useUser 훅에서 user와 setUser 가져오기
   const [searchFocused, setSearchFocused] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false); // showUserMenu 상태 추가
 
   const mainMenuItems = [
     {
@@ -193,18 +197,52 @@ const Sidebar = ({ isOpen, onToggle }) => {
 
       {/* User Section */}
       <div className="p-4 border-t border-slate-800/50 flex-shrink-0">
-        {isOpen ? (
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
-              <User size={16} className="text-white" />
+        {isOpen && user ? (
+          <div className="relative">
+            <div 
+              className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-slate-800/50 transition-colors"
+              onClick={() => setShowUserMenu(!showUserMenu)}
+            >
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold">
+                {user.name?.charAt(0) || 'U'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-white truncate">{user.name || '사용자'}</p>
+                <p className="text-xs text-slate-400">{user.university || '대학교'}</p>
+              </div>
+              <Settings size={16} className="text-slate-400" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-white truncate">사용자</p>
-              <p className="text-xs text-slate-400">온라인</p>
-            </div>
-            <button className="p-2 text-slate-400 hover:text-slate-300 hover:bg-slate-800/50 rounded-lg transition-all duration-200">
-              <Settings size={16} />
-            </button>
+            {/* User Menu Dropdown */}
+            {showUserMenu && (
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-slate-800 rounded-lg shadow-xl border border-slate-700 py-2">
+                <div className="px-4 py-2 border-b border-slate-700">
+                  <div className="text-sm font-medium text-white">{user.name || '사용자'}</div>
+                  <div className="text-xs text-slate-400">{user.email || '이메일 없음'}</div>
+                  <div className="text-xs text-emerald-400 mt-1">
+                    🔥 {user.currentStreak || 0}일 연속 학습
+                  </div>
+                </div>
+                <button className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 flex items-center gap-2">
+                  <User size={14} />
+                  프로필 설정
+                </button>
+                <button className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 flex items-center gap-2">
+                  <Settings size={14} />
+                  환경 설정
+                </button>
+                <hr className="my-2 border-slate-700" />
+                <button 
+                  onClick={() => {
+                    setUser(null);
+                    setShowUserMenu(false);
+                  }}
+                  className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-slate-700 flex items-center gap-2"
+                >
+                  <LogOut size={14} />
+                  로그아웃
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <button

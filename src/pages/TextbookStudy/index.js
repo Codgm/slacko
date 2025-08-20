@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useOutletContext, useParams} from 'react-router-dom';
 import { Search, Settings, NotebookPen, X, BookOpen, AlertTriangle, FileDown, CheckCircle, ZoomIn, ZoomOut, List, ChevronLeft, ChevronRight, Target, Star } from 'lucide-react';
 import Breadcrumb from '../../components/common/Breadcrumb';
@@ -52,6 +52,10 @@ const TextbookStudyPage = () => {
   const [showSettingsMenu, setShowSettingsMenu] = useState(false);
   const [shouldOpenEditor, setShouldOpenEditor] = useState(false);
 
+  // 저장 관련 ref와 상태
+  const saveTimeoutRef = useRef(null);
+  const lastSavedDataRef = useRef(null);
+
   const highlightColors = [
     { name: '노랑', class: 'bg-yellow-200', preview: 'bg-yellow-200' },
     { name: '파랑', class: 'bg-blue-200', preview: 'bg-blue-200' },
@@ -59,9 +63,6 @@ const TextbookStudyPage = () => {
     { name: '분홍', class: 'bg-pink-200', preview: 'bg-pink-200' },
     { name: '보라', class: 'bg-purple-200', preview: 'bg-purple-200' }
   ];
-
-  // 데이터 저장을 위한 디바운스 타이머
-  const [saveTimeout, setSaveTimeout] = useState(null);
 
   // 현재 페이지에 해당하는 챕터 찾기
   const findChapterByPage = (page) => {
@@ -236,17 +237,35 @@ const TextbookStudyPage = () => {
     setAllNotes(notesFromHighlights);
   }, [highlights]);
   
-  // 데이터 저장 함수 (디바운스 적용, 개선된 버전)
-  const saveDataToStorage = () => {
+  // 데이터 저장 함수 (개선된 버전 - 무한 루프 방지)
+  const saveDataToStorage = useCallback((forceImmediate = false) => {
     if (!id || !textbookData) return;
     
-    // 이전 타이머 클리어
-    if (saveTimeout) {
-      clearTimeout(saveTimeout);
+    // 현재 저장할 데이터 생성
+    const currentData = {
+      currentPage,
+      plan: JSON.stringify(plan), // 깊은 비교를 위해 JSON 문자열로 변환
+      highlights: JSON.stringify(highlights),
+      studyTimer
+    };
+    
+    // 이전에 저장된 데이터와 비교 (변경이 없으면 저장하지 않음)
+    const lastSaved = lastSavedDataRef.current;
+    if (lastSaved && 
+        lastSaved.currentPage === currentData.currentPage &&
+        lastSaved.plan === currentData.plan &&
+        lastSaved.highlights === currentData.highlights &&
+        lastSaved.studyTimer === currentData.studyTimer) {
+      console.log('💾 데이터 변경 없음, 저장 스킵');
+      return;
     }
     
-    // 500ms 후에 저장 (디바운스)
-    const newTimeout = setTimeout(() => {
+    // 이전 타이머 클리어
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+    
+    const doSave = () => {
       try {
         const books = JSON.parse(localStorage.getItem('textbooks') || '[]');
         const bookIndex = books.findIndex(b => String(b.id) === String(id));
@@ -293,6 +312,9 @@ const TextbookStudyPage = () => {
           books[bookIndex] = updatedBook;
           localStorage.setItem('textbooks', JSON.stringify(books));
           
+          // 마지막 저장된 데이터 업데이트
+          lastSavedDataRef.current = currentData;
+          
           console.log('💾 데이터 저장 완료:', {
             id: id,
             currentPage,
@@ -306,24 +328,35 @@ const TextbookStudyPage = () => {
       } catch (error) {
         console.error('❌ 데이터 저장 실패:', error);
       }
-    }, 500);
+    };
     
-    setSaveTimeout(newTimeout);
-  };
+    if (forceImmediate) {
+      doSave();
+    } else {
+      // 1초 후에 저장 (디바운스)
+      saveTimeoutRef.current = setTimeout(doSave, 1000);
+    }
+  }, [id, textbookData, currentPage, plan, highlights, studyTimer]);
 
-  // 주요 데이터 변경 시 저장 실행
+  // 주요 데이터 변경 시 저장 실행 - 의존성 배열 최적화
   useEffect(() => {
     if (textbookData && id) {
       saveDataToStorage();
     }
-    
-    // 컴포넌트 언마운트 시 타이머 정리
+  }, [saveDataToStorage, textbookData, id]);
+
+  // 컴포넌트 언마운트 시 즉시 저장
+  useEffect(() => {
     return () => {
-      if (saveTimeout) {
-        clearTimeout(saveTimeout);
+      if (saveTimeoutRef.current) {
+        clearTimeout(saveTimeoutRef.current);
+        // 언마운트 시 즉시 저장
+        if (id && textbookData) {
+          saveDataToStorage(true);
+        }
       }
     };
-  }, [currentPage, plan, highlights, studyTimer, id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [id, textbookData, saveDataToStorage]);
 
   // 학습 계획 업데이트 함수
   const handlePlanUpdate = (updatedPlan) => {
