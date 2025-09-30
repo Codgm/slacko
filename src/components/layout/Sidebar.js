@@ -1,5 +1,5 @@
 // Sidebar.js - 메인 사이드바 컴포넌트
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useUser } from '../../context/UserContext';
 import { LogOut } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
@@ -18,9 +18,44 @@ import {
 
 const Sidebar = ({ isOpen, onToggle }) => {
   const location = useLocation();
-  const { user, setUser } = useUser(); // useUser 훅에서 user와 setUser 가져오기
+  const { user, logout } = useUser(); // useUser 훅에서 user와 logout 가져오기
   const [searchFocused, setSearchFocused] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false); // showUserMenu 상태 추가
+  const userMenuRef = useRef(null);
+
+  // Click outside to close user menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showUserMenu]);
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape' && showUserMenu) {
+        setShowUserMenu(false);
+      }
+    };
+
+    if (showUserMenu) {
+      document.addEventListener('keydown', handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showUserMenu]);
 
   const mainMenuItems = [
     {
@@ -45,7 +80,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
       id: 'project',
       title: '프로젝트 관리',
       icon: FolderOpen,
-      path: '/project',
+      path: '/projects',
       color: 'violet',
       gradient: 'from-violet-500 to-purple-500'
     },
@@ -53,7 +88,7 @@ const Sidebar = ({ isOpen, onToggle }) => {
       id: 'textbook',
       title: '원서 관리',
       icon: Book,
-      path: '/textbook',
+      path: '/textbooks',
       color: 'orange',
       gradient: 'from-orange-500 to-red-500'
     },
@@ -195,52 +230,122 @@ const Sidebar = ({ isOpen, onToggle }) => {
         </div>
       </nav>
 
-      {/* User Section */}
+      {/* User Section - 수정된 부분 */}
       <div className="p-4 border-t border-slate-800/50 flex-shrink-0">
-        {isOpen && user ? (
-          <div className="relative">
-            <div 
-              className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-slate-800/50 transition-colors"
+        {isOpen ? (
+          <div className="relative" ref={userMenuRef}>
+            <div
+              className="flex items-center gap-3 cursor-pointer p-3 rounded-lg hover:bg-slate-800/50 transition-all duration-200 hover:shadow-sm"
               onClick={() => setShowUserMenu(!showUserMenu)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setShowUserMenu(!showUserMenu);
+                }
+              }}
+              tabIndex={0}
+              role="button"
+              aria-expanded={showUserMenu}
+              aria-haspopup="true"
+              aria-label="사용자 메뉴"
             >
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold">
-                {user.name?.charAt(0) || 'U'}
+              {/* Profile Picture - user 데이터 없어도 항상 표시 */}
+              <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user.name || '사용자'}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      // Fallback to initial if image fails to load
+                      e.target.style.display = 'none';
+                      e.target.nextSibling.style.display = 'flex';
+                    }}
+                  />
+                ) : null}
+                <div className={`w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold ${user?.avatar ? 'hidden' : ''}`}>
+                  {user?.name?.charAt(0) || 'U'}
+                </div>
               </div>
+
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-white truncate">{user.name || '사용자'}</p>
-                <p className="text-xs text-slate-400">{user.university || '대학교'}</p>
+                <p className="text-sm font-medium text-white truncate">
+                  {user?.name || '사용자'}
+                </p>
+                <p className="text-xs text-slate-400 truncate">
+                  {user?.email || user?.university || '로딩 중...'}
+                </p>
               </div>
-              <Settings size={16} className="text-slate-400" />
+              <div className="flex items-center gap-1">
+                <Settings size={16} className="text-slate-400" />
+                {showUserMenu && (
+                  <div className="w-1.5 h-1.5 bg-blue-400 rounded-full animate-pulse"></div>
+                )}
+              </div>
             </div>
+
             {/* User Menu Dropdown */}
             {showUserMenu && (
-              <div className="absolute bottom-full left-0 right-0 mb-2 bg-slate-800 rounded-lg shadow-xl border border-slate-700 py-2">
-                <div className="px-4 py-2 border-b border-slate-700">
-                  <div className="text-sm font-medium text-white">{user.name || '사용자'}</div>
-                  <div className="text-xs text-slate-400">{user.email || '이메일 없음'}</div>
-                  <div className="text-xs text-emerald-400 mt-1">
-                    🔥 {user.currentStreak || 0}일 연속 학습
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-slate-800 rounded-lg shadow-xl border border-slate-700 py-2 z-50">
+                {/* User Info Header */}
+                <div className="px-4 py-3 border-b border-slate-700">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-700 flex items-center justify-center">
+                      {user?.avatar ? (
+                        <img
+                          src={user.avatar}
+                          alt={user.name || '사용자'}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.nextSibling.style.display = 'flex';
+                          }}
+                        />
+                      ) : null}
+                      <div className={`w-full h-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-sm ${user?.avatar ? 'hidden' : ''}`}>
+                        {user?.name?.charAt(0) || 'U'}
+                      </div>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-white truncate">
+                        {user?.name || '사용자'}
+                      </div>
+                      <div className="text-xs text-slate-400 truncate">
+                        {user?.email || '이메일 없음'}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-xs text-emerald-400">
+                    🔥 {user?.currentStreak || 0}일 연속 학습
                   </div>
                 </div>
-                <button className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 flex items-center gap-2">
-                  <User size={14} />
-                  프로필 설정
-                </button>
-                <button className="w-full px-4 py-2 text-left text-sm text-slate-300 hover:bg-slate-700 flex items-center gap-2">
-                  <Settings size={14} />
-                  환경 설정
-                </button>
-                <hr className="my-2 border-slate-700" />
-                <button 
-                  onClick={() => {
-                    setUser(null);
-                    setShowUserMenu(false);
-                  }}
-                  className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-slate-700 flex items-center gap-2"
-                >
-                  <LogOut size={14} />
-                  로그아웃
-                </button>
+
+                {/* Menu Items */}
+                <div className="py-1">
+                  <button className="w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-slate-700 hover:text-white flex items-center gap-3 transition-all duration-200 group">
+                    <User size={14} className="group-hover:text-blue-400 transition-colors" />
+                    <span>프로필 설정</span>
+                  </button>
+                  <button className="w-full px-4 py-2.5 text-left text-sm text-slate-300 hover:bg-slate-700 hover:text-white flex items-center gap-3 transition-all duration-200 group">
+                    <Settings size={14} className="group-hover:text-blue-400 transition-colors" />
+                    <span>환경 설정</span>
+                  </button>
+                </div>
+
+                <hr className="my-1 border-slate-700" />
+
+                <div className="py-1">
+                  <button
+                    onClick={() => {
+                      if (logout) logout();
+                      setShowUserMenu(false);
+                    }}
+                    className="w-full px-4 py-2.5 text-left text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 flex items-center gap-3 transition-all duration-200 group"
+                  >
+                    <LogOut size={14} className="group-hover:text-red-300 transition-colors" />
+                    <span>로그아웃</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

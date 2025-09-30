@@ -1,7 +1,15 @@
 // src/services/authAPI.js
 class AuthAPI {
   constructor() {
-    this.baseURL = 'https://cffdb44bbd9c.ngrok-free.app/api';
+    const isDev = process.env.NODE_ENV === 'development';
+    const useMock = process.env.REACT_APP_USE_MOCK === 'true';
+
+    if (isDev && useMock) {
+      this.baseURL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000/api';
+      console.log('🔧 Mock API 서버 사용:', this.baseURL);
+    } else {
+      this.baseURL = 'https://a1d862e78d7d.ngrok-free.app/api';
+    }
     this.endpoints = {
       oauth2Google: '/auth/oauth2/google',
       loginSuccess: '/auth/login/success',
@@ -58,11 +66,21 @@ class AuthAPI {
     });
   }
 
-  // 1. OAuth2 로그인 URL 가져오기
+  // 1. OAuth2 로그인 URL 가져오기 - 수정됨
   async getGoogleAuthUrl() {
     try {
-      return await this.request(this.endpoints.oauth2Google);
+      const response = await this.request(this.endpoints.oauth2Google);
+      console.log('Auth URL response:', response); // 디버깅용
+      
+      // Mock 서버의 응답 구조에 맞게 수정
+      if (response.authUrl) {
+        return { authUrl: response.authUrl };
+      }
+      
+      // 기존 구조도 지원
+      return response;
     } catch (error) {
+      console.error('Google auth URL request failed:', error);
       throw new Error(`Google 인증 URL 요청 실패: ${error.message}`);
     }
   }
@@ -71,7 +89,11 @@ class AuthAPI {
   async handleLoginSuccess() {
     try {
       const response = await fetch(`${this.baseURL}${this.endpoints.loginSuccess}`, {
-        credentials: 'include' // 쿠키 포함
+        method: 'GET',
+        credentials: 'include', // 쿠키 포함
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
       });
 
       if (!response.ok) {
@@ -81,6 +103,7 @@ class AuthAPI {
 
       return await response.json();
     } catch (error) {
+      console.error('Login success handling failed:', error);
       throw new Error(`로그인 성공 처리 실패: ${error.message}`);
     }
   }

@@ -20,6 +20,9 @@ export default function StudyManagementSystem() {
     subjects,
     studyLogs,
     goals,
+    apiSubjects,
+    apiStudyLogs,
+    apiGoals,
     getTodayRecommendations,
     updateStudyTime,
     updateGoalProgress,
@@ -43,6 +46,19 @@ export default function StudyManagementSystem() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('전체');
 
+  // API 데이터 로드 (StudyContext에서 자동으로 처리됨)
+  // useEffect(() => {
+  //   const loadData = async () => {
+  //     try {
+  //       await loadAllApiData();
+  //     } catch (error) {
+  //       console.error('학습 관리 데이터 로드 실패:', error);
+  //     }
+  //   };
+
+  //   loadData();
+  // }, [loadAllApiData]);
+
   // 유틸리티 함수들
   const getProgress = (subject) => {
     return Math.round((subject.completedChapters / subject.totalChapters) * 100);
@@ -55,25 +71,32 @@ export default function StudyManagementSystem() {
   };
 
   const getTotalStudyTime = () => {
-    return subjects.reduce((total, subject) => total + subject.totalStudyTime, 0);
+    return subjects?.reduce((total, subject) => total + (subject?.totalStudyTime || 0), 0) || 0;
   };
 
   const getCompletionRate = () => {
-    const totalChapters = subjects.reduce((total, subject) => total + subject.totalChapters, 0);
-    const completedChapters = subjects.reduce((total, subject) => total + subject.completedChapters, 0);
+    if (!subjects || subjects.length === 0) return 0;
+    const totalChapters = subjects.reduce((total, subject) => total + (subject?.totalChapters || 0), 0);
+    const completedChapters = subjects.reduce((total, subject) => total + (subject?.completedChapters || 0), 0);
     return totalChapters > 0 ? Math.round((completedChapters / totalChapters) * 100) : 0;
   };
 
   const getCurrentStreak = () => {
-    return Math.max(...subjects.map(s => s.currentStreak));
+    if (!subjects || subjects.length === 0) return 0;
+    return Math.max(...subjects.map(s => s?.currentStreak || 0));
   };
 
-  // 통계 계산
+  // API 데이터 또는 mock 데이터 사용 (null/undefined 체크 추가)
+  const currentSubjects = (apiSubjects && apiSubjects.length > 0) ? apiSubjects : subjects;
+  const currentStudyLogs = (apiStudyLogs && apiStudyLogs.length > 0) ? apiStudyLogs : studyLogs;
+  const currentGoals = (apiGoals && apiGoals.length > 0) ? apiGoals : goals;
+
+  // 통계 계산 (null/undefined 체크 추가)
   const stats = {
-    total: subjects.length,
-    inProgress: subjects.filter(s => s.completedChapters > 0 && s.completedChapters < s.totalChapters).length,
-    completed: subjects.filter(s => s.completedChapters === s.totalChapters).length,
-    notStarted: subjects.filter(s => s.completedChapters === 0).length
+    total: currentSubjects?.length || 0,
+    inProgress: currentSubjects?.filter(s => s.completedChapters > 0 && s.completedChapters < s.totalChapters).length || 0,
+    completed: currentSubjects?.filter(s => s.completedChapters === s.totalChapters).length || 0,
+    notStarted: currentSubjects?.filter(s => s.completedChapters === 0).length || 0
   };
 
   // 이벤트 핸들러들
@@ -167,16 +190,16 @@ export default function StudyManagementSystem() {
     <div className="min-h-screen bg-slate-50">
       {/* 상단 헤더 바 (원서 관리와 동일한 구조) */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-between">
+        <div className="px-4 md:px-6 py-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* 페이지 제목 */}
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">학습 관리</h1>
-              <p className="text-sm text-slate-600 mt-0.5">체계적인 학습으로 목표를 달성하세요</p>
+              <h1 className="text-xl md:text-2xl font-bold text-slate-900">학습 관리</h1>
+              <p className="text-xs md:text-sm text-slate-600 mt-0.5">체계적인 학습으로 목표를 달성하세요</p>
             </div>
 
             {/* 우측 액션 버튼들 */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3 flex-wrap">
               <div className="flex items-center gap-2 bg-slate-50/80 backdrop-blur px-3 py-2 rounded-lg border border-slate-200/50">
                 <Trophy size={16} className="text-amber-500" />
                 <span className="text-xs text-slate-600">{getCurrentStreak()}일 연속</span>
@@ -196,7 +219,7 @@ export default function StudyManagementSystem() {
           </div>
 
           {/* 통계 카드들 (원서 관리와 동일한 구조) */}
-          <div className="grid grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <div className="bg-slate-50 rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-slate-100 rounded-lg">
@@ -246,10 +269,10 @@ export default function StudyManagementSystem() {
       </div>
 
       {/* 컨트롤 바 (탭 + 검색/필터) */}
-      <div className="bg-white border-b border-slate-200 px-6 py-3">
-        <div className="flex items-center justify-between">
+      <div className="bg-white border-b border-slate-200 px-4 md:px-6 py-3">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           {/* 탭 네비게이션 */}
-          <div className="flex items-center gap-1 bg-gray-200 p-1 rounded-xl">
+          <div className="flex items-center gap-1 bg-gray-200 p-1 rounded-xl overflow-x-auto">
             {[
               { id: 'dashboard', name: '대시보드', icon: BarChart3 },
               { id: 'subjects', name: '과목 관리', icon: BookMarked },
@@ -277,19 +300,19 @@ export default function StudyManagementSystem() {
 
           {/* 검색 & 필터 (과목 관리 탭에서만 표시) */}
           {activeTab === 'subjects' && (
-            <div className="flex items-center gap-3">
-              <div className="relative">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+              <div className="relative w-full sm:w-auto">
                 <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
                   type="text"
                   placeholder="과목 검색..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 pr-4 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-48"
+                  className="pl-9 pr-4 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-48"
                 />
               </div>
-              
-              <div className="flex items-center gap-2">
+
+              <div className="flex items-center gap-2 flex-wrap">
                 {['전체', '진행 중', '완료', '예정'].map(status => (
                   <button
                     key={status}
@@ -314,9 +337,9 @@ export default function StudyManagementSystem() {
         {/* 탭별 컨텐츠 */}
         {activeTab === 'dashboard' && (
           <StudyDashboard
-            subjects={subjects}
-            studyLogs={studyLogs}
-            goals={goals}
+            subjects={currentSubjects || []}
+            studyLogs={currentStudyLogs || []}
+            goals={currentGoals || []}
             getProgress={getProgress}
             formatTime={formatTime}
             getTotalStudyTime={getTotalStudyTime}
@@ -330,8 +353,8 @@ export default function StudyManagementSystem() {
 
         {activeTab === 'subjects' && (
           <SubjectManagement
-            subjects={subjects}
-            studyLogs={studyLogs}
+            subjects={currentSubjects || []}
+            studyLogs={currentStudyLogs || []}
             expandedSubjects={expandedSubjects}
             getProgress={getProgress}
             formatTime={formatTime}
@@ -350,7 +373,7 @@ export default function StudyManagementSystem() {
 
         {activeTab === 'timer' && (
           <StudyTimer
-            subjects={subjects}
+            subjects={currentSubjects || []}
             selectedSubject={selectedSubject}
             setSelectedSubject={setSelectedSubject}
             showToastMessage={showToastMessage}
@@ -361,8 +384,8 @@ export default function StudyManagementSystem() {
 
         {activeTab === 'goals' && (
           <GoalSetting
-            subjects={subjects}
-            goals={goals}
+            subjects={currentSubjects || []}
+            goals={currentGoals || []}
             showToastMessage={showToastMessage}
             updateGoalProgress={updateGoalProgress}
           />
@@ -370,9 +393,9 @@ export default function StudyManagementSystem() {
 
         {activeTab === 'analytics' && (
           <StudyAnalytics
-            subjects={subjects}
-            studyLogs={studyLogs}
-            goals={goals}
+            subjects={currentSubjects || []}
+            studyLogs={currentStudyLogs || []}
+            goals={currentGoals || []}
             getProgress={getProgress}
             formatTime={formatTime}
             getTotalStudyTime={getTotalStudyTime}

@@ -14,13 +14,13 @@ export default function Modal({ open, onClose, children, className = '', ...prop
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-all"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm transition-all p-4"
       aria-modal="true"
       role="dialog"
       onClick={onClose}
     >
       <div
-        className={`bg-white rounded-2xl shadow-xl p-8 max-w-lg w-full relative border border-gray-100 transition-all ${className}`}
+        className={`bg-white rounded-2xl shadow-xl p-4 md:p-8 max-w-lg w-full relative border border-gray-100 transition-all ${className}`}
         onClick={e => e.stopPropagation()}
         {...props}
       >
@@ -47,7 +47,7 @@ export function SlidePanel({ open, onClose, children, className = '', ...props }
       role="dialog"
     >
       <div
-        className={`bg-white w-full max-w-xl h-full shadow-xl p-8 overflow-y-auto relative border-l border-gray-100 transition-all transform translate-x-0 ${className}`}
+        className={`bg-white w-full max-w-xl h-full shadow-xl p-4 md:p-8 overflow-y-auto relative border-l border-gray-100 transition-all transform translate-x-0 ${className}`}
         onClick={e => e.stopPropagation()}
         {...props}
       >

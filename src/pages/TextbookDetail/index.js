@@ -1,80 +1,225 @@
 import Breadcrumb from '../../components/common/Breadcrumb';
 import WeeklyGoalsWidget from '../../components/plan/WeeklyGoalsWidget';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Play, BarChart3, MoreHorizontal, Calendar, CheckCircle, Target, Clock, BookOpen, TrendingUp } from 'lucide-react';
+import { Play, BarChart3, MoreHorizontal, Calendar, CheckCircle, Target, Clock, BookOpen, TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
 import { PdfThumbnail } from '../../utils/pdfAnalyzer';
 import { useState, useEffect } from 'react';
+import { useStudyContext } from '../../context/StudyContext';
 
-// 원서 상세 페이지
 const TextbookDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { textbooks, loading: contextLoading, loadTextbooks } = useStudyContext();
   
   // 원서 데이터 상태
   const [textbook, setTextbook] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState(null);
 
-  // 기존 학습 계획 데이터 (요일 정보 추가됨)
+  // 기존 학습 계획 데이터
   const [studyPlans, setStudyPlans] = useState([]);
 
-  // 데이터 로드
-  useEffect(() => {
-    const loadTextbookData = () => {
-      try {
-        const existingBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
-        const foundTextbook = existingBooks.find(book => book.id === parseInt(id));
+  // 데이터 로드 함수
+  const loadTextbookData = async () => {
+    setIsLoading(true);
+    setLoadError(null);
+    
+    try {
+      console.log('📚 원서 상세 데이터 로드 시작, ID:', id);
+      
+      // 1. 컨텍스트에서 원서 찾기 (API 데이터 포함)
+      let foundTextbook = textbooks.find(book => book.id === parseInt(id));
+      
+      if (!foundTextbook) {
+        // 2. 컨텍스트에 없으면 다시 로드 시도
+        console.log('📚 컨텍스트에서 원서를 찾을 수 없음, 다시 로드 시도');
+        await loadTextbooks();
         
-        if (!foundTextbook) {
-          navigate('/textbook');
-          return;
-        }
-
-        setTextbook(foundTextbook);
-        // 기존 학습 계획 로드 (plan 또는 weeklyGoals)
-        const plans = foundTextbook.plan || foundTextbook.weeklyGoals || [];
-        setStudyPlans(plans);
-      } catch (error) {
-        console.error('원서 데이터 로드 실패:', error);
-        navigate('/textbook');
-      } finally {
-        setIsLoading(false);
+        // 다시 찾기
+        const updatedTextbooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+        foundTextbook = updatedTextbooks.find(book => book.id === parseInt(id));
       }
-    };
+      
+      if (!foundTextbook) {
+        throw new Error('원서를 찾을 수 없습니다');
+      }
+      
+      // 3. 로컬 데이터와 병합 (PDF 파일, 노트 등)
+      const localData = getLocalBookData(parseInt(id));
+      console.log('💾 로컬 데이터 로드:', localData);
+      
+      const mergedTextbook = {
+        ...foundTextbook,
+        ...localData,
+        // PDF 관련 데이터 우선적으로 로컬에서 가져오기
+        file: localData.file || foundTextbook.file,
+        pdfId: localData.pdfId || foundTextbook.pdfId,
+        notes: localData.notes || foundTextbook.notes || [],
+        readingHistory: localData.readingHistory || foundTextbook.readingHistory || [],
+        plan: localData.plan || foundTextbook.plan || []
+      };
+      
+      console.log('✅ 병합된 원서 데이터:', {
+        id: mergedTextbook.id,
+        title: mergedTextbook.title,
+        hasPdfFile: !!mergedTextbook.file,
+        pdfId: mergedTextbook.pdfId,
+        notesCount: mergedTextbook.notes.length,
+        planCount: mergedTextbook.plan.length
+      });
+      
+      setTextbook(mergedTextbook);
+      setStudyPlans(mergedTextbook.plan || []);
+      
+    } catch (error) {
+      console.error('❌ 원서 데이터 로드 실패:', error);
+      setLoadError(error.message);
+      
+      // 실패 시 로컬 스토리지에서 직접 찾기 (호환성)
+      try {
+        const localBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+        const localBook = localBooks.find(book => book.id === parseInt(id));
+        
+        if (localBook) {
+          console.log('🔄 로컬 스토리지에서 복원:', localBook.title);
+          setTextbook(localBook);
+          setStudyPlans(localBook.plan || localBook.weeklyGoals || []);
+          setLoadError(null);
+        }
+      } catch (localError) {
+        console.error('❌ 로컬 데이터 복원도 실패:', localError);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
+  // 로컬 데이터 가져오기
+  const getLocalBookData = (bookId) => {
+    try {
+      const localDataKey = `book_local_${bookId}`;
+      const localData = localStorage.getItem(localDataKey);
+      
+      if (localData) {
+        const parsed = JSON.parse(localData);
+        console.log('📋 로컬 데이터 발견:', localDataKey, {
+          hasPdfFile: !!parsed.file,
+          pdfId: parsed.pdfId,
+          notesCount: (parsed.notes || []).length
+        });
+        return parsed;
+      }
+      
+      // 기존 방식 호환성 - 직접 textbooks에서 찾기
+      const textbooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
+      const book = textbooks.find(b => b.id === bookId);
+      
+      if (book) {
+        return {
+          file: book.file,
+          pdfId: book.pdfId,
+          notes: book.notes || [],
+          readingHistory: book.readingHistory || [],
+          plan: book.plan || []
+        };
+      }
+      
+      return {};
+    } catch (error) {
+      console.error('로컬 데이터 읽기 실패:', error);
+      return {};
+    }
+  };
+
+  // 데이터 로드 트리거
+  useEffect(() => {
     if (id) {
       loadTextbookData();
     }
-  }, [id, navigate]);
+  }, [id]);
 
-  // 학습 계획 업데이트 (요일 정보 포함)
-  const updateStudyPlans = (updatedPlans) => {
+  // textbooks 변경 시 다시 로드
+  useEffect(() => {
+    if (id && textbooks.length > 0 && !textbook) {
+      loadTextbookData();
+    }
+  }, [textbooks, id]);
+
+  // 학습 계획 업데이트
+  const updateStudyPlans = async (updatedPlans) => {
     try {
-      const books = JSON.parse(localStorage.getItem('textbooks') || '[]');
-      const bookIndex = books.findIndex(book => book.id === parseInt(id));
+      setStudyPlans(updatedPlans);
       
-      if (bookIndex !== -1) {
-        books[bookIndex] = { 
-          ...books[bookIndex], 
+      if (textbook) {
+        const updatedTextbook = { 
+          ...textbook, 
           plan: updatedPlans,
           weeklyGoals: updatedPlans // 호환성 유지
         };
-        localStorage.setItem('textbooks', JSON.stringify(books));
-        setTextbook(prev => ({ ...prev, plan: updatedPlans }));
+        
+        setTextbook(updatedTextbook);
+        
+        // 로컬 데이터 업데이트
+        const localDataKey = `book_local_${textbook.id}`;
+        const existingLocalData = getLocalBookData(textbook.id);
+        const updatedLocalData = {
+          ...existingLocalData,
+          plan: updatedPlans
+        };
+        
+        localStorage.setItem(localDataKey, JSON.stringify(updatedLocalData));
+        console.log('📋 학습 계획 로컬 업데이트 완료');
+        
+        // 기존 방식 호환성 - textbooks에도 업데이트
+        const books = JSON.parse(localStorage.getItem('textbooks') || '[]');
+        const bookIndex = books.findIndex(book => book.id === textbook.id);
+        
+        if (bookIndex !== -1) {
+          books[bookIndex] = updatedTextbook;
+          localStorage.setItem('textbooks', JSON.stringify(books));
+        }
       }
       
-      setStudyPlans(updatedPlans);
     } catch (error) {
       console.error('학습 계획 업데이트 실패:', error);
     }
   };
 
-  // 로딩 중
-  if (isLoading) {
+  // 로딩 상태
+  if (isLoading || contextLoading) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <Loader2 className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
           <p className="text-lg font-medium text-gray-700">원서 정보 로딩 중...</p>
+          <p className="text-sm text-gray-500 mt-2">서버와 로컬 데이터를 병합하고 있습니다</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태
+  if (loadError && !textbook) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-gray-900 mb-2">원서를 불러올 수 없습니다</h2>
+          <p className="text-gray-600 mb-4">{loadError}</p>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={() => navigate('/textbook')}
+              className="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600"
+            >
+              목록으로 돌아가기
+            </button>
+            <button
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            >
+              다시 시도
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -82,6 +227,7 @@ const TextbookDetailPage = () => {
 
   // 원서가 없으면 리다이렉트
   if (!textbook) {
+    setTimeout(() => navigate('/textbook'), 100);
     return null;
   }
 
@@ -108,7 +254,6 @@ const TextbookDetailPage = () => {
   // 노트와 하이라이트 개수
   const notes = textbook.notes || [];
   const noteCount = notes.filter(n => n.content && n.content.trim() !== '').length;
-  // const highlightCount = notes.filter(n => n.type === 'highlight' || (n.color && !n.content)).length;
 
   // 제목을 간단하게 표시하는 함수
   const getShortTitle = (title) => {
@@ -121,7 +266,17 @@ const TextbookDetailPage = () => {
   };
 
   const handleStartStudy = () => {
-    navigate(`/textbook/${id}/study`, { state: { textbookTitle: textbook.title } });
+    console.log('🚀 학습 시작:', {
+      textbookId: textbook.id,
+      hasPdfFile: !!textbook.file,
+      pdfId: textbook.pdfId
+    });
+    navigate(`/textbook/${id}/study`, { 
+      state: { 
+        textbookTitle: textbook.title,
+        textbook: textbook // 전체 데이터 전달
+      } 
+    });
   };
 
   // 최근 노트 요약
@@ -155,32 +310,6 @@ const TextbookDetailPage = () => {
 
   const noteSummaries = getRecentNoteSummaries();
 
-  // 주간 진도 계산
-  // const getWeeklyProgress = () => {
-  //   const today = new Date();
-  //   const startOfWeek = new Date(today.setDate(today.getDate() - today.getDay()));
-    
-  //   const weekDays = [];
-  //   const completedDays = [];
-    
-  //   for (let i = 0; i < 7; i++) {
-  //     const day = new Date(startOfWeek);
-  //     day.setDate(startOfWeek.getDate() + i);
-  //     const dayStr = day.toISOString().split('T')[0];
-      
-  //     weekDays.push(i);
-      
-  //     const dayPlan = studyPlans.find(p => p.date === dayStr && p.completed);
-  //     if (dayPlan) {
-  //       completedDays.push(i);
-  //     }
-  //   }
-    
-  //   return { selectedDays: weekDays, completedDays };
-  // };
-
-  // const weeklyProgress = getWeeklyProgress();
-
   return (
     <div className="min-h-screen bg-slate-50">
       <div className="flex">
@@ -192,7 +321,19 @@ const TextbookDetailPage = () => {
               <div className="flex items-center justify-between">
                 {/* 페이지 제목 */}
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900">{getShortTitle(textbook.title)}</h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-bold text-slate-900">{getShortTitle(textbook.title)}</h1>
+                    {textbook.isLocalOnly && (
+                      <span className="px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">
+                        로컬 전용
+                      </span>
+                    )}
+                    {loadError && (
+                      <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full">
+                        동기화 오류
+                      </span>
+                    )}
+                  </div>
                   <div className='py-2 flex'>
                     <Breadcrumb />
                   </div>
@@ -206,10 +347,11 @@ const TextbookDetailPage = () => {
                   </div>
                   <button
                     onClick={handleStartStudy}
-                    className="bg-slate-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition-colors flex items-center gap-2"
+                    disabled={!textbook.file && !textbook.pdfId}
+                    className="bg-slate-900 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-slate-800 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Play size={16} />
-                    학습 시작
+                    {textbook.file || textbook.pdfId ? '학습 시작' : 'PDF 없음'}
                   </button>
                   <button className="p-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition-all duration-200">
                     <MoreHorizontal size={18} />
@@ -284,6 +426,15 @@ const TextbookDetailPage = () => {
                     <div className="absolute -bottom-3 -right-3 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg">
                       {progress}%
                     </div>
+                    
+                    {/* PDF 상태 표시 */}
+                    <div className="absolute top-2 right-2">
+                      {textbook.file || textbook.pdfId ? (
+                        <div className="w-3 h-3 bg-green-500 rounded-full" title="PDF 사용 가능" />
+                      ) : (
+                        <div className="w-3 h-3 bg-red-500 rounded-full" title="PDF 없음" />
+                      )}
+                    </div>
                   </div>
                   <div className="flex-1 space-y-6">
                     <div>
@@ -302,6 +453,25 @@ const TextbookDetailPage = () => {
                       </div>
                       <div className="text-sm text-gray-600 py-1">
                         목표 완료일: {textbook.targetDate}
+                      </div>
+                      
+                      {/* 데이터 소스 정보 */}
+                      <div className="flex items-center gap-2 mt-2">
+                        {textbook.apiId && !textbook.isLocalOnly && (
+                          <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                            서버 연동
+                          </span>
+                        )}
+                        {(textbook.file || textbook.pdfId) && (
+                          <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                            PDF 연결됨
+                          </span>
+                        )}
+                        {textbook.notes && textbook.notes.length > 0 && (
+                          <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded-full">
+                            노트 {textbook.notes.length}개
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

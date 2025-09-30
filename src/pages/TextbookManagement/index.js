@@ -1,15 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button';
-import { Plus, Search, MoreHorizontal, BookOpen, Calendar, Target, TrendingUp, Sparkles, Trash2 } from 'lucide-react';
+import { Plus, Search, MoreHorizontal, BookOpen, Calendar, Target, TrendingUp, Sparkles, Trash2, Loader2, AlertCircle } from 'lucide-react';
 import { useStudyContext } from '../../context/StudyContext';
+import apiService from '../../api/Textbook_Api';
 
 export default function TextbookManagement() {
   const navigate = useNavigate();
-  const { textbooks, deleteTextbook } = useStudyContext();
+  const { textbooks, deleteTextbook, loading: contextLoading } = useStudyContext();
   const [books, setBooks] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState('전체');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState(null);
+  const [searchMode, setSearchMode] = useState('local'); // 'local', 'api'
 
   // 제목을 간단하게 표시하는 함수
   const getShortTitle = (title) => {
@@ -25,12 +30,149 @@ export default function TextbookManagement() {
     setBooks(textbooks);
   }, [textbooks]);
 
+  // 디바운스된 검색 함수
+  const debounceTimeout = useRef(null);
+  
+  const performApiSearch = useCallback(async (query) => {
+    if (!query.trim()) {
+      setSearchResults([]);
+      setSearchMode('local');
+      return;
+    }
+
+    setIsSearching(true);
+    setSearchError(null);
+    setSearchMode('api');
+
+    try {
+      console.log('🔍 API 검색 시작:', query);
+      
+      // 키워드 검색을 기본으로 사용 (제목, 저자, 내용을 모두 검색)
+      const keywordResults = await apiService.searchBooksByKeyword(query);
+      console.log('📚 키워드 검색 결과:', keywordResults.length);
+
+      // API 응답을 프론트엔드 형식으로 변환
+      const transformedResults = keywordResults.map(apiBook => {
+        const frontendBook = apiService.transformFromApiFormat(apiBook);
+        
+        // 로컬 데이터와 병합 (PDF 파일, 노트 등)
+        const existingBook = textbooks.find(b => b.apiId === apiBook.id || b.id === apiBook.id);
+        if (existingBook) {
+          return {
+            ...frontendBook,
+            file: existingBook.file,
+            pdfId: existingBook.pdfId,
+            notes: existingBook.notes || [],
+            readingHistory: existingBook.readingHistory || [],
+            currentPage: existingBook.currentPage || 1
+          };
+        }
+        
+        return frontendBook;
+      });
+
+      setSearchResults(transformedResults);
+      console.log('✅ 변환된 검색 결과:', transformedResults.length);
+      
+    } catch (error) {
+      console.error('❌ API 검색 실패:', error);
+      setSearchError(error.message);
+      
+      // API 검색 실패 시 로컬 검색으로 폴백
+      console.log('🔄 로컬 검색으로 폴백');
+      setSearchMode('local');
+    } finally {
+      setIsSearching(false);
+    }
+  }, [textbooks]);
+
+  // 검색어 변경 시 디바운스 적용
+  useEffect(() => {
+    if (debounceTimeout) {
+      clearTimeout(debounceTimeout);
+    }
+    
+    const timeout = setTimeout(() => {
+      performApiSearch(searchQuery);
+    }, 500); // 500ms 디바운스
+    
+    return () => clearTimeout(timeout);
+  }, [searchQuery, performApiSearch]);
+
+  // 로컬 검색 결과
+  const localFilteredBooks = useMemo(() => {
+    return books.filter(book => {
+      const matchesSearch = !searchQuery || 
+        book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        book.author.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesFilter = filterStatus === '전체' || book.status === filterStatus;
+      return matchesSearch && matchesFilter;
+    });
+  }, [books, searchQuery, filterStatus]);
+
+  // API 검색 결과에 필터 적용
+  const apiFilteredBooks = useMemo(() => {
+    return searchResults.filter(book => {
+      const matchesFilter = filterStatus === '전체' || book.status === filterStatus;
+      return matchesFilter;
+    });
+  }, [searchResults, filterStatus]);
+
+  // 최종 표시할 책 목록
+  const displayBooks = searchMode === 'api' ? apiFilteredBooks : localFilteredBooks;
+
+  // TextbookManagementSystem의 openBookDetail 함수를 다음과 같이 수정해서 테스트해보세요:
   const openBookDetail = (book) => {
-    navigate(`/textbook/${book.id}`);
+    console.log('=== 네비게이션 디버깅 ===');
+    console.log('1. 클릭된 책:', book);
+    console.log('2. book.id:', book.id, typeof book.id);
+    console.log('3. 현재 location:', window.location);
+    console.log('4. navigate 함수:', navigate);
+    
+    // navigate 함수가 제대로 정의되어 있는지 확인
+    if (typeof navigate !== 'function') {
+      console.error('navigate가 함수가 아닙니다!');
+      return;
+    }
+    
+    const targetPath = `/textbook/${book.id}`;
+    console.log('5. 목표 경로:', targetPath);
+    
+    // 브라우저 히스토리 상태 확인
+    console.log('6. 현재 히스토리 길이:', window.history.length);
+    console.log('7. 현재 히스토리 상태:', window.history.state);
+    
+    try {
+      // navigate 호출 전 상태
+      console.log('8. navigate 호출 전 - pathname:', window.location.pathname);
+      
+      // navigate 호출
+      navigate(targetPath);
+      console.log('9. navigate 호출 완료');
+      
+      // navigate 호출 직후 상태 (동기적으로는 변하지 않을 수 있음)
+      setTimeout(() => {
+        console.log('10. 100ms 후 - pathname:', window.location.pathname);
+        console.log('11. 100ms 후 - href:', window.location.href);
+        console.log('12. 100ms 후 - 히스토리 길이:', window.history.length);
+      }, 100);
+      
+      setTimeout(() => {
+        console.log('13. 500ms 후 - pathname:', window.location.pathname);
+        console.log('14. 500ms 후 - href:', window.location.href);
+      }, 500);
+      
+    } catch (error) {
+      console.error('navigate 실행 중 에러:', error);
+      
+      // 대체 방법 시도
+      console.log('15. window.location.href로 대체 시도');
+      window.location.href = targetPath;
+    }
   };
 
   const openAddBookPage = () => {
-    navigate('/textbook/add');
+    navigate('/textbook-add');
   };
 
   const getProgressPercentage = (currentPage, totalPages) => {
@@ -57,15 +199,7 @@ export default function TextbookManagement() {
     return `${date.getMonth() + 1}/${date.getDate()}`;
   };
 
-  // 검색 및 필터링
-  const filteredBooks = books.filter(book => {
-    const matchesSearch = book.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         book.author.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesFilter = filterStatus === '전체' || book.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
-
-  // 통계 데이터
+  // 통계 데이터 (로컬 데이터 기준)
   const stats = {
     total: books.length,
     reading: books.filter(b => b.status === '읽는 중').length,
@@ -89,14 +223,6 @@ export default function TextbookManagement() {
       if (window.confirm('정말 이 원서를 삭제하시겠습니까?')) {
         try {
           deleteTextbook(book.id);
-          
-          if (book.file && book.file.isChunked && book.file.totalChunks) {
-            for (let i = 0; i < book.file.totalChunks; i++) {
-              const chunkKey = `textbook_${book.id}_chunk_${i}`;
-              localStorage.removeItem(chunkKey);
-            }
-          }
-          
         } catch (error) {
           console.error('원서 삭제 중 오류:', error);
           alert('원서 삭제 중 오류가 발생했습니다.');
@@ -106,9 +232,16 @@ export default function TextbookManagement() {
 
     return (
       <div 
-        className="group bg-white border border-slate-200 rounded-xl hover:border-slate-300 hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
+        className="group bg-white border border-slate-200 rounded-xl hover:border-slate-300 hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden relative"
         onClick={() => openBookDetail(book)}
       >
+        {/* API 검색 결과 표시 */}
+        {searchMode === 'api' && !books.find(b => b.id === book.id || b.apiId === book.apiId) && (
+          <div className="absolute top-2 right-2 bg-blue-100 text-blue-700 text-xs px-2 py-1 rounded-md">
+            서버 검색 결과
+          </div>
+        )}
+
         {/* 카드 헤더 */}
         <div className="p-5 pb-4 border-b border-slate-100">
           <div className="flex items-start justify-between">
@@ -214,27 +347,11 @@ export default function TextbookManagement() {
     }
   };
 
-  const cleanupOrphanedChunks = () => {
+  const cleanupOrphanedData = () => {
     try {
-      const savedBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
-      const bookIds = savedBooks.map(book => book.id);
-      
-      const allKeys = Object.keys(localStorage);
-      const chunkKeys = allKeys.filter(key => key.startsWith('textbook_') && key.includes('chunk_'));
-      
-      let deletedCount = 0;
-      chunkKeys.forEach(key => {
-        const match = key.match(/textbook_(\d+)_chunk_(\d+)/);
-        if (match) {
-          const bookId = parseInt(match[1]);
-          if (!bookIds.includes(bookId)) {
-            localStorage.removeItem(key);
-            deletedCount++;
-          }
-        }
-      });
-      
-      return deletedCount;
+      // IndexedDB에서 고아 데이터 정리 (향후 구현)
+      console.log('데이터 정리 기능은 추후 구현 예정');
+      return 0;
     } catch (error) {
       console.error('정리 중 오류:', error);
       return 0;
@@ -249,20 +366,25 @@ export default function TextbookManagement() {
         <div className="flex-1">
           {/* 상단 바 */}
           <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
-            <div className="px-6 py-4">
-              <div className="flex items-center justify-between">
+            <div className="px-4 md:px-6 py-4">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 {/* 페이지 제목 */}
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900">원서 관리</h1>
-                  <p className="text-sm text-slate-600 mt-0.5">학습 중인 원서를 관리하고 진행상황을 확인하세요</p>
+                  <h1 className="text-xl md:text-2xl font-bold text-slate-900">원서 관리</h1>
+                  <p className="text-xs md:text-sm text-slate-600 mt-0.5">
+                    학습 중인 원서를 관리하고 진행상황을 확인하세요
+                    {searchMode === 'api' && (
+                      <span className="ml-2 text-blue-600 font-medium">• 서버 검색 중</span>
+                    )}
+                  </p>
                 </div>
 
                 {/* 우측 액션 버튼들 */}
-                <div className="flex items-center gap-3">
-                  <button 
+                <div className="flex items-center gap-2 md:gap-3 flex-wrap">
+                  <button
                     className="px-3 py-2 text-sm text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
                     onClick={() => {
-                      const count = cleanupOrphanedChunks();
+                      const count = cleanupOrphanedData();
                       alert(count > 0 ? `${count}개 항목을 정리했습니다.` : '정리할 항목이 없습니다.');
                     }}
                   >
@@ -287,7 +409,7 @@ export default function TextbookManagement() {
               </div>
 
               {/* 통계 카드들 */}
-              <div className="grid grid-cols-4 gap-4 mt-6">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
                 <div className="bg-slate-50 rounded-lg p-4">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-slate-100 rounded-lg">
@@ -337,22 +459,25 @@ export default function TextbookManagement() {
           </div>
 
           {/* 컨트롤 바 */}
-          <div className="bg-white border-b border-slate-200 px-6 py-3">
-            <div className="flex items-center justify-between">
+          <div className="bg-white border-b border-slate-200 px-4 md:px-6 py-3">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               {/* 검색 & 필터 */}
-              <div className="flex items-center gap-3">
-                <div className="relative">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                <div className="relative w-full sm:w-auto">
                   <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  {isSearching && (
+                    <Loader2 size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 animate-spin" />
+                  )}
                   <input
                     type="text"
                     placeholder="원서 검색..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9 pr-4 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64"
+                    className="pl-9 pr-10 py-2 border border-slate-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-80"
                   />
                 </div>
-                
-                <div className="flex items-center gap-2">
+
+                <div className="flex items-center gap-2 flex-wrap">
                   {['전체', '읽는 중', '완료', '미시작'].map(status => (
                     <button
                       key={status}
@@ -369,16 +494,40 @@ export default function TextbookManagement() {
                 </div>
               </div>
 
-              {/* 결과 수 */}
-              <div className="text-sm text-slate-500">
-                {filteredBooks.length}개의 원서
+              {/* 결과 수 및 검색 상태 */}
+              <div className="flex items-center gap-3 text-sm text-slate-500">
+                {searchError && (
+                  <div className="flex items-center gap-1 text-red-500">
+                    <AlertCircle size={14} />
+                    <span>검색 오류</span>
+                  </div>
+                )}
+                <span>
+                  {displayBooks.length}개의 원서
+                  {searchMode === 'api' && searchQuery && (
+                    <span className="ml-1 text-blue-600">(서버 검색)</span>
+                  )}
+                </span>
               </div>
             </div>
+            
+            {/* 검색 오류 메시지 */}
+            {searchError && (
+              <div className="mt-2 p-2 bg-red-50 border border-red-200 rounded-md text-sm text-red-700">
+                <strong>서버 검색 실패:</strong> {searchError}
+                <div className="text-red-600 mt-1">로컬 검색 결과를 표시합니다.</div>
+              </div>
+            )}
           </div>
 
           {/* 메인 콘텐츠 영역 */}
-          <div className="p-6">
-            {filteredBooks.length === 0 ? (
+          <div className="p-4 md:p-6">
+            {contextLoading ? (
+              <div className="flex items-center justify-center py-20">
+                <Loader2 size={32} className="animate-spin text-slate-400" />
+                <span className="ml-2 text-slate-600">원서 목록을 불러오는 중...</span>
+              </div>
+            ) : displayBooks.length === 0 ? (
               <div className="text-center py-20">
                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <BookOpen size={32} className="text-slate-400" />
@@ -387,7 +536,12 @@ export default function TextbookManagement() {
                   {searchQuery ? '검색 결과가 없습니다' : filterStatus === '전체' ? '아직 등록된 원서가 없습니다' : `${filterStatus} 상태의 원서가 없습니다`}
                 </h3>
                 <p className="text-slate-600 mb-6">
-                  {searchQuery ? '다른 키워드로 검색해보세요.' : '새로운 원서를 추가하여 학습을 시작해보세요.'}
+                  {searchQuery ? (
+                    <>
+                      "<strong>{searchQuery}</strong>"에 대한 검색 결과가 없습니다.
+                      <br />다른 키워드로 검색해보세요.
+                    </>
+                  ) : '새로운 원서를 추가하여 학습을 시작해보세요.'}
                 </p>
                 {!searchQuery && filterStatus === '전체' && (
                   <button 
@@ -400,8 +554,8 @@ export default function TextbookManagement() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredBooks.map(book => (
-                  <BookCard key={book.id} book={book} />
+                {displayBooks.map(book => (
+                  <BookCard key={`${searchMode}-${book.id}`} book={book} />
                 ))}
               </div>
             )}

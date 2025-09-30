@@ -33,18 +33,32 @@ function App() {
       <StudyProvider>
         <ProjectProvider>
           <Routes>
+            {/* 인증 라우트 */}
             <Route path="/auth" element={<AuthPages />} />
+            
+            {/* 메인 레이아웃 라우트 */}
             <Route element={<Layout />}>
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/study" element={<StudyManagementSystem />} />
-              <Route path="/textbook/:id" element={<TextbookDetailPage />} />
-              <Route path="/textbook" element={<TextbookManagementSystem />} />
-              <Route path="/textbook/add" element={<AddTextbook />} />
-              <Route path="/textbook-study/:id" element={<TextbookStudyPage />} />
-              <Route path="/project" element={<ProjectManagementPage />} />
+              <Route path="/projects" element={<ProjectManagementPage />} />
               <Route path="/calendar" element={<StudyCalendarPage />} />
               
-              {/* 원서 학습 중첩 라우트 */}
+              {/* 원서 관리 라우트들 - 더 구체적인 경로를 먼저 배치 */}
+              <Route path="/textbooks" element={<TextbookManagementSystem />} />
+              <Route path="/textbook-add" element={<AddTextbook />} />
+              <Route path="/textbook/:id" element={<TextbookDetailPage />} />
+              
+              {/* 원서 학습 라우트들 */}
+              {/* <Route path="/textbook-study/:id" element={<TextbookStudyPage />}>
+                <Route index element={<StudyContent />} />
+                <Route path="content" element={<StudyContent />} />
+                <Route path="notes" element={<StudyNotes />} />
+                <Route path="concepts" element={<StudyConcepts />} />
+                <Route path="progress" element={<StudyProgress />} />
+                <Route path="bookmarks" element={<StudyBookmarks />} />
+              </Route>
+              
+              또는 이 방식도 가능 */}
               <Route path="/textbook/:id/study" element={<TextbookStudyPage />}>
                 <Route index element={<StudyContent />} />
                 <Route path="content" element={<StudyContent />} />
@@ -54,9 +68,10 @@ function App() {
                 <Route path="bookmarks" element={<StudyBookmarks />} />
               </Route>
             </Route>
+            
             {/* 기타 라우트 */}
-            <Route path="*" element={<NotFound />} />
             <Route path="/" element={<OnboardingLanding />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </ProjectProvider>
       </StudyProvider>

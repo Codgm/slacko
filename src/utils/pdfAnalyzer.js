@@ -17,39 +17,47 @@ const DB_VERSION = 3;
 const PDF_STORE_NAME = 'pdfs';
 const METADATA_STORE_NAME = 'pdfMetadata';
 
-// IndexedDB 초기화
+// IndexedDB 초기화 - 안전한 업그레이드 방식
 const initDB = async () => {
   try {
     return await openDB(DB_NAME, DB_VERSION, {
       upgrade(db, oldVersion, newVersion) {
         console.log(`IndexedDB 업그레이드: ${oldVersion} -> ${newVersion}`);
-        
-        // 기존 스토어가 있으면 삭제 후 재생성
-        if (db.objectStoreNames.contains(PDF_STORE_NAME)) {
-          db.deleteObjectStore(PDF_STORE_NAME);
+
+        // PDF 스토어 생성 (없는 경우에만)
+        if (!db.objectStoreNames.contains(PDF_STORE_NAME)) {
+          const pdfStore = db.createObjectStore(PDF_STORE_NAME, { keyPath: 'id' });
+          pdfStore.createIndex('name', 'name', { unique: false });
+          pdfStore.createIndex('timestamp', 'timestamp', { unique: false });
+          console.log('✅ PDF 스토어 생성 완료');
         }
-        if (db.objectStoreNames.contains(METADATA_STORE_NAME)) {
-          db.deleteObjectStore(METADATA_STORE_NAME);
+
+        // 메타데이터 스토어 생성 (없는 경우에만)
+        if (!db.objectStoreNames.contains(METADATA_STORE_NAME)) {
+          const metadataStore = db.createObjectStore(METADATA_STORE_NAME, { keyPath: 'id' });
+          metadataStore.createIndex('title', 'title', { unique: false });
+          console.log('✅ 메타데이터 스토어 생성 완료');
         }
-        
-        // 새로운 스토어 생성
-        const pdfStore = db.createObjectStore(PDF_STORE_NAME, { keyPath: 'id' });
-        const metadataStore = db.createObjectStore(METADATA_STORE_NAME, { keyPath: 'id' });
-        
-        // 인덱스 추가
-        pdfStore.createIndex('name', 'name', { unique: false });
-        pdfStore.createIndex('timestamp', 'timestamp', { unique: false });
-        metadataStore.createIndex('title', 'title', { unique: false });
       }
     });
   } catch (error) {
     console.error('IndexedDB 초기화 실패:', error);
-    return await openDB(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        db.createObjectStore(PDF_STORE_NAME, { keyPath: 'id' });
-        db.createObjectStore(METADATA_STORE_NAME, { keyPath: 'id' });
-      }
-    });
+    // 폴백: 기본 설정으로 시도
+    try {
+      return await openDB(DB_NAME, 1, {
+        upgrade(db) {
+          if (!db.objectStoreNames.contains(PDF_STORE_NAME)) {
+            db.createObjectStore(PDF_STORE_NAME, { keyPath: 'id' });
+          }
+          if (!db.objectStoreNames.contains(METADATA_STORE_NAME)) {
+            db.createObjectStore(METADATA_STORE_NAME, { keyPath: 'id' });
+          }
+        }
+      });
+    } catch (fallbackError) {
+      console.error('IndexedDB 폴백 초기화도 실패:', fallbackError);
+      throw fallbackError;
+    }
   }
 };
 
@@ -1250,4 +1258,131 @@ export const extractFromPDFFile = async (file) => {
 export const debugPDFStructure = async (pdf) => {
   const { debugPDFStructure } = await import('./PDFTocExtractor');
   return debugPDFStructure(pdf);
+};
+
+/**
+ * 클라우드 백업용 데이터 패키지 생성
+ * PDF 파일과 메모 데이터를 하나의 패키지로 묶어서 반환
+ */
+export const createBackupPackage = async (bookId) => {
+  try {
+    console.log(`📦 클라우드 백업 패키지 생성: ${bookId}`);
+
+    // PDF 파일 데이터
+    const pdfExists = await checkPDFExists(bookId);
+    let pdfData = null;
+    if (pdfExists) {
+      const db = await initDB();
+      const tx = db.transaction([PDF_STORE_NAME], 'readonly');
+      const store = tx.objectStore(PDF_STORE_NAME);
+      const saved = await store.get(bookId.toString());
+
+      if (saved && saved.data) {
+        // ArrayBuffer를 base64로 변환하여 JSON 직렬화 가능하게 함
+        const uint8Array = new Uint8Array(saved.data);
+        const binaryString = Array.from(uint8Array, byte => String.fromCharCode(byte)).join('');
+        pdfData = {
+          data: btoa(binaryString), // base64 인코딩
+          type: saved.type,
+          name: saved.name,
+          size: saved.size,
+          timestamp: saved.timestamp
+        };
+      }
+    }
+
+    // 메타데이터
+    const metadata = await getPDFMetadataFromIndexedDB(bookId);
+
+    // 로컬 메모 데이터 (노트, 플랜 등)
+    const localData = JSON.parse(localStorage.getItem(`book_local_${bookId}`) || '{}');
+
+    const backupPackage = {
+      bookId: bookId.toString(),
+      timestamp: Date.now(),
+      version: '1.0',
+      data: {
+        pdf: pdfData,
+        metadata: metadata,
+        notes: localData.notes || [],
+        readingHistory: localData.readingHistory || [],
+        plan: localData.plan || [],
+        bookmarks: localData.bookmarks || []
+      }
+    };
+
+    console.log('✅ 백업 패키지 생성 완료:', {
+      hasPdf: !!pdfData,
+      hasMetadata: !!metadata,
+      notesCount: (localData.notes || []).length
+    });
+
+    return backupPackage;
+
+  } catch (error) {
+    console.error('❌ 백업 패키지 생성 실패:', error);
+    return null;
+  }
+};
+
+/**
+ * 클라우드 백업 데이터 복원
+ * 백업 패키지에서 데이터를 추출하여 로컬에 복원
+ */
+export const restoreFromBackupPackage = async (backupPackage) => {
+  try {
+    console.log(`📦 백업 데이터 복원 시작: ${backupPackage.bookId}`);
+
+    const { bookId, data } = backupPackage;
+
+    // PDF 데이터 복원
+    if (data.pdf) {
+      const db = await initDB();
+      const tx = db.transaction([PDF_STORE_NAME], 'readwrite');
+      const store = tx.objectStore(PDF_STORE_NAME);
+
+      // base64를 ArrayBuffer로 변환
+      const binaryString = atob(data.pdf.data);
+      const uint8Array = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        uint8Array[i] = binaryString.charCodeAt(i);
+      }
+      const arrayBuffer = uint8Array.buffer;
+
+      const pdfData = {
+        id: bookId,
+        data: arrayBuffer,
+        type: data.pdf.type,
+        name: data.pdf.name,
+        size: data.pdf.size,
+        timestamp: data.pdf.timestamp
+      };
+
+      await store.put(pdfData);
+      console.log('✅ PDF 데이터 복원 완료');
+    }
+
+    // 메타데이터 복원
+    if (data.metadata) {
+      await savePDFMetadataToIndexedDB(bookId, data.metadata);
+      console.log('✅ 메타데이터 복원 완료');
+    }
+
+    // 로컬 데이터 복원
+    const localData = {
+      notes: data.notes || [],
+      readingHistory: data.readingHistory || [],
+      plan: data.plan || [],
+      bookmarks: data.bookmarks || []
+    };
+
+    localStorage.setItem(`book_local_${bookId}`, JSON.stringify(localData));
+    console.log('✅ 로컬 데이터 복원 완료');
+
+    return { success: true, bookId };
+
+  } catch (error) {
+    console.error('❌ 백업 데이터 복원 실패:', error);
+    return { success: false, error: error.message };
+  }
 };

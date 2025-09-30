@@ -10,9 +10,11 @@ import {
   analyzePDF, 
   isPDFFile 
 } from '../../utils/pdfAnalyzer';
+import { useStudyContext } from '../../context/StudyContext';
 
 export default function AddTextbook() {
   const navigate = useNavigate();
+  const { addTextbook } = useStudyContext();
   const [currentStep, setCurrentStep] = useState(1);
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
@@ -380,65 +382,82 @@ export default function AddTextbook() {
     }
 
     try {
-      // 학습 계획 생성 (개선된 버전)
+      // 학습 계획 생성
       const studyPlan = generateStudyPlan(planTasks, formData.startDate, formData.endDate, formData.intensity);
 
-      const newBook = {
-        id: Date.now(),
-        pdfId: savedPdfId, // 저장된 PDF ID 포함
+      // 백엔드로 보낼 원서 객체 (PDF 파일 제외)
+      const newBookForAPI = {
         title: formData.title,
-        author: formData.author,
-        publisher: formData.publisher,
+        author: formData.author || 'Unknown Author',
+        publisher: formData.publisher || 'Unknown Publisher', 
         totalPages: parseInt(formData.totalPages),
-        currentPage: 1,
-        targetDate: formData.endDate,
-        status: '읽는 중',
         startDate: formData.startDate,
-        notes: [],
-        readingHistory: [],
-        file: bookFile,
-        daysLeft: daysLeft,
+        targetDate: formData.endDate,
+        
+        // 학습 계획을 챕터 형식으로 변환
+        chapters: studyPlan.map((plan, index) => ({
+          title: plan.chapter,
+          chapterNumber: index + 1,
+          sectionNumber: `${index + 1}`,
+          startPage: Math.ceil((parseInt(formData.totalPages) / studyPlan.length) * index) + 1,
+          endPage: Math.min(
+            Math.ceil((parseInt(formData.totalPages) / studyPlan.length) * (index + 1)),
+            parseInt(formData.totalPages)
+          ),
+          estimatedStudyTime: plan.estimatedTime || 120,
+          description: plan.description || plan.chapter
+        })),
+        
+        // 추가 메타데이터
+        subject: formData.subject,
         purpose: formData.purpose,
         intensity: formData.intensity,
-        plan: studyPlan, // 구조화된 학습 계획
-        subject: formData.subject,
+        plan: studyPlan, // 프론트엔드용 플랜 유지
+        
+        // 로컬에서만 관리할 데이터
+        file: bookFile,
+        pdfId: savedPdfId,
+        notes: [],
+        readingHistory: [],
         tableOfContents: formData.tableOfContents,
-        studyTime: 0, // 초기 학습 시간
-        progress: 0, // 초기 진행률
+        studyTime: 0,
+        progress: 0,
         lastStudiedAt: new Date().toISOString(),
         createdAt: new Date().toISOString(),
-        // 추가 메타데이터
         totalStudyTime: 0,
         noteCount: 0,
         highlightCount: 0,
-        estimatedTotalTime: studyPlan.reduce((acc, plan) => acc + plan.estimatedTime, 0)
+        estimatedTotalTime: studyPlan.reduce((acc, plan) => acc + plan.estimatedTime, 0),
+        daysLeft: daysLeft,
+        currentPage: 1,
+        status: '읽는 중'
       };
 
-      console.log('📚 원서 저장:', {
-        id: newBook.id,
-        pdfId: newBook.pdfId,
-        title: newBook.title,
-        planCount: studyPlan.length,
-        estimatedTotalTime: newBook.estimatedTotalTime
+      console.log('📚 원서 저장 시작:', {
+        title: newBookForAPI.title,
+        totalPages: newBookForAPI.totalPages,
+        chaptersCount: newBookForAPI.chapters.length,
+        hasPdfFile: !!newBookForAPI.file,
+        pdfId: newBookForAPI.pdfId
       });
 
-      // 로컬 스토리지에 저장
-      const existingBooks = JSON.parse(localStorage.getItem('textbooks') || '[]');
-      const updatedBooks = [...existingBooks, newBook];
-      localStorage.setItem('textbooks', JSON.stringify(updatedBooks));
+      // StudyContext의 addTextbook 함수 호출 (API 연동 포함)
+      const savedBook = await addTextbook(newBookForAPI);
+      
+      console.log('✅ 원서 저장 완료:', savedBook.id);
       
       setToastMessage('새 원서가 추가되었습니다!');
       setToastType('success');
       setShowToast(true);
       
-      // 잠시 후 해당 원서의 상세 페이지로 이동
+      // 성공 후 해당 원서의 상세 페이지로 이동
       setTimeout(() => {
-        navigate(`/textbook/${newBook.id}`);
+        navigate(`/textbook/${savedBook.id}`);
       }, 1500);
 
     } catch (error) {
       console.error('❌ 원서 저장 실패:', error);
-      setToastMessage('원서 저장에 실패했습니다. 다시 시도해주세요.');
+      setToastMessage(`원서 저장에 실패했습니다: ${error.message}`);
       setToastType('error');
       setShowToast(true);
     }
@@ -500,7 +519,7 @@ export default function AddTextbook() {
                 {/* 페이지 제목 */}
                 <div className="flex items-center gap-4">
                   <button
-                    onClick={() => navigate('/textbook')}
+                    onClick={() => navigate('/textbooks')}
                     className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-xl transition-all duration-300"
                   >
                     <ArrowLeft className="w-5 h-5" />

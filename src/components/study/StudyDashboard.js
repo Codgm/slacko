@@ -122,13 +122,19 @@ const StudyDashboard = ({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {recommendations.map((rec, index) => {
               const subject = subjects.find(s => s.id === rec.subjectId);
-              const colors = colorMap[subject.color];
-              
+
+              // Skip rendering if subject is not found
+              if (!subject || !subject.color) {
+                return null;
+              }
+
+              const colors = colorMap[subject.color] || colorMap.blue; // fallback to blue if color not found
+
               return (
                 <div key={rec.subjectId} className={`${colors.bg} rounded-xl p-6 border ${colors.border} shadow-sm hover:shadow-md transition-shadow`}>
                   <div className="flex items-center justify-between mb-3">
-                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${categoryMap[subject.category].color}`}>
-                      {categoryMap[subject.category].name}
+                    <span className={`px-2 py-1 rounded-lg text-xs font-medium ${categoryMap[subject.category]?.color || 'bg-gray-100 text-gray-800'}`}>
+                      {categoryMap[subject.category]?.name || '기타'}
                     </span>
                     <span className="text-xs text-slate-500">우선순위 {rec.priority}</span>
                   </div>
@@ -136,7 +142,7 @@ const StudyDashboard = ({
                   <p className="text-sm text-slate-600 mb-3">{rec.reason}</p>
                   <div className="flex items-center gap-2 text-xs text-slate-500">
                     <Clock size={12} />
-                    <span>예상 시간: {subject.dailyGoal}분</span>
+                    <span>예상 시간: {subject.dailyGoal || 0}분</span>
                   </div>
                 </div>
               );
@@ -201,16 +207,22 @@ const StudyDashboard = ({
           <div className="space-y-4">
             {todayLogs.map(log => {
               const subject = subjects.find(s => s.id === log.subjectId);
-              const chapter = subject?.chapters.find(c => c.id === log.chapterId);
-              const colors = colorMap[subject.color];
-              
+
+              // Skip rendering if subject is not found
+              if (!subject || !subject.color) {
+                return null;
+              }
+
+              const chapter = subject?.chapters?.find(c => c.id === log.chapterId);
+              const colors = colorMap[subject.color] || colorMap.blue; // fallback to blue if color not found
+
               return (
                 <div key={log.id} className={`${colors.bg} rounded-xl p-4 border ${colors.border}`}>
                   <div className="flex items-center justify-between mb-2">
                     <h4 className={`font-semibold ${colors.text}`}>{subject.name}</h4>
                     <span className="text-sm text-slate-600">{formatTime(log.duration)}</span>
                   </div>
-                  <p className="text-sm text-slate-700 mb-2">{chapter?.name}</p>
+                  <p className="text-sm text-slate-700 mb-2">{chapter?.name || '챕터 정보 없음'}</p>
                   <p className="text-xs text-slate-500">{log.content}</p>
                 </div>
               );
@@ -239,10 +251,16 @@ const StudyDashboard = ({
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {subjects.map(subject => {
+            // Skip rendering if subject data is incomplete
+            if (!subject || !subject.color || !subject.category) {
+              return null;
+            }
+
             const progress = getProgress(subject);
-            const colors = colorMap[subject.color];
-            const CategoryIcon = categoryMap[subject.category].icon;
-            
+            const colors = colorMap[subject.color] || colorMap.blue; // fallback to blue if color not found
+            const categoryInfo = categoryMap[subject.category];
+            const CategoryIcon = categoryInfo?.icon || BookOpen;
+
             return (
               <div key={subject.id} className={`${colors.bg} rounded-xl p-6 border ${colors.border} shadow-sm`}>
                 <div className="flex items-center justify-between mb-4">
@@ -250,25 +268,25 @@ const StudyDashboard = ({
                     <CategoryIcon size={20} className={colors.text} />
                     <h3 className={`font-semibold ${colors.text}`}>{subject.name}</h3>
                   </div>
-                  <span className={`px-2 py-1 rounded-lg text-xs font-medium ${categoryMap[subject.category].color}`}>
-                    {categoryMap[subject.category].name}
+                  <span className={`px-2 py-1 rounded-lg text-xs font-medium ${categoryInfo?.color || 'bg-gray-100 text-gray-800'}`}>
+                    {categoryInfo?.name || '기타'}
                   </span>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-slate-600">진도율</span>
                     <span className={`text-sm font-semibold ${colors.text}`}>{progress}%</span>
                   </div>
                   <div className="w-full bg-white/60 rounded-full h-2">
-                    <div 
-                      className={`${colors.accent} h-2 rounded-full transition-all duration-500`} 
+                    <div
+                      className={`${colors.accent} h-2 rounded-full transition-all duration-500`}
                       style={{ width: `${progress}%` }}
                     />
                   </div>
                   <div className="flex justify-between text-xs text-slate-500">
-                    <span>{subject.completedChapters}/{subject.totalChapters} 챕터</span>
-                    <span>{formatTime(subject.totalStudyTime)}</span>
+                    <span>{subject.completedChapters || 0}/{subject.totalChapters || 0} 챕터</span>
+                    <span>{formatTime(subject.totalStudyTime || 0)}</span>
                   </div>
                 </div>
               </div>

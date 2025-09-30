@@ -1,61 +1,70 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Clock, Target, Bell, BookOpen, TrendingUp, Flame, Calendar, Plus, Zap, Brain, Timer, BarChart3, BookMarked, CheckCircle2, Play, Pause, RotateCcw, Sparkles, Sun, Moon, Sunrise, Settings, User, LogOut } from 'lucide-react';
+import { Clock, Target, Bell, BookOpen, TrendingUp, Flame, Calendar, Plus, Zap, Brain, Timer, BarChart3, BookMarked, CheckCircle2, Play, Pause, RotateCcw, Sparkles, Sun, Moon, Sunrise } from 'lucide-react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { useStudyContext } from '../../context/StudyContext';
+import { useProjectContext } from '../../context/ProjectContext';
+import { useUser } from '../../context/UserContext';
 
 const Dashboard = () => {
-  // Mock data - 실제로는 context에서 가져올 데이터
-  const subjects = useMemo(() => [
-    { id: 1, name: '알고리즘', completedChapters: 8, totalChapters: 12, priority: 'high', color: '#3b82f6' },
-    { id: 2, name: '데이터베이스', completedChapters: 6, totalChapters: 10, priority: 'medium', color: '#10b981' },
-    { id: 3, name: '운영체제', completedChapters: 4, totalChapters: 8, priority: 'medium', color: '#f59e0b' }
-  ], []);
+  const { subjects, textbooks, goals, studyLogs, loading: studyLoading, error: studyError } = useStudyContext();
+  const { projects, loading: projectLoading, error: projectError } = useProjectContext();
+  const { user } = useUser();
 
-  const projects = useMemo(() => [
-    { id: 1, name: '캡스톤 프로젝트', description: 'AI 기반 학습 관리 시스템', progress: 75, status: 'in-progress', priority: 'high', icon: '🚀' },
-    { id: 2, name: '웹 포트폴리오', description: '개인 포트폴리오 웹사이트 제작', progress: 45, status: 'in-progress', priority: 'medium', icon: '💼' }
-  ], []);
-
-  const textbooks = useMemo(() => [
-    { id: 1, title: 'Clean Code', author: 'Robert Martin', currentPage: 120, totalPages: 400, priority: 'high' },
-    { id: 2, title: 'System Design Interview', author: 'Alex Xu', currentPage: 80, totalPages: 300, priority: 'medium' }
-  ], []);
-  
-  const goals = useMemo(() => [
-    { id: 1, title: '알고리즘 마스터', progress: 80 },
-    { id: 2, title: '프로젝트 완성', progress: 75 }
-  ], []);
+  const loading = studyLoading || projectLoading;
+  const error = studyError || projectError;
 
   // 실제 데이터에서 Todo 목록 생성
   const [todoList, setTodoList] = useState([]);
-  
+
   useEffect(() => {
+    if (loading) return;
+
     const todos = [
-      ...subjects.map(subject => ({
-        id: `subject-${subject.id}`,
-        text: `${subject.name} ${subject.completedChapters + 1}챕터 학습`,
-        completed: subject.completedChapters === subject.totalChapters,
-        priority: subject.priority || 'medium',
-        type: 'study'
-      })),
-      ...projects.flatMap(project => 
-        project.tasks?.map(task => ({
-          id: `task-${task.id}`,
-          text: `${project.name}: ${task.title}`,
-          completed: task.status === 'completed',
-          priority: task.priority || 'medium',
-          type: 'project'
-        })) || []
+      // 학습 과목에서 미완료 챕터
+      ...subjects.flatMap(subject =>
+        subject.chapters
+          .filter(chapter => !chapter.completed)
+          .slice(0, 2) // 과목당 최대 2개로 제한
+          .map(chapter => ({
+            id: `subject-${subject.id}-${chapter.id}`,
+            text: `${subject.name}: ${chapter.name} 학습`,
+            completed: false,
+            priority: subject.priority || 'medium',
+            type: 'study',
+            subjectId: subject.id,
+            chapterId: chapter.id
+          }))
       ),
-      ...textbooks.map(textbook => ({
-        id: `textbook-${textbook.id}`,
-        text: `${textbook.title} ${textbook.currentPage + 1}페이지 읽기`,
-        completed: textbook.currentPage >= textbook.totalPages,
-        priority: textbook.priority || 'medium',
-        type: 'textbook'
-      }))
+      // 프로젝트에서 진행중인 태스크
+      ...projects.flatMap(project =>
+        (project.tasks || [])
+          .filter(task => task.status !== 'completed')
+          .slice(0, 3) // 프로젝트당 최대 3개로 제한
+          .map(task => ({
+            id: `task-${task.id}`,
+            text: `${project.name}: ${task.title}`,
+            completed: false,
+            priority: task.priority || project.priority || 'medium',
+            type: 'project',
+            projectId: project.id,
+            taskId: task.id
+          }))
+      ),
+      // 원서에서 읽을 페이지
+      ...textbooks
+        .filter(textbook => textbook.currentPage < textbook.totalPages)
+        .slice(0, 2) // 최대 2개로 제한
+        .map(textbook => ({
+          id: `textbook-${textbook.id}`,
+          text: `${textbook.title} ${textbook.currentPage + 1}페이지 읽기`,
+          completed: false,
+          priority: textbook.priority || 'medium',
+          type: 'textbook',
+          textbookId: textbook.id
+        }))
     ];
     setTodoList(todos);
-  }, [subjects, projects, textbooks]);
+  }, [subjects, projects, textbooks, loading]);
 
   // 모달 상태
   const [showAddTodoModal, setShowAddTodoModal] = useState(false);
@@ -68,7 +77,6 @@ const Dashboard = () => {
 
   // 알림 드롭다운 상태
   const [showNotifications, setShowNotifications] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
 
   // 시간 기반 인사말
   const getTimeBasedGreeting = () => {
@@ -100,19 +108,42 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, [studyTimer.isActive]);
 
-  // Mock functions
-  const getTotalStudyTime = () => 7200; // 2시간 in seconds
-  const getCompletionRate = () => 78;
-  const getCurrentStreak = () => 12;
-  const getWeeklyStudyData = () => [
-    { day: '월', hours: 3 },
-    { day: '화', hours: 2.5 },
-    { day: '수', hours: 4 },
-    { day: '목', hours: 2 },
-    { day: '금', hours: 3.5 },
-    { day: '토', hours: 1.5 },
-    { day: '일', hours: 2 }
-  ];
+  // 실제 데이터 기반 계산 함수들
+  const getWeeklyStudyData = useMemo(() => {
+    if (loading || !studyLogs.length) {
+      return [
+        { day: '월', hours: 0 },
+        { day: '화', hours: 0 },
+        { day: '수', hours: 0 },
+        { day: '목', hours: 0 },
+        { day: '금', hours: 0 },
+        { day: '토', hours: 0 },
+        { day: '일', hours: 0 }
+      ];
+    }
+
+    const today = new Date();
+    const weekStart = new Date(today);
+    weekStart.setDate(today.getDate() - today.getDay() + 1); // 월요일부터 시작
+
+    const weeklyData = [];
+    for (let i = 0; i < 7; i++) {
+      const date = new Date(weekStart);
+      date.setDate(weekStart.getDate() + i);
+      const dateStr = date.toISOString().split('T')[0];
+
+      const dayLogs = studyLogs.filter(log => log.date === dateStr);
+      const totalMinutes = dayLogs.reduce((sum, log) => sum + (log.duration || 0), 0);
+      const totalHours = Math.round((totalMinutes / 60) * 10) / 10;
+
+      weeklyData.push({
+        day: ['월', '화', '수', '목', '금', '토', '일'][i],
+        hours: totalHours
+      });
+    }
+
+    return weeklyData;
+  }, [studyLogs, loading]);
 
   // 유틸리티 함수들
   const formatTime = (seconds) => {
@@ -137,20 +168,38 @@ const Dashboard = () => {
   };
 
   // 실제 데이터 기반 통계
-  const quickStats = {
-    totalSubjects: subjects.length,
-    totalProjects: projects.length,
-    totalTextbooks: textbooks.length,
-    totalStudyTime: Math.round(getTotalStudyTime() / 60),
-    completionRate: getCompletionRate(),
-    currentStreak: getCurrentStreak(),
-    totalGoals: goals.length,
-    completedGoals: goals.filter(goal => goal.progress >= 100).length
-  };
+  const quickStats = useMemo(() => {
+    if (loading) return {
+      totalSubjects: 0,
+      totalProjects: 0,
+      totalTextbooks: 0,
+      totalStudyTime: 0,
+      completionRate: 0,
+      currentStreak: 0,
+      totalGoals: 0,
+      completedGoals: 0
+    };
 
-  // 알림 데이터
-  const notifications = [
-    ...subjects.filter(subject => subject.completedChapters < subject.totalChapters)
+    return {
+      totalSubjects: subjects.length,
+      totalProjects: projects.length,
+      totalTextbooks: textbooks.length,
+      totalStudyTime: Math.round(subjects.reduce((total, subject) => total + (subject.totalStudyTime || 0), 0) / 60),
+      completionRate: subjects.length > 0 ?
+        Math.round(subjects.reduce((total, subject) => total + Math.round((subject.completedChapters / subject.totalChapters) * 100), 0) / subjects.length) : 0,
+      currentStreak: subjects.length > 0 ? Math.max(...subjects.map(s => s.currentStreak || 0)) : 0,
+      totalGoals: goals.length,
+      completedGoals: goals.filter(goal => goal.progress >= 100).length
+    };
+  }, [subjects, projects, textbooks, goals, loading]);
+
+  // 알림 데이터 - 실제 데이터에서 생성
+  const notifications = useMemo(() => {
+    if (loading) return [];
+
+    const studyNotifications = subjects
+      .filter(subject => subject.completedChapters < subject.totalChapters)
+      .slice(0, 3) // 최대 3개로 제한
       .map(subject => ({
         id: `subject-${subject.id}`,
         title: `${subject.name} 학습 필요`,
@@ -159,8 +208,11 @@ const Dashboard = () => {
         priority: subject.priority,
         time: '10분 전',
         urgent: subject.priority === 'high'
-      })),
-    ...projects.filter(project => project.status !== 'completed')
+      }));
+
+    const projectNotifications = projects
+      .filter(project => project.status !== 'completed')
+      .slice(0, 3) // 최대 3개로 제한
       .map(project => ({
         id: `project-${project.id}`,
         title: `${project.name} 진행 필요`,
@@ -169,56 +221,128 @@ const Dashboard = () => {
         priority: project.priority,
         time: '1시간 전',
         urgent: project.priority === 'high'
-      }))
-  ];
+      }));
 
-  // 마감일 데이터
-  const upcomingDeadlines = [
-    { id: 1, title: '알고리즘 과목 완료', dueDate: '2024-12-30', priority: 'high', type: 'study' },
-    { id: 2, title: '캡스톤 프로젝트 제출', dueDate: '2024-12-25', priority: 'high', type: 'project' },
-    { id: 3, title: 'Clean Code 완독', dueDate: '2024-12-20', priority: 'medium', type: 'textbook' }
-  ].sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+    return [...studyNotifications, ...projectNotifications];
+  }, [subjects, projects, loading]);
 
-  // 오늘의 추천 학습
-  const getTodayRecommendations = () => {
+  // 마감일 데이터 - 실제 데이터에서 생성
+  const upcomingDeadlines = useMemo(() => {
+    if (loading) return [];
+
+    const deadlines = [
+      // 학습 과목 마감일
+      ...subjects
+        .filter(subject => subject.targetCompletionDate)
+        .map(subject => ({
+          id: `subject-${subject.id}`,
+          title: `${subject.name} 과목 완료`,
+          dueDate: subject.targetCompletionDate,
+          priority: subject.priority,
+          type: 'study'
+        })),
+      // 프로젝트 마감일
+      ...projects
+        .filter(project => project.endDate)
+        .map(project => ({
+          id: `project-${project.id}`,
+          title: `${project.name} 제출`,
+          dueDate: project.endDate,
+          priority: project.priority,
+          type: 'project'
+        })),
+      // 원서 마감일
+      ...textbooks
+        .filter(textbook => textbook.targetDate)
+        .map(textbook => ({
+          id: `textbook-${textbook.id}`,
+          title: `${textbook.title} 완독`,
+          dueDate: textbook.targetDate,
+          priority: textbook.priority,
+          type: 'textbook'
+        }))
+    ];
+
+    // 날짜순으로 정렬하고 가까운 것부터 최대 5개
+    return deadlines
+      .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate))
+      .slice(0, 5);
+  }, [subjects, projects, textbooks, loading]);
+
+  // 오늘의 추천 학습 - 실제 데이터 기반
+  const getTodayRecommendations = useMemo(() => {
+    if (loading) return [];
+
     const currentHour = currentTime.getHours();
     const recommendations = [];
 
+    // 아침 시간대 (6-12시): 학습 과목 추천
     if (currentHour >= 6 && currentHour < 12) {
-      recommendations.push({
-        type: 'study',
-        title: '알고리즘 학습',
-        reason: '아침 집중력이 높을 때 어려운 개념 학습',
-        estimatedTime: '90분',
-        priority: 'high',
-        icon: Brain
-      });
+      const incompleteSubjects = subjects.filter(subject =>
+        subject.completedChapters < subject.totalChapters
+      );
+
+      if (incompleteSubjects.length > 0) {
+        const highPrioritySubject = incompleteSubjects.find(s => s.priority === 'high') || incompleteSubjects[0];
+        const nextChapter = highPrioritySubject.chapters.find(ch => !ch.completed);
+
+        if (nextChapter) {
+          recommendations.push({
+            type: 'study',
+            title: `${highPrioritySubject.name} 학습`,
+            reason: '아침 집중력이 높을 때 어려운 개념 학습',
+            estimatedTime: '90분',
+            priority: highPrioritySubject.priority,
+            icon: Brain,
+            subjectId: highPrioritySubject.id,
+            chapterId: nextChapter.id
+          });
+        }
+      }
     }
 
+    // 오후 시간대 (12-18시): 프로젝트 추천
     if (currentHour >= 12 && currentHour < 18) {
-      recommendations.push({
-        type: 'project',
-        title: '캡스톤 프로젝트 진행',
-        reason: '오후 시간대에 창작 활동 최적',
-        estimatedTime: '120분',
-        priority: 'high',
-        icon: Zap
-      });
+      const activeProjects = projects.filter(project => project.status === 'in-progress');
+
+      if (activeProjects.length > 0) {
+        const highPriorityProject = activeProjects.find(p => p.priority === 'high') || activeProjects[0];
+
+        recommendations.push({
+          type: 'project',
+          title: `${highPriorityProject.name} 진행`,
+          reason: '오후 시간대에 창작 활동 최적',
+          estimatedTime: '120분',
+          priority: highPriorityProject.priority,
+          icon: Zap,
+          projectId: highPriorityProject.id
+        });
+      }
     }
 
+    // 저녁 시간대 (18-22시): 원서 읽기 추천
     if (currentHour >= 18 && currentHour < 22) {
-      recommendations.push({
-        type: 'reading',
-        title: 'Clean Code 읽기',
-        reason: '저녁에 독서로 하루 마무리',
-        estimatedTime: '30분',
-        priority: 'medium',
-        icon: BookOpen
-      });
+      const unreadTextbooks = textbooks.filter(textbook =>
+        textbook.currentPage < textbook.totalPages
+      );
+
+      if (unreadTextbooks.length > 0) {
+        const highPriorityTextbook = unreadTextbooks.find(t => t.priority === 'high') || unreadTextbooks[0];
+
+        recommendations.push({
+          type: 'reading',
+          title: `${highPriorityTextbook.title} 읽기`,
+          reason: '저녁에 독서로 하루 마무리',
+          estimatedTime: '30분',
+          priority: highPriorityTextbook.priority,
+          icon: BookOpen,
+          textbookId: highPriorityTextbook.id
+        });
+      }
     }
 
     return recommendations;
-  };
+  }, [currentTime, subjects, projects, textbooks, loading]);
 
   // Todo 핸들러들
   const handleAddTodo = () => {
@@ -251,35 +375,67 @@ const Dashboard = () => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
+  // 로딩 상태 처리
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">대시보드를 불러오는 중...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // 에러 상태 처리
+  if (error) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-red-500 text-6xl mb-4">⚠️</div>
+          <h2 className="text-xl font-semibold text-slate-900 mb-2">데이터 로드 실패</h2>
+          <p className="text-slate-600 mb-4">{error}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+          >
+            다시 시도
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-slate-50">
       {/* 상단 바 - 고정 */}
       <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
-        <div className="px-6 py-4">
+        <div className="px-4 md:px-6 py-4">
           <div className="flex items-center justify-between">
             {/* 페이지 제목 */}
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-slate-900 rounded-lg">
-                <Target size={24} className="text-white" />
+            <div className="flex items-center gap-3 md:gap-4">
+              <div className="p-2 md:p-3 bg-slate-900 rounded-lg">
+                <Target size={20} className="md:w-6 md:h-6 text-white" />
               </div>
-              <div>
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 mb-1">
                   {(() => {
                     const greeting = getTimeBasedGreeting();
                     const GreetingIcon = greeting.icon;
                     return (
                       <>
-                        <GreetingIcon size={16} className={greeting.color} />
-                        <span className="text-sm text-slate-600 font-medium">{greeting.text}</span>
+                        <GreetingIcon size={14} className="md:w-4 md:h-4" />
+                        <span className="text-xs md:text-sm text-slate-600 font-medium">{greeting.text}</span>
                       </>
                     );
                   })()}
                 </div>
-                <h1 className="text-2xl font-bold text-slate-900">학습 대시보드</h1>
-                <p className="text-sm text-slate-600 mt-0.5">
-                  {currentTime.toLocaleDateString('ko-KR', { 
-                    year: 'numeric', 
-                    month: 'long', 
+                <h1 className="text-xl md:text-2xl font-bold text-slate-900 truncate">학습 대시보드</h1>
+                <p className="text-xs md:text-sm text-slate-600 mt-0.5 truncate">
+                  {user?.name ? `${user.name}님, ` : ''}
+                  {currentTime.toLocaleDateString('ko-KR', {
+                    year: 'numeric',
+                    month: 'long',
                     day: 'numeric',
                     weekday: 'long'
                   })}
@@ -288,7 +444,7 @@ const Dashboard = () => {
             </div>
 
             {/* 우상단 알림 및 유저 메뉴 */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               {/* 알림 */}
               <div className="relative">
                 <button
@@ -305,7 +461,7 @@ const Dashboard = () => {
 
                 {/* 알림 드롭다운 */}
                 {showNotifications && (
-                  <div className="absolute right-0 top-12 w-96 bg-white rounded-lg shadow-xl border border-slate-200 z-50">
+                  <div className="absolute right-0 top-12 w-80 md:w-96 bg-white rounded-lg shadow-xl border border-slate-200 z-50">
                     <div className="p-4 border-b border-slate-200">
                       <h3 className="font-semibold text-slate-900">알림</h3>
                     </div>
@@ -334,47 +490,11 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {/* 유저 메뉴 */}
-              <div className="relative">
-                <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-2 p-2 text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
-                >
-                  <User size={24} />
-                </button>
-
-                {/* 유저 메뉴 드롭다운 */}
-                {showUserMenu && (
-                  <div className="absolute right-0 top-12 w-64 bg-white rounded-lg shadow-xl border border-slate-200 z-50">
-                    <div className="p-4 border-b border-slate-200">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-slate-900 rounded-full flex items-center justify-center">
-                          <User size={16} className="text-white" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-slate-900">학습자</p>
-                          <p className="text-sm text-slate-600">learner@example.com</p>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="p-2">
-                      <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-md transition-colors text-left">
-                        <Settings size={16} className="text-slate-600" />
-                        <span className="text-slate-700">설정</span>
-                      </button>
-                      <button className="w-full flex items-center gap-3 px-3 py-2 hover:bg-slate-50 rounded-md transition-colors text-left">
-                        <LogOut size={16} className="text-slate-600" />
-                        <span className="text-slate-700">로그아웃</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
             </div>
           </div>
 
           {/* 통계 카드들 */}
-          <div className="grid grid-cols-4 gap-4 mt-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <div className="bg-slate-100 rounded-lg p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-slate-200 rounded-lg">
@@ -424,8 +544,8 @@ const Dashboard = () => {
       </div>
 
       {/* 메인 콘텐츠 */}
-      <div className="p-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="p-4 md:p-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
           {/* 왼쪽 컬럼 */}
           <div className="lg:col-span-2 space-y-6">
             {/* 오늘의 집중 학습 & 타이머 */}
@@ -480,7 +600,7 @@ const Dashboard = () => {
 
               {/* 오늘의 추천 학습 */}
               <div className="space-y-4">
-                {getTodayRecommendations().map((rec, index) => {
+                {getTodayRecommendations.map((rec, index) => {
                   const IconComponent = rec.icon;
                   return (
                     <div key={index} className="group hover:shadow-lg transition-all duration-300 bg-gradient-to-r from-white to-slate-50 rounded-2xl p-5 border border-slate-200/60">
@@ -525,7 +645,7 @@ const Dashboard = () => {
                 </div>
                 <div className="h-40">
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={getWeeklyStudyData()}>
+                    <AreaChart data={getWeeklyStudyData}>
                       <defs>
                         <linearGradient id="colorHours" x1="0" y1="0" x2="0" y2="1">
                           <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
@@ -535,7 +655,7 @@ const Dashboard = () => {
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
                       <XAxis dataKey="day" stroke="#64748b" fontSize={11} />
                       <YAxis stroke="#64748b" fontSize={11} />
-                      <Tooltip 
+                      <Tooltip
                         contentStyle={{
                           backgroundColor: 'white',
                           border: '1px solid #e2e8f0',
@@ -543,11 +663,11 @@ const Dashboard = () => {
                           fontSize: '12px'
                         }}
                       />
-                      <Area 
-                        type="monotone" 
-                        dataKey="hours" 
-                        stroke="#3b82f6" 
-                        fillOpacity={1} 
+                      <Area
+                        type="monotone"
+                        dataKey="hours"
+                        stroke="#3b82f6"
+                        fillOpacity={1}
                         fill="url(#colorHours)"
                         strokeWidth={2}
                       />
@@ -922,7 +1042,7 @@ const Dashboard = () => {
       {/* 모달 */}
       {showAddTodoModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md">
+          <div className="bg-white rounded-xl p-4 md:p-6 w-full max-w-md mx-4">
             <h3 className="text-lg font-semibold text-slate-900 mb-4">새 할 일 추가</h3>
             <div className="space-y-4">
               <div>

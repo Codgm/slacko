@@ -30,7 +30,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "mock-server": "json-server --watch db.json --port 3001 --routes routes.json --middlewares middleware.js --host localhost"
   },
   "eslintConfig": {
     "extends": [
@@ -52,6 +53,7 @@
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",
+    "json-server": "^0.17.4",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.10",
     "webpack": "^5.101.0"

@@ -14,7 +14,7 @@ const UserProvider = ({ children }) => {
     refreshToken: null,
     tokenType: 'Bearer',
     expiresIn: null,
-    expiresAt: null // 실제 만료 시각
+    expiresAt: null
   });
 
   // 토큰 저장 헬퍼
@@ -44,7 +44,7 @@ const UserProvider = ({ children }) => {
     localStorage.removeItem('slacko_tokens');
   }, []);
 
-  // 5. 토큰 갱신 - useCallback으로 래핑하여 의존성 문제 해결
+  // 5. 토큰 갱신
   const refreshAccessToken = useCallback(async (refreshToken) => {
     try {
       const tokenToUse = refreshToken || tokens.refreshToken;
@@ -109,7 +109,7 @@ const UserProvider = ({ children }) => {
 
         const parsedTokens = JSON.parse(savedTokens);
         
-        // 토큰 만료 확인 - expiresAt을 사용하도록 수정
+        // 토큰 만료 확인
         if (authAPI.isTokenExpired(parsedTokens.expiresAt)) {
           // 리프레시 토큰으로 갱신 시도
           if (parsedTokens.refreshToken) {
@@ -133,21 +133,59 @@ const UserProvider = ({ children }) => {
     initAuth();
   }, [fetchCurrentUser, refreshAccessToken, clearAuth]);
 
-  // 1. Google 로그인
+  // 1. Google 로그인 - 수정됨
   const loginWithGoogle = async () => {
     try {
+      setIsLoading(true);
+      console.log('Requesting Google auth URL...');
+      
       const authData = await authAPI.getGoogleAuthUrl();
-      // 명세에 따라 올바른 baseURL 사용 (8080 -> ngrok URL)
-      window.location.href = `https://cffdb44bbd9c.ngrok-free.app${authData.authUrl}`;
+      console.log('Received auth data:', authData);
+      
+      // 백엔드 응답 구조에 따라 URL 처리
+      let authUrl;
+      
+      if (typeof authData === 'string') {
+        // 응답이 문자열인 경우 (직접 URL)
+        authUrl = authData;
+      } else if (authData.authUrl) {
+        // 응답이 객체이고 authUrl 속성이 있는 경우
+        authUrl = authData.authUrl;
+      } else if (authData.url) {
+        // url 속성이 있는 경우
+        authUrl = authData.url;
+      } else {
+        // 기본적으로 전체 응답을 URL로 처리
+        authUrl = authData;
+      }
+
+      console.log('Final auth URL:', authUrl);
+
+      // URL이 이미 완전한 URL인지 확인
+      if (authUrl.startsWith('http://') || authUrl.startsWith('https://')) {
+        window.location.href = authUrl;
+      } else {
+        // 상대 경로인 경우 authAPI의 baseURL과 결합
+        window.location.href = `${authAPI.baseURL}${authUrl}`;
+      }
+      
     } catch (error) {
       console.error('Google login failed:', error);
-      throw new Error('Google 로그인을 시작할 수 없습니다');
+      setIsLoading(false);
+      
+      // 더 구체적인 에러 메시지 제공
+      if (error.message.includes('Failed to fetch') || error.message.includes('DNS')) {
+        throw new Error('서버에 연결할 수 없습니다. 네트워크 연결을 확인하거나 잠시 후 다시 시도해주세요.');
+      } else {
+        throw new Error(`Google 로그인을 시작할 수 없습니다: ${error.message}`);
+      }
     }
   };
 
   // 2. 로그인 성공 처리 (OAuth2 콜백 후)
   const handleLoginSuccess = async () => {
     try {
+      setIsLoading(true);
       const data = await authAPI.handleLoginSuccess();
       
       // 토큰 저장
@@ -164,7 +202,10 @@ const UserProvider = ({ children }) => {
       return data.userInfo;
     } catch (error) {
       console.error('Login success handling failed:', error);
+      clearAuth();
       throw new Error('로그인 처리 중 오류가 발생했습니다');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -316,7 +357,7 @@ const UserProvider = ({ children }) => {
     // 유틸리티 함수들
     setUser,
     clearAuth,
-    apiRequest, // 다른 API 요청을 위한 헬퍼
+    apiRequest,
     
     // API 인스턴스 (필요시 직접 접근)
     authAPI

@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { User, Lock, Mail, Eye, EyeOff, ArrowRight, CheckCircle, AlertCircle, Target, Sparkles, BookOpen, TrendingUp } from 'lucide-react';
-import { useAuth, useUser } from '../../context/UserContext';
+import { useNavigate } from 'react-router-dom';
+import { User, Lock, Mail, Eye, EyeOff, ArrowRight, AlertCircle, Target } from 'lucide-react';
+import { useAuth } from '../../context/UserContext';
 
 const AuthPages = () => {
-  const { 
-    isAuthenticated, 
-    isLoading: authLoading, 
-    loginWithGoogle, 
-    logout,
-    handleLoginSuccess 
+  const navigate = useNavigate();
+  const {
+    isAuthenticated,
+    isLoading: authLoading,
+    loginWithGoogle,
+    handleLoginSuccess
   } = useAuth();
+
+  // 이미 인증된 사용자는 대시보드로 리디렉션
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
 
   // URL 파라미터에서 로그인 성공/실패 처리 (OAuth2 콜백)
   useEffect(() => {
@@ -21,8 +29,9 @@ const AuthPages = () => {
       setIsLoading(true);
       handleLoginSuccess()
         .then(() => {
-          // 성공 시 URL 파라미터 정리
+          // 성공 시 URL 파라미터 정리 후 대시보드로 이동
           window.history.replaceState({}, document.title, window.location.pathname);
+          navigate('/dashboard');
         })
         .catch(err => {
           setErrors({ general: '로그인 처리 중 오류가 발생했습니다.' });
@@ -36,7 +45,7 @@ const AuthPages = () => {
       // URL 파라미터 정리
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [handleLoginSuccess]);
+  }, [handleLoginSuccess, navigate]);
 
   // Google 로그인 핸들러
   const handleGoogleLogin = async () => {
@@ -44,6 +53,8 @@ const AuthPages = () => {
       setIsLoading(true);
       setErrors({});
       await loginWithGoogle();
+      // Google 로그인 성공 시 자동으로 대시보드로 이동
+      navigate('/dashboard');
     } catch (error) {
       setErrors({ general: 'Google 로그인 중 오류가 발생했습니다.' });
       console.error('Google login error:', error);
@@ -57,7 +68,6 @@ const AuthPages = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [user, setUser] = useState(null); // 로그인된 사용자 정보
   
   // 폼 데이터 상태
   const [formData, setFormData] = useState({
@@ -140,20 +150,8 @@ const AuthPages = () => {
       await new Promise(resolve => setTimeout(resolve, 1500));
       
       if (isLogin) {
-        // 로그인 성공
-        const userData = {
-          name: '김학생',
-          email: formData.email,
-          university: '과탑대학교',
-          major: '컴퓨터공학과',
-          year: '3학년',
-          avatar: null,
-          joinDate: '2024-03-01',
-          totalStudyHours: 156,
-          completedCourses: 12,
-          currentStreak: 14
-        };
-        setUser(userData);
+        // 로그인 성공 시 바로 대시보드로 이동
+        navigate('/dashboard');
       } else {
         // 회원가입 성공 후 로그인 모드로 전환
         setIsLogin(true);
@@ -175,22 +173,6 @@ const AuthPages = () => {
     }
   };
 
-  // 로그아웃 핸들러
-  const handleLogout = () => {
-    setUser(null);
-    setFormData({
-      email: '',
-      password: '',
-      confirmPassword: '',
-      name: '',
-      university: '',
-      major: '',
-      agreeTerms: false,
-      agreeMarketing: false
-    });
-    setErrors({});
-  };
-
   // 모드 전환 핸들러
   const toggleMode = () => {
     setIsLogin(!isLogin);
@@ -206,141 +188,6 @@ const AuthPages = () => {
       agreeMarketing: false
     }));
   };
-
-  // 로그인된 사용자의 대시보드 미리보기
-  if (user) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
-        {/* 상단 바 */}
-        <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
-          <div className="px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-slate-900 rounded-lg">
-                  <Target size={24} className="text-white" />
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold text-slate-900">환영합니다, {user.name}님!</h1>
-                  <p className="text-sm text-slate-600 mt-0.5">
-                    {user.university} {user.major} {user.year}
-                  </p>
-                </div>
-              </div>
-              
-              <div className="flex items-center gap-4">
-                <div className="text-right">
-                  <div className="text-sm font-medium text-slate-900">{user.name}</div>
-                  <div className="text-xs text-slate-600">{user.email}</div>
-                </div>
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold">
-                  {user.name.charAt(0)}
-                </div>
-                <button 
-                  onClick={handleLogout}
-                  className="px-4 py-2 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors"
-                >
-                  로그아웃
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* 메인 콘텐츠 */}
-        <div className="p-6">
-          <div className="max-w-6xl mx-auto">
-            {/* 환영 섹션 */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white mb-8">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-3xl font-bold mb-2">🎉 과탑에 오신 것을 환영합니다!</h2>
-                  <p className="text-blue-100 text-lg mb-4">
-                    지금부터 스마트한 학습 관리를 시작해보세요
-                  </p>
-                  <div className="flex items-center gap-6 text-sm">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle size={16} />
-                      <span>가입일: {new Date(user.joinDate).toLocaleDateString('ko-KR')}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Sparkles size={16} />
-                      <span>현재 연속 학습: {user.currentStreak}일</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-4xl font-bold mb-1">{user.totalStudyHours}h</div>
-                  <div className="text-blue-200">총 학습시간</div>
-                </div>
-              </div>
-            </div>
-
-            {/* 시작하기 카드들 */}
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
-              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-lg transition-all hover:scale-105 cursor-pointer">
-                <div className="p-3 bg-blue-100 rounded-lg w-fit mb-4">
-                  <BookOpen size={24} className="text-blue-600" />
-                </div>
-                <h3 className="font-bold text-slate-900 mb-2">첫 과목 추가하기</h3>
-                <p className="text-slate-600 text-sm mb-4">
-                  학습 중인 과목을 등록하고 진도를 관리해보세요
-                </p>
-                <button className="flex items-center gap-2 text-blue-600 font-medium text-sm">
-                  시작하기 <ArrowRight size={16} />
-                </button>
-              </div>
-
-              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-lg transition-all hover:scale-105 cursor-pointer">
-                <div className="p-3 bg-purple-100 rounded-lg w-fit mb-4">
-                  <Target size={24} className="text-purple-600" />
-                </div>
-                <h3 className="font-bold text-slate-900 mb-2">학습 목표 설정</h3>
-                <p className="text-slate-600 text-sm mb-4">
-                  이번 학기 목표를 설정하고 달성 과정을 추적하세요
-                </p>
-                <button className="flex items-center gap-2 text-purple-600 font-medium text-sm">
-                  시작하기 <ArrowRight size={16} />
-                </button>
-              </div>
-
-              <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm hover:shadow-lg transition-all hover:scale-105 cursor-pointer">
-                <div className="p-3 bg-green-100 rounded-lg w-fit mb-4">
-                  <TrendingUp size={24} className="text-green-600" />
-                </div>
-                <h3 className="font-bold text-slate-900 mb-2">학습 패턴 분석</h3>
-                <p className="text-slate-600 text-sm mb-4">
-                  AI가 분석한 최적의 학습 시간대를 확인하세요
-                </p>
-                <button className="flex items-center gap-2 text-green-600 font-medium text-sm">
-                  시작하기 <ArrowRight size={16} />
-                </button>
-              </div>
-            </div>
-
-            {/* 빠른 통계 */}
-            <div className="grid grid-cols-4 gap-4">
-              <div className="bg-white rounded-lg p-4 border border-slate-200">
-                <div className="text-2xl font-bold text-slate-900">{user.completedCourses}</div>
-                <div className="text-sm text-slate-600">완료한 과목</div>
-              </div>
-              <div className="bg-white rounded-lg p-4 border border-slate-200">
-                <div className="text-2xl font-bold text-slate-900">{user.currentStreak}</div>
-                <div className="text-sm text-slate-600">연속 학습일</div>
-              </div>
-              <div className="bg-white rounded-lg p-4 border border-slate-200">
-                <div className="text-2xl font-bold text-slate-900">{user.totalStudyHours}</div>
-                <div className="text-sm text-slate-600">총 학습시간</div>
-              </div>
-              <div className="bg-white rounded-lg p-4 border border-slate-200">
-                <div className="text-2xl font-bold text-slate-900">A+</div>
-                <div className="text-sm text-slate-600">목표 학점</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex">
@@ -360,21 +207,27 @@ const AuthPages = () => {
 
           <div className="space-y-6 max-w-md">
             <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-              <CheckCircle className="text-green-300 flex-shrink-0" size={20} />
+              <div className="w-5 h-5 bg-green-300 rounded-full flex items-center justify-center">
+                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+              </div>
               <div>
                 <div className="font-semibold">AI 우선순위 추천</div>
                 <div className="text-sm text-blue-100">중요한 학습부터 자동 정렬</div>
               </div>
             </div>
             <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-              <CheckCircle className="text-green-300 flex-shrink-0" size={20} />
+              <div className="w-5 h-5 bg-green-300 rounded-full flex items-center justify-center">
+                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+              </div>
               <div>
                 <div className="font-semibold">스마트 진도 관리</div>
                 <div className="text-sm text-blue-100">학습 현황 실시간 추적</div>
               </div>
             </div>
             <div className="flex items-center gap-4 p-4 bg-white/10 backdrop-blur-sm rounded-lg border border-white/20">
-              <CheckCircle className="text-green-300 flex-shrink-0" size={20} />
+              <div className="w-5 h-5 bg-green-300 rounded-full flex items-center justify-center">
+                <div className="w-2 h-2 bg-green-600 rounded-full"></div>
+              </div>
               <div>
                 <div className="font-semibold">개인 맞춤 분석</div>
                 <div className="text-sm text-blue-100">학습 패턴 기반 코칭</div>
@@ -647,8 +500,10 @@ const AuthPages = () => {
               </div>
               
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <button className="flex items-center justify-center gap-2 py-2.5 px-4 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+                <button 
+                  className="flex items-center justify-center gap-2 py-2.5 px-4 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
                   onClick={handleGoogleLogin}
+                  disabled={isLoading}
                 >
                   <div className="w-5 h-5 bg-blue-600 rounded"></div>
                   <span className="text-sm font-medium text-slate-700">Google</span>

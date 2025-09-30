@@ -1,12 +1,51 @@
-// TextbookApi.js - 백엔드 API와 통신하는 서비스 모듈
-
-const API_BASE_URL = 'https://cffdb44bbd9c.ngrok-free.app/api';
+// TextbookApi.js - 백엔드 API와 통신하는 서비스 모듈 (JSON Server Fallback 지원)
 
 class TextbookApi {
   
-  // HTTP 요청 헬퍼 함수
+  constructor() {
+    // 환경 변수 확인
+    const isDev = process.env.NODE_ENV === 'development';
+    const useMock = process.env.REACT_APP_USE_MOCK === 'true';
+    const ngrokUrl = process.env.REACT_APP_NGROK_URL || 'https://a1d862e78d7d.ngrok-free.app';
+    const jsonServerUrl = process.env.REACT_APP_JSON_SERVER_URL || 'http://localhost:3001';
+
+    // 우선순위: ngrok > JSON Server
+    this.primaryURL = ngrokUrl;
+    this.fallbackURL = jsonServerUrl;
+    this.currentURL = this.primaryURL;
+    
+    console.log('🔧 API 설정:', {
+      primary: this.primaryURL,
+      fallback: this.fallbackURL,
+      current: this.currentURL,
+      isDev,
+      useMock
+    });
+  }
+  
+  // HTTP 요청 헬퍼 함수 - Fallback 지원
   async request(endpoint, options = {}) {
-    const url = `${API_BASE_URL}${endpoint}`;
+    // 첫 번째 시도: Primary URL (ngrok)
+    try {
+      return await this.makeRequest(this.primaryURL, endpoint, options);
+    } catch (primaryError) {
+      console.warn('⚠️ Primary 서버 연결 실패, Fallback으로 전환:', primaryError.message);
+      
+      // 두 번째 시도: Fallback URL (JSON Server)
+      try {
+        this.currentURL = this.fallbackURL;
+        const result = await this.makeRequest(this.fallbackURL, endpoint, options);
+        console.log('✅ Fallback 서버로 성공적으로 연결됨');
+        return result;
+      } catch (fallbackError) {
+        console.error('❌ 모든 서버 연결 실패');
+        throw new Error(`모든 서버에 연결할 수 없습니다. Primary: ${primaryError.message}, Fallback: ${fallbackError.message}`);
+      }
+    }
+  }
+
+  async makeRequest(baseURL, endpoint, options = {}) {
+    const url = `${baseURL}${endpoint.startsWith('/api') ? '' : '/api'}${endpoint}`;
     console.log('API 요청 URL:', url);
     
     const config = {
@@ -18,53 +57,40 @@ class TextbookApi {
       ...options,
     };
 
-    try {
-      const response = await fetch(url, config);
-      console.log('API 응답 상태:', response.status, response.statusText);
-      console.log('API 응답 헤더:', response.headers.get('content-type'));
-      
-      // 응답 텍스트 미리 확인
-      const responseText = await response.text();
-      console.log('응답 내용 (첫 200자):', responseText.slice(0, 200));
-      
-      // HTML 응답인지 확인
-      if (responseText.trim().startsWith('<!DOCTYPE html>') || responseText.trim().startsWith('<html')) {
-        throw new Error(`서버가 HTML 페이지를 반환했습니다. ngrok URL이나 서버 상태를 확인해주세요.`);
-      }
-      
-      // 빈 응답 처리
-      if (!responseText.trim()) {
-        if (response.ok) {
-          return {}; // 성공했지만 빈 응답인 경우
-        } else {
-          throw new Error(`서버 오류 (${response.status}): 응답 내용이 없습니다.`);
-        }
-      }
-      
-      // JSON 파싱 시도
-      let data;
-      try {
-        data = JSON.parse(responseText);
-      } catch (parseError) {
-        throw new Error(`JSON 파싱 실패: ${parseError.message}. 응답: ${responseText.slice(0, 100)}...`);
-      }
-      
-      if (!response.ok) {
-        throw new Error(data.message || `HTTP error! status: ${response.status}`);
-      }
-      
-      return data;
-      
-    } catch (error) {
-      console.error(`API 요청 실패 (${endpoint}):`, error);
-      
-      // 네트워크 오류 구분
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        throw new Error('네트워크 연결 오류: 서버에 접근할 수 없습니다. URL과 서버 상태를 확인해주세요.');
-      }
-      
-      throw error;
+    const response = await fetch(url, config);
+    console.log('API 응답 상태:', response.status, response.statusText);
+    
+    // 응답 텍스트 미리 확인
+    const responseText = await response.text();
+    console.log('응답 내용 (첫 200자):', responseText.slice(0, 200));
+    
+    // HTML 응답인지 확인
+    if (responseText.trim().startsWith('<!DOCTYPE html>') || responseText.trim().startsWith('<html')) {
+      throw new Error(`서버가 HTML 페이지를 반환했습니다. 서버 상태를 확인해주세요.`);
     }
+    
+    // 빈 응답 처리
+    if (!responseText.trim()) {
+      if (response.ok) {
+        return {}; // 성공했지만 빈 응답인 경우
+      } else {
+        throw new Error(`서버 오류 (${response.status}): 응답 내용이 없습니다.`);
+      }
+    }
+    
+    // JSON 파싱 시도
+    let data;
+    try {
+      data = JSON.parse(responseText);
+    } catch (parseError) {
+      throw new Error(`JSON 파싱 실패: ${parseError.message}. 응답: ${responseText.slice(0, 100)}...`);
+    }
+    
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+    
+    return data;
   }
 
   // 1. 원서 등록 (POST /api/books)
@@ -138,67 +164,113 @@ class TextbookApi {
     return await this.request(`/books/starting-soon?days=${days}`);
   }
 
-  // 서버 상태 확인 (새로운 메서드)
+  // 서버 상태 확인
   async checkServerStatus() {
     try {
-      const response = await fetch(API_BASE_URL.replace('/api', ''), {
-        method: 'GET',
-        headers: {
-          'ngrok-skip-browser-warning': 'true'
-        }
-      });
+      console.log('🔌 서버 상태 확인 중...');
       
-      const text = await response.text();
-      console.log('서버 상태 응답:', response.status, text.slice(0, 200));
-      
-      return {
-        status: response.status,
-        isHtml: text.trim().startsWith('<!DOCTYPE html>') || text.trim().startsWith('<html'),
-        content: text.slice(0, 200)
-      };
+      // Primary 서버 확인
+      try {
+        const primaryResult = await this.makeRequest(this.primaryURL, '/health', { method: 'GET' });
+        return {
+          success: true,
+          server: 'primary',
+          url: this.primaryURL,
+          data: primaryResult
+        };
+      } catch (primaryError) {
+        console.log('Primary 서버 연결 실패, Fallback 확인 중...');
+        
+        // Fallback 서버 확인
+        const fallbackResult = await this.makeRequest(this.fallbackURL, '/health', { method: 'GET' });
+        this.currentURL = this.fallbackURL;
+        return {
+          success: true,
+          server: 'fallback',
+          url: this.fallbackURL,
+          data: fallbackResult
+        };
+      }
       
     } catch (error) {
       console.error('서버 상태 확인 실패:', error);
-      throw error;
+      return {
+        success: false,
+        error: error.message
+      };
     }
   }
 
-  // URL 유효성 검사
-  validateApiUrl() {
+  // 연결 테스트 함수
+  async testConnection() {
     try {
-      const url = new URL(API_BASE_URL);
-      console.log('API URL 검증:', {
-        protocol: url.protocol,
-        hostname: url.hostname,
-        pathname: url.pathname,
-        full: API_BASE_URL
-      });
+      console.log('🔌 서버 연결 테스트 시작...');
       
-      if (!url.hostname.includes('ngrok')) {
-        console.warn('⚠️ ngrok URL이 아닌 것 같습니다:', url.hostname);
-      }
+      const response = await this.request('/books?limit=1');
       
-      return true;
+      console.log('✅ 서버 연결 성공');
+      return { 
+        success: true, 
+        message: `서버 연결 성공 (${this.currentURL})`,
+        server: this.currentURL === this.primaryURL ? 'primary' : 'fallback',
+        booksCount: Array.isArray(response) ? response.length : 0
+      };
+      
     } catch (error) {
-      console.error('❌ 잘못된 API URL:', API_BASE_URL, error);
-      return false;
+      console.error('❌ 서버 연결 실패:', error);
+      return { 
+        success: false, 
+        message: error.message,
+        details: error.stack
+      };
     }
   }
 
   // 프론트엔드 데이터를 백엔드 API 형식으로 변환
   transformToApiFormat(frontendBook) {
-    // 플랜 데이터를 챕터 형식으로 변환
-    const chapters = frontendBook.plan?.map((planItem, index) => ({
-      title: planItem.title || planItem.chapter || `Chapter ${index + 1}`,
-      chapterNumber: index + 1,
-      sectionNumber: `${index + 1}`,
-      startPage: this.calculateChapterStartPage(frontendBook, index),
-      endPage: this.calculateChapterEndPage(frontendBook, index),
-      estimatedStudyTime: planItem.estimatedTime || 120, // 기본 2시간
-      description: planItem.description || planItem.memo || ''
-    })) || [];
+    console.log('🔄 API 형식 변환 시작:', {
+      title: frontendBook.title,
+      hasChapters: !!frontendBook.chapters,
+      hasPlan: !!frontendBook.plan
+    });
 
-    return {
+    // 챕터 데이터 생성 (plan이나 chapters에서)
+    let chapters = [];
+    
+    if (frontendBook.chapters && frontendBook.chapters.length > 0) {
+      chapters = frontendBook.chapters.map((chapter, index) => ({
+        title: chapter.title || `Chapter ${index + 1}`,
+        chapterNumber: chapter.chapterNumber || (index + 1),
+        sectionNumber: chapter.sectionNumber || `${index + 1}`,
+        startPage: chapter.startPage || this.calculateChapterStartPage(frontendBook, index),
+        endPage: chapter.endPage || this.calculateChapterEndPage(frontendBook, index),
+        estimatedStudyTime: chapter.estimatedStudyTime || 120,
+        description: chapter.description || chapter.title || `Chapter ${index + 1} 학습`
+      }));
+    } else if (frontendBook.plan && frontendBook.plan.length > 0) {
+      chapters = frontendBook.plan.map((planItem, index) => ({
+        title: planItem.chapter || planItem.title || `Chapter ${index + 1}`,
+        chapterNumber: index + 1,
+        sectionNumber: `${index + 1}`,
+        startPage: this.calculateChapterStartPage(frontendBook, index),
+        endPage: this.calculateChapterEndPage(frontendBook, index),
+        estimatedStudyTime: planItem.estimatedTime || 120,
+        description: planItem.description || planItem.memo || `${planItem.chapter || planItem.title} 학습`
+      }));
+    } else {
+      const defaultChapterCount = Math.min(10, Math.ceil(frontendBook.totalPages / 50));
+      chapters = Array.from({ length: defaultChapterCount }, (_, index) => ({
+        title: `Chapter ${index + 1}`,
+        chapterNumber: index + 1,
+        sectionNumber: `${index + 1}`,
+        startPage: this.calculateChapterStartPage({ ...frontendBook, totalChapters: defaultChapterCount }, index),
+        endPage: this.calculateChapterEndPage({ ...frontendBook, totalChapters: defaultChapterCount }, index),
+        estimatedStudyTime: 120,
+        description: `Chapter ${index + 1} 학습`
+      }));
+    }
+
+    const apiData = {
       isbn: frontendBook.isbn || this.generateFakeISBN(),
       title: frontendBook.title,
       author: frontendBook.author || 'Unknown Author',
@@ -208,10 +280,26 @@ class TextbookApi {
       studyEndDate: frontendBook.targetDate,
       chapters: chapters
     };
+
+    console.log('✅ API 형식 변환 완료:', {
+      title: apiData.title,
+      author: apiData.author,
+      totalPages: apiData.totalPages,
+      chaptersCount: apiData.chapters.length,
+      studyPeriod: `${apiData.studyStartDate} ~ ${apiData.studyEndDate}`
+    });
+
+    return apiData;
   }
 
   // 백엔드 API 응답을 프론트엔드 형식으로 변환
   transformFromApiFormat(apiBook) {
+    console.log('🔄 프론트엔드 형식 변환 시작:', {
+      id: apiBook.id,
+      title: apiBook.title,
+      chaptersCount: apiBook.chapters?.length || 0
+    });
+
     // 챕터 데이터를 플랜 형식으로 변환
     const plan = apiBook.chapters?.map((chapter, index) => ({
       id: `plan-${chapter.id || index}`,
@@ -226,7 +314,7 @@ class TextbookApi {
       week: Math.ceil((index + 1) / 2)
     })) || [];
 
-    return {
+    const frontendBook = {
       id: apiBook.id,
       title: apiBook.title,
       author: apiBook.author,
@@ -249,35 +337,59 @@ class TextbookApi {
       noteCount: 0,
       highlightCount: 0,
       estimatedTotalTime: plan.reduce((acc, item) => acc + item.estimatedTime, 0),
+      
       // API 특정 필드들
       isbn: apiBook.isbn,
       studyDays: apiBook.studyDays,
-      apiId: apiBook.id // 원본 API ID 보존
+      apiId: apiBook.id, // 원본 API ID 보존
+      
+      // 추가 계산된 필드들
+      daysLeft: this.calculateDaysLeft(apiBook.studyEndDate),
+      purpose: '전공 학습',
+      intensity: '보통'
     };
+
+    console.log('✅ 프론트엔드 형식 변환 완료:', {
+      id: frontendBook.id,
+      title: frontendBook.title,
+      planCount: frontendBook.plan.length,
+      estimatedTotalTime: frontendBook.estimatedTotalTime,
+      daysLeft: frontendBook.daysLeft
+    });
+
+    return frontendBook;
   }
 
   // 헬퍼 함수들
   calculateChapterStartPage(book, chapterIndex) {
-    const pagesPerChapter = Math.ceil(book.totalPages / (book.plan?.length || 1));
+    const totalChapters = book.totalChapters || book.plan?.length || book.chapters?.length || 1;
+    const pagesPerChapter = Math.ceil(book.totalPages / totalChapters);
     return (chapterIndex * pagesPerChapter) + 1;
   }
 
   calculateChapterEndPage(book, chapterIndex) {
-    const pagesPerChapter = Math.ceil(book.totalPages / (book.plan?.length || 1));
+    const totalChapters = book.totalChapters || book.plan?.length || book.chapters?.length || 1;
+    const pagesPerChapter = Math.ceil(book.totalPages / totalChapters);
     const endPage = (chapterIndex + 1) * pagesPerChapter;
     return Math.min(endPage, book.totalPages);
   }
 
   calculatePlanDate(startDate, index, totalChapters) {
     const start = new Date(startDate);
-    const daysPerChapter = 7; // 일주일에 한 챕터 기본
+    const daysPerChapter = 7;
     const targetDate = new Date(start);
     targetDate.setDate(start.getDate() + (index * daysPerChapter));
     return targetDate.toISOString().split('T')[0];
   }
 
+  calculateDaysLeft(endDate) {
+    const today = new Date();
+    const target = new Date(endDate);
+    const diffTime = target - today;
+    return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+  }
+
   generateFakeISBN() {
-    // 간단한 fake ISBN 생성
     const timestamp = Date.now().toString();
     return '978' + timestamp.slice(-10);
   }

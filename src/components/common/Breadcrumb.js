@@ -41,7 +41,7 @@ const Breadcrumb = () => {
     const crumbs = [homeCrumb];
 
     if (pathnames[0] === 'textbook') {
-      const textbookManagementPath = '/textbook';
+      const textbookManagementPath = '/textbooks';
       const isCurrentPage = pathnames.length === 1;
 
       crumbs.push(<li key="separator-textbook" className="flex items-center"><ChevronRight className="h-4 w-4 text-gray-400 mx-2" /></li>);

@@ -1,0 +1,1572 @@
+{
+  "auth": {
+    "googleAuthUrl": "http://localhost:3001/auth/callback?provider=google&state=mock_state",
+    "currentUser": {
+      "id": "google_user_123",
+      "email": "user@gmail.com",
+      "name": "구글사용자",
+      "avatar": "https://lh3.googleusercontent.com/a/default-user",
+      "provider": "google",
+      "university": "과탑대학교",
+      "major": "컴퓨터공학과",
+      "year": "3학년",
+      "createdAt": "2024-01-01T00:00:00.000Z"
+    },
+    "tokens": {
+      "accessToken": "mock_access_token_12345",
+      "refreshToken": "mock_refresh_token_67890",
+      "tokenType": "Bearer",
+      "expiresIn": 86400000,
+      "userInfo": {
+        "id": "google_user_123",
+        "email": "user@gmail.com",
+        "name": "구글사용자",
+        "avatar": "https://lh3.googleusercontent.com/a/default-user",
+        "provider": "google",
+        "university": "과탑대학교",
+        "major": "컴퓨터공학과",
+        "year": "3학년"
+      }
+    }
+  },
+  "books": [
+    {
+      "id": 1,
+      "isbn": "9781234567890",
+      "title": "Deep Learning Fundamentals",
+      "author": "Andrew Ng",
+      "publisher": "MIT Press",
+      "totalPages": 420,
+      "studyStartDate": "2025-08-20",
+      "studyEndDate": "2025-09-30",
+      "studyPeriodActive": true,
+      "progressPercentage": 15,
+      "studyDays": 41,
+      "createdAt": "2025-08-15T10:00:00.000Z",
+      "updatedAt": "2025-08-21T14:30:00.000Z",
+      "chapters": [
+        {
+          "id": 1,
+          "title": "Introduction to Deep Learning",
+          "chapterNumber": 1,
+          "sectionNumber": "1",
+          "startPage": 1,
+          "endPage": 70,
+          "estimatedStudyTime": 180,
+          "description": "딥러닝의 기본 개념과 역사"
+        },
+        {
+          "id": 2,
+          "title": "Neural Networks Basics",
+          "chapterNumber": 2,
+          "sectionNumber": "2",
+          "startPage": 71,
+          "endPage": 140,
+          "estimatedStudyTime": 240,
+          "description": "신경망의 기본 원리"
+        },
+        {
+          "id": 3,
+          "title": "Backpropagation",
+          "chapterNumber": 3,
+          "sectionNumber": "3",
+          "startPage": 141,
+          "endPage": 210,
+          "estimatedStudyTime": 300,
+          "description": "역전파 알고리즘 학습"
+        },
+        {
+          "id": 4,
+          "title": "Convolutional Neural Networks",
+          "chapterNumber": 4,
+          "sectionNumber": "4",
+          "startPage": 211,
+          "endPage": 280,
+          "estimatedStudyTime": 360,
+          "description": "CNN 구조와 응용"
+        },
+        {
+          "id": 5,
+          "title": "Recurrent Neural Networks",
+          "chapterNumber": 5,
+          "sectionNumber": "5",
+          "startPage": 281,
+          "endPage": 350,
+          "estimatedStudyTime": 300,
+          "description": "RNN과 LSTM"
+        },
+        {
+          "id": 6,
+          "title": "Advanced Topics",
+          "chapterNumber": 6,
+          "sectionNumber": "6",
+          "startPage": 351,
+          "endPage": 420,
+          "estimatedStudyTime": 420,
+          "description": "고급 딥러닝 기법"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "isbn": "9780987654321",
+      "title": "Advanced Algorithms",
+      "author": "Robert Sedgewick",
+      "publisher": "Princeton University Press",
+      "totalPages": 680,
+      "studyStartDate": "2025-08-25",
+      "studyEndDate": "2025-11-15",
+      "studyPeriodActive": false,
+      "progressPercentage": 0,
+      "studyDays": 82,
+      "createdAt": "2025-08-18T15:20:00.000Z",
+      "updatedAt": "2025-08-21T09:45:00.000Z",
+      "chapters": [
+        {
+          "id": 7,
+          "title": "Graph Algorithms",
+          "chapterNumber": 1,
+          "sectionNumber": "1",
+          "startPage": 1,
+          "endPage": 85,
+          "estimatedStudyTime": 240,
+          "description": "그래프 알고리즘 기초"
+        },
+        {
+          "id": 8,
+          "title": "Dynamic Programming",
+          "chapterNumber": 2,
+          "sectionNumber": "2",
+          "startPage": 86,
+          "endPage": 170,
+          "estimatedStudyTime": 300,
+          "description": "동적 프로그래밍 심화"
+        },
+        {
+          "id": 9,
+          "title": "Network Flow Algorithms",
+          "chapterNumber": 3,
+          "sectionNumber": "3",
+          "startPage": 171,
+          "endPage": 255,
+          "estimatedStudyTime": 280,
+          "description": "네트워크 플로우 알고리즘"
+        },
+        {
+          "id": 10,
+          "title": "String Algorithms",
+          "chapterNumber": 4,
+          "sectionNumber": "4",
+          "startPage": 256,
+          "endPage": 340,
+          "estimatedStudyTime": 260,
+          "description": "문자열 알고리즘"
+        },
+        {
+          "id": 11,
+          "title": "Geometric Algorithms",
+          "chapterNumber": 5,
+          "sectionNumber": "5",
+          "startPage": 341,
+          "endPage": 425,
+          "estimatedStudyTime": 300,
+          "description": "기하 알고리즘"
+        },
+        {
+          "id": 12,
+          "title": "Advanced Data Structures",
+          "chapterNumber": 6,
+          "sectionNumber": "6",
+          "startPage": 426,
+          "endPage": 510,
+          "estimatedStudyTime": 320,
+          "description": "고급 자료구조"
+        },
+        {
+          "id": 13,
+          "title": "Approximation Algorithms",
+          "chapterNumber": 7,
+          "sectionNumber": "7",
+          "startPage": 511,
+          "endPage": 595,
+          "estimatedStudyTime": 280,
+          "description": "근사 알고리즘"
+        },
+        {
+          "id": 14,
+          "title": "Randomized Algorithms",
+          "chapterNumber": 8,
+          "sectionNumber": "8",
+          "startPage": 596,
+          "endPage": 680,
+          "estimatedStudyTime": 300,
+          "description": "랜덤 알고리즘"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "isbn": "9781122334455",
+      "title": "Machine Learning Patterns",
+      "author": "Aurélien Géron",
+      "publisher": "O'Reilly Media",
+      "totalPages": 560,
+      "studyStartDate": "2025-08-22",
+      "studyEndDate": "2025-10-10",
+      "studyPeriodActive": true,
+      "progressPercentage": 25,
+      "studyDays": 49,
+      "createdAt": "2025-08-20T08:15:00.000Z",
+      "updatedAt": "2025-08-21T16:20:00.000Z",
+      "chapters": [
+        {
+          "id": 15,
+          "title": "Supervised Learning",
+          "chapterNumber": 1,
+          "sectionNumber": "1",
+          "startPage": 1,
+          "endPage": 70,
+          "estimatedStudyTime": 200,
+          "description": "지도학습 알고리즘"
+        },
+        {
+          "id": 16,
+          "title": "Unsupervised Learning",
+          "chapterNumber": 2,
+          "sectionNumber": "2",
+          "startPage": 71,
+          "endPage": 140,
+          "estimatedStudyTime": 220,
+          "description": "비지도학습 기법"
+        },
+        {
+          "id": 17,
+          "title": "Ensemble Learning",
+          "chapterNumber": 3,
+          "sectionNumber": "3",
+          "startPage": 141,
+          "endPage": 210,
+          "estimatedStudyTime": 240,
+          "description": "앙상블 학습 방법"
+        },
+        {
+          "id": 18,
+          "title": "Dimensionality Reduction",
+          "chapterNumber": 4,
+          "sectionNumber": "4",
+          "startPage": 211,
+          "endPage": 280,
+          "estimatedStudyTime": 260,
+          "description": "차원 축소 기법"
+        },
+        {
+          "id": 19,
+          "title": "Feature Engineering",
+          "chapterNumber": 5,
+          "sectionNumber": "5",
+          "startPage": 281,
+          "endPage": 350,
+          "estimatedStudyTime": 200,
+          "description": "특성 엔지니어링"
+        },
+        {
+          "id": 20,
+          "title": "Model Selection and Evaluation",
+          "chapterNumber": 6,
+          "sectionNumber": "6",
+          "startPage": 351,
+          "endPage": 420,
+          "estimatedStudyTime": 280,
+          "description": "모델 선택과 평가"
+        },
+        {
+          "id": 21,
+          "title": "Deployment Strategies",
+          "chapterNumber": 7,
+          "sectionNumber": "7",
+          "startPage": 421,
+          "endPage": 490,
+          "estimatedStudyTime": 240,
+          "description": "배포 전략"
+        },
+        {
+          "id": 22,
+          "title": "Production ML",
+          "chapterNumber": 8,
+          "sectionNumber": "8",
+          "startPage": 491,
+          "endPage": 560,
+          "estimatedStudyTime": 300,
+          "description": "프로덕션 머신러닝"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "isbn": "9781555666777",
+      "title": "Computer Networks",
+      "author": "Andrew Tanenbaum",
+      "publisher": "Pearson",
+      "totalPages": 820,
+      "studyStartDate": "2025-08-28",
+      "studyEndDate": "2025-12-15",
+      "studyPeriodActive": false,
+      "progressPercentage": 0,
+      "studyDays": 109,
+      "createdAt": "2025-08-22T11:30:00.000Z",
+      "updatedAt": "2025-08-22T11:30:00.000Z",
+      "chapters": [
+        {
+          "id": 23,
+          "title": "Introduction to Computer Networks",
+          "chapterNumber": 1,
+          "sectionNumber": "1",
+          "startPage": 1,
+          "endPage": 102,
+          "estimatedStudyTime": 300,
+          "description": "컴퓨터 네트워크 개론"
+        },
+        {
+          "id": 24,
+          "title": "Physical Layer",
+          "chapterNumber": 2,
+          "sectionNumber": "2",
+          "startPage": 103,
+          "endPage": 204,
+          "estimatedStudyTime": 280,
+          "description": "물리 계층"
+        },
+        {
+          "id": 25,
+          "title": "Data Link Layer",
+          "chapterNumber": 3,
+          "sectionNumber": "3",
+          "startPage": 205,
+          "endPage": 306,
+          "estimatedStudyTime": 320,
+          "description": "데이터 링크 계층"
+        },
+        {
+          "id": 26,
+          "title": "Network Layer",
+          "chapterNumber": 4,
+          "sectionNumber": "4",
+          "startPage": 307,
+          "endPage": 408,
+          "estimatedStudyTime": 350,
+          "description": "네트워크 계층"
+        },
+        {
+          "id": 27,
+          "title": "Transport Layer",
+          "chapterNumber": 5,
+          "sectionNumber": "5",
+          "startPage": 409,
+          "endPage": 510,
+          "estimatedStudyTime": 340,
+          "description": "전송 계층"
+        },
+        {
+          "id": 28,
+          "title": "Application Layer",
+          "chapterNumber": 6,
+          "sectionNumber": "6",
+          "startPage": 511,
+          "endPage": 612,
+          "estimatedStudyTime": 300,
+          "description": "응용 계층"
+        },
+        {
+          "id": 29,
+          "title": "Network Security",
+          "chapterNumber": 7,
+          "sectionNumber": "7",
+          "startPage": 613,
+          "endPage": 714,
+          "estimatedStudyTime": 280,
+          "description": "네트워크 보안"
+        },
+        {
+          "id": 30,
+          "title": "Multimedia Networking",
+          "chapterNumber": 8,
+          "sectionNumber": "8",
+          "startPage": 715,
+          "endPage": 820,
+          "estimatedStudyTime": 260,
+          "description": "멀티미디어 네트워킹"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "isbn": "9781888999888",
+      "title": "Database System Concepts",
+      "author": "Abraham Silberschatz",
+      "publisher": "McGraw-Hill",
+      "totalPages": 950,
+      "studyStartDate": "2025-09-01",
+      "studyEndDate": "2025-12-20",
+      "studyPeriodActive": false,
+      "progressPercentage": 0,
+      "studyDays": 110,
+      "createdAt": "2025-08-23T09:45:00.000Z",
+      "updatedAt": "2025-08-23T09:45:00.000Z",
+      "chapters": [
+        {
+          "id": 31,
+          "title": "Introduction to Database Systems",
+          "chapterNumber": 1,
+          "sectionNumber": "1",
+          "startPage": 1,
+          "endPage": 95,
+          "estimatedStudyTime": 240,
+          "description": "데이터베이스 시스템 개론"
+        },
+        {
+          "id": 32,
+          "title": "Entity-Relationship Model",
+          "chapterNumber": 2,
+          "sectionNumber": "2",
+          "startPage": 96,
+          "endPage": 190,
+          "estimatedStudyTime": 280,
+          "description": "개체-관계 모델"
+        },
+        {
+          "id": 33,
+          "title": "Relational Model",
+          "chapterNumber": 3,
+          "sectionNumber": "3",
+          "startPage": 191,
+          "endPage": 285,
+          "estimatedStudyTime": 300,
+          "description": "관계형 모델"
+        },
+        {
+          "id": 34,
+          "title": "SQL",
+          "chapterNumber": 4,
+          "sectionNumber": "4",
+          "startPage": 286,
+          "endPage": 380,
+          "estimatedStudyTime": 320,
+          "description": "SQL 언어"
+        },
+        {
+          "id": 35,
+          "title": "Advanced SQL",
+          "chapterNumber": 5,
+          "sectionNumber": "5",
+          "startPage": 381,
+          "endPage": 475,
+          "estimatedStudyTime": 340,
+          "description": "고급 SQL"
+        },
+        {
+          "id": 36,
+          "title": "Database Design",
+          "chapterNumber": 6,
+          "sectionNumber": "6",
+          "startPage": 476,
+          "endPage": 570,
+          "estimatedStudyTime": 360,
+          "description": "데이터베이스 설계"
+        },
+        {
+          "id": 37,
+          "title": "Storage and File Structure",
+          "chapterNumber": 7,
+          "sectionNumber": "7",
+          "startPage": 571,
+          "endPage": 665,
+          "estimatedStudyTime": 300,
+          "description": "저장소와 파일 구조"
+        },
+        {
+          "id": 38,
+          "title": "Indexing and Hashing",
+          "chapterNumber": 8,
+          "sectionNumber": "8",
+          "startPage": 666,
+          "endPage": 760,
+          "estimatedStudyTime": 320,
+          "description": "인덱싱과 해싱"
+        },
+        {
+          "id": 39,
+          "title": "Query Processing",
+          "chapterNumber": 9,
+          "sectionNumber": "9",
+          "startPage": 761,
+          "endPage": 855,
+          "estimatedStudyTime": 280,
+          "description": "질의 처리"
+        },
+        {
+          "id": 40,
+          "title": "Transaction Management",
+          "chapterNumber": 10,
+          "sectionNumber": "10",
+          "startPage": 856,
+          "endPage": 950,
+          "estimatedStudyTime": 340,
+          "description": "트랜잭션 관리"
+        }
+      ]
+    },
+    {
+      "isbn": "9787436314934",
+      "title": "문학의세계 중간시험 대체과제 샘플 1",
+      "author": "CAU",
+      "publisher": "Unknown Publisher",
+      "totalPages": 7,
+      "studyStartDate": "2025-09-12",
+      "studyEndDate": "2025-09-30",
+      "chapters": [
+        {
+          "title": "1~3장 기초 확립",
+          "chapterNumber": 1,
+          "sectionNumber": "1",
+          "startPage": 1,
+          "endPage": 2,
+          "estimatedStudyTime": 90,
+          "description": "1~3장 읽기 및 개념 정리"
+        },
+        {
+          "title": "4~6장 이론 학습",
+          "chapterNumber": 2,
+          "sectionNumber": "2",
+          "startPage": 3,
+          "endPage": 4,
+          "estimatedStudyTime": 90,
+          "description": "4~6장 읽기 및 문제풀이"
+        },
+        {
+          "title": "7~9장 심화 학습",
+          "chapterNumber": 3,
+          "sectionNumber": "3",
+          "startPage": 5,
+          "endPage": 6,
+          "estimatedStudyTime": 90,
+          "description": "7~9장 읽기 및 복습"
+        },
+        {
+          "title": "10~12장 완성",
+          "chapterNumber": 4,
+          "sectionNumber": "4",
+          "startPage": 7,
+          "endPage": 7,
+          "estimatedStudyTime": 90,
+          "description": "10~12장 읽기 및 심화 학습"
+        }
+      ],
+      "id": 6
+    }
+  ],
+  "projects": [
+    {
+      "id": 1,
+      "name": "캡스톤 디자인 프로젝트",
+      "description": "AI 기반 학습 도우미 앱 개발",
+      "status": "in-progress",
+      "priority": "high",
+      "startDate": "2025-08-01",
+      "endDate": "2025-10-31",
+      "estimatedHours": 320,
+      "actualHours": 156,
+      "budget": 15000000,
+      "spent": 7200000,
+      "visibility": "team",
+      "tags": [
+        "AI",
+        "Mobile",
+        "Education"
+      ],
+      "color": "#6366f1",
+      "icon": "🎓",
+      "ownerId": 1,
+      "createdAt": "2025-07-15T09:00:00.000Z",
+      "updatedAt": "2025-08-21T14:30:00.000Z",
+      "progress": 45,
+      "owner": {
+        "id": 1,
+        "name": "김현우",
+        "email": "kim@example.com",
+        "avatar": "https://i.pravatar.cc/40?img=1",
+        "role": "PM"
+      },
+      "teamMembers": [
+        {
+          "userId": 1,
+          "name": "김현우",
+          "role": "PM",
+          "email": "kim@example.com",
+          "avatar": "https://i.pravatar.cc/40?img=1",
+          "phone": "010-1234-5678"
+        },
+        {
+          "userId": 2,
+          "name": "이수진",
+          "role": "Designer",
+          "email": "lee@example.com",
+          "avatar": "https://i.pravatar.cc/40?img=2",
+          "phone": "010-2345-6789"
+        },
+        {
+          "userId": 3,
+          "name": "박준호",
+          "role": "Developer",
+          "email": "park@example.com",
+          "avatar": "https://i.pravatar.cc/40?img=3",
+          "phone": "010-3456-7890"
+        },
+        {
+          "userId": 4,
+          "name": "최영미",
+          "role": "QA",
+          "email": "choi@example.com",
+          "avatar": "https://i.pravatar.cc/40?img=4",
+          "phone": "010-4567-8901"
+        }
+      ],
+      "tasks": [
+        {
+          "id": 1,
+          "title": "요구사항 분석 및 기획서 작성",
+          "description": "사용자 요구사항 조사 및 기능 정의",
+          "status": "completed",
+          "priority": "high",
+          "assigneeId": 1,
+          "dueDate": "2025-08-15",
+          "estimatedHours": 24,
+          "actualHours": 28,
+          "labels": [
+            "기획",
+            "문서화"
+          ],
+          "subtasks": [
+            {
+              "id": 11,
+              "title": "사용자 인터뷰 진행",
+              "completed": true
+            },
+            {
+              "id": 12,
+              "title": "경쟁사 분석",
+              "completed": true
+            },
+            {
+              "id": 13,
+              "title": "기능 정의서 작성",
+              "completed": true
+            }
+          ],
+          "commentsCount": 3,
+          "attachmentsCount": 2,
+          "assignee": {
+            "id": 1,
+            "name": "김현우"
+          }
+        },
+        {
+          "id": 2,
+          "title": "UI/UX 디자인 시스템 구축",
+          "description": "통일된 디자인 시스템과 컴포넌트 라이브러리 구축",
+          "status": "in-progress",
+          "priority": "high",
+          "assigneeId": 2,
+          "dueDate": "2025-09-01",
+          "estimatedHours": 40,
+          "actualHours": 18,
+          "labels": [
+            "디자인",
+            "UI"
+          ],
+          "subtasks": [
+            {
+              "id": 21,
+              "title": "컬러 팔레트 정의",
+              "completed": true
+            },
+            {
+              "id": 22,
+              "title": "타이포그래피 시스템",
+              "completed": true
+            },
+            {
+              "id": 23,
+              "title": "컴포넌트 디자인",
+              "completed": false
+            },
+            {
+              "id": 24,
+              "title": "프로토타입 제작",
+              "completed": false
+            }
+          ],
+          "commentsCount": 8,
+          "attachmentsCount": 15,
+          "assignee": {
+            "id": 2,
+            "name": "이수진"
+          }
+        },
+        {
+          "id": 3,
+          "title": "AI 모델 개발 및 학습",
+          "description": "Natural Language Processing 모델 개발",
+          "status": "in-progress",
+          "priority": "critical",
+          "assigneeId": 3,
+          "dueDate": "2025-09-20",
+          "estimatedHours": 80,
+          "actualHours": 35,
+          "labels": [
+            "AI",
+            "개발"
+          ],
+          "subtasks": [
+            {
+              "id": 31,
+              "title": "데이터셋 수집",
+              "completed": true
+            },
+            {
+              "id": 32,
+              "title": "모델 아키텍처 설계",
+              "completed": false
+            },
+            {
+              "id": 33,
+              "title": "학습 파이프라인 구축",
+              "completed": false
+            }
+          ],
+          "commentsCount": 12,
+          "attachmentsCount": 5,
+          "assignee": {
+            "id": 3,
+            "name": "박준호"
+          }
+        }
+      ],
+      "milestones": [
+        {
+          "id": 1,
+          "title": "프로젝트 킥오프",
+          "date": "2025-08-01",
+          "completed": true
+        },
+        {
+          "id": 2,
+          "title": "기획 완료",
+          "date": "2025-08-15",
+          "completed": true
+        },
+        {
+          "id": 3,
+          "title": "디자인 시스템 완료",
+          "date": "2025-09-01",
+          "completed": false
+        },
+        {
+          "id": 4,
+          "title": "MVP 개발 완료",
+          "date": "2025-09-28",
+          "completed": false
+        },
+        {
+          "id": 5,
+          "title": "최종 발표",
+          "date": "2025-10-31",
+          "completed": false
+        }
+      ],
+      "activities": [
+        {
+          "id": 1,
+          "type": "task_completed",
+          "action": "요구사항 분석 완료",
+          "createdAt": "2025-08-21T12:00:00.000Z",
+          "user": {
+            "id": 1,
+            "name": "김현우"
+          }
+        },
+        {
+          "id": 2,
+          "type": "comment",
+          "action": "UI 디자인에 댓글 추가",
+          "createdAt": "2025-08-21T10:00:00.000Z",
+          "user": {
+            "id": 2,
+            "name": "이수진"
+          }
+        },
+        {
+          "id": 3,
+          "type": "file_upload",
+          "action": "데이터셋 파일 업로드",
+          "createdAt": "2025-08-20T15:30:00.000Z",
+          "user": {
+            "id": 3,
+            "name": "박준호"
+          }
+        }
+      ],
+      "files": [
+        {
+          "id": 1,
+          "name": "프로젝트_기획서.pdf",
+          "size": "2.4MB",
+          "type": "pdf",
+          "uploadedBy": "김현우",
+          "uploadedAt": "2025-08-10"
+        },
+        {
+          "id": 2,
+          "name": "와이어프레임_v2.fig",
+          "size": "15.2MB",
+          "type": "figma",
+          "uploadedBy": "이수진",
+          "uploadedAt": "2025-08-18"
+        },
+        {
+          "id": 3,
+          "name": "dataset_samples.zip",
+          "size": "156MB",
+          "type": "zip",
+          "uploadedBy": "박준호",
+          "uploadedAt": "2025-08-25"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "개인 포트폴리오 웹사이트",
+      "description": "인터랙티브 3D 포트폴리오 사이트 제작",
+      "status": "completed",
+      "priority": "medium",
+      "startDate": "2025-07-01",
+      "endDate": "2025-07-31",
+      "estimatedHours": 60,
+      "actualHours": 72,
+      "budget": 2000000,
+      "spent": 1850000,
+      "visibility": "private",
+      "tags": [
+        "Web",
+        "3D",
+        "Portfolio"
+      ],
+      "color": "#10b981",
+      "icon": "💻",
+      "ownerId": 1,
+      "createdAt": "2025-06-25T10:00:00.000Z",
+      "updatedAt": "2025-07-31T18:00:00.000Z",
+      "progress": 100,
+      "owner": {
+        "id": 1,
+        "name": "김현우",
+        "email": "kim@example.com",
+        "avatar": "https://i.pravatar.cc/40?img=1",
+        "role": "Full-stack"
+      },
+      "teamMembers": [
+        {
+          "userId": 1,
+          "name": "김현우",
+          "role": "Full-stack",
+          "email": "kim@example.com",
+          "avatar": "https://i.pravatar.cc/40?img=1",
+          "phone": "010-1234-5678"
+        }
+      ],
+      "tasks": [
+        {
+          "id": 4,
+          "title": "3D 모델링 및 애니메이션",
+          "description": "Three.js를 이용한 3D 인터랙션 구현",
+          "status": "completed",
+          "priority": "medium",
+          "assigneeId": 1,
+          "dueDate": "2025-07-15",
+          "estimatedHours": 20,
+          "actualHours": 24,
+          "labels": [
+            "3D",
+            "애니메이션"
+          ],
+          "subtasks": [],
+          "commentsCount": 2,
+          "attachmentsCount": 1,
+          "assignee": {
+            "id": 1,
+            "name": "김현우"
+          }
+        },
+        {
+          "id": 5,
+          "title": "반응형 웹 개발",
+          "description": "모바일 친화적 반응형 레이아웃 구현",
+          "status": "completed",
+          "priority": "high",
+          "assigneeId": 1,
+          "dueDate": "2025-07-25",
+          "estimatedHours": 30,
+          "actualHours": 35,
+          "labels": [
+            "웹개발",
+            "반응형"
+          ],
+          "subtasks": [],
+          "commentsCount": 1,
+          "attachmentsCount": 0,
+          "assignee": {
+            "id": 1,
+            "name": "김현우"
+          }
+        }
+      ],
+      "milestones": [
+        {
+          "id": 6,
+          "title": "디자인 완료",
+          "date": "2025-07-10",
+          "completed": true
+        },
+        {
+          "id": 7,
+          "title": "개발 완료",
+          "date": "2025-07-25",
+          "completed": true
+        },
+        {
+          "id": 8,
+          "title": "배포 완료",
+          "date": "2025-07-31",
+          "completed": true
+        }
+      ],
+      "activities": [
+        {
+          "id": 4,
+          "type": "project_completed",
+          "action": "프로젝트 완료",
+          "createdAt": "2025-07-31T18:00:00.000Z",
+          "user": {
+            "id": 1,
+            "name": "김현우"
+          }
+        }
+      ],
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "모바일 앱 프로토타입",
+      "description": "React Native를 이용한 크로스플랫폼 앱 개발",
+      "status": "not-started",
+      "priority": "medium",
+      "startDate": "2025-09-01",
+      "endDate": "2025-11-30",
+      "estimatedHours": 200,
+      "actualHours": 0,
+      "budget": 8000000,
+      "spent": 0,
+      "visibility": "public",
+      "tags": [
+        "Mobile",
+        "React Native",
+        "Cross-platform"
+      ],
+      "color": "#f59e0b",
+      "icon": "📱",
+      "ownerId": 2,
+      "createdAt": "2025-08-20T14:00:00.000Z",
+      "updatedAt": "2025-08-20T14:00:00.000Z",
+      "progress": 0,
+      "owner": {
+        "id": 2,
+        "name": "이수진",
+        "email": "lee@example.com",
+        "avatar": "https://i.pravatar.cc/40?img=2",
+        "role": "Lead Designer"
+      },
+      "teamMembers": [
+        {
+          "userId": 2,
+          "name": "이수진",
+          "role": "Lead Designer",
+          "email": "lee@example.com",
+          "avatar": "https://i.pravatar.cc/40?img=2",
+          "phone": "010-2345-6789"
+        },
+        {
+          "userId": 3,
+          "name": "박준호",
+          "role": "Mobile Developer",
+          "email": "park@example.com",
+          "avatar": "https://i.pravatar.cc/40?img=3",
+          "phone": "010-3456-7890"
+        }
+      ],
+      "tasks": [
+        {
+          "id": 6,
+          "title": "기술 스택 선정",
+          "description": "프로젝트에 사용할 기술 스택 결정",
+          "status": "not-started",
+          "priority": "high",
+          "assigneeId": 3,
+          "dueDate": "2025-09-05",
+          "estimatedHours": 8,
+          "actualHours": 0,
+          "labels": [
+            "기획",
+            "기술"
+          ],
+          "subtasks": [],
+          "commentsCount": 0,
+          "attachmentsCount": 0,
+          "assignee": {
+            "id": 3,
+            "name": "박준호"
+          }
+        }
+      ],
+      "milestones": [
+        {
+          "id": 9,
+          "title": "프로젝트 시작",
+          "date": "2025-09-01",
+          "completed": false
+        }
+      ],
+      "activities": [],
+      "files": []
+    }
+  ],
+  "tasks": [
+    {
+      "id": 1,
+      "projectId": 1,
+      "title": "요구사항 분석 및 기획서 작성",
+      "description": "사용자 요구사항 조사 및 기능 정의",
+      "status": "completed",
+      "priority": "high",
+      "assigneeId": 1,
+      "dueDate": "2025-08-15",
+      "estimatedHours": 24,
+      "actualHours": 28,
+      "labels": [
+        "기획",
+        "문서화"
+      ],
+      "createdAt": "2025-08-01T09:00:00.000Z",
+      "updatedAt": "2025-08-15T17:00:00.000Z",
+      "assignee": {
+        "id": 1,
+        "name": "김현우",
+        "email": "kim@example.com",
+        "avatar": "https://i.pravatar.cc/40?img=1"
+      }
+    },
+    {
+      "id": 2,
+      "projectId": 1,
+      "title": "UI/UX 디자인 시스템 구축",
+      "description": "통일된 디자인 시스템과 컴포넌트 라이브러리 구축",
+      "status": "in-progress",
+      "priority": "high",
+      "assigneeId": 2,
+      "dueDate": "2025-09-01",
+      "estimatedHours": 40,
+      "actualHours": 18,
+      "labels": [
+        "디자인",
+        "UI"
+      ],
+      "createdAt": "2025-08-01T09:00:00.000Z",
+      "updatedAt": "2025-08-21T14:30:00.000Z",
+      "assignee": {
+        "id": 2,
+        "name": "이수진",
+        "email": "lee@example.com",
+        "avatar": "https://i.pravatar.cc/40?img=2"
+      }
+    },
+    {
+      "id": 3,
+      "projectId": 1,
+      "title": "AI 모델 개발 및 학습",
+      "description": "Natural Language Processing 모델 개발",
+      "status": "in-progress",
+      "priority": "critical",
+      "assigneeId": 3,
+      "dueDate": "2025-09-20",
+      "estimatedHours": 80,
+      "actualHours": 35,
+      "labels": [
+        "AI",
+        "개발"
+      ],
+      "createdAt": "2025-08-01T09:00:00.000Z",
+      "updatedAt": "2025-08-21T10:00:00.000Z",
+      "assignee": {
+        "id": 3,
+        "name": "박준호",
+        "email": "park@example.com",
+        "avatar": "https://i.pravatar.cc/40?img=3"
+      }
+    },
+    {
+      "status": "in-progress",
+      "id": 1756254835111
+    }
+  ],
+  "users": [
+    {
+      "id": 1,
+      "name": "김현우",
+      "email": "kim@example.com",
+      "avatar": "https://i.pravatar.cc/40?img=1",
+      "role": "Project Manager",
+      "phone": "010-1234-5678",
+      "department": "개발팀",
+      "joinDate": "2024-01-15"
+    },
+    {
+      "id": 2,
+      "name": "이수진",
+      "email": "lee@example.com",
+      "avatar": "https://i.pravatar.cc/40?img=2",
+      "role": "UI/UX Designer",
+      "phone": "010-2345-6789",
+      "department": "디자인팀",
+      "joinDate": "2024-02-01"
+    },
+    {
+      "id": 3,
+      "name": "박준호",
+      "email": "park@example.com",
+      "avatar": "https://i.pravatar.cc/40?img=3",
+      "role": "Full-stack Developer",
+      "phone": "010-3456-7890",
+      "department": "개발팀",
+      "joinDate": "2024-01-20"
+    },
+    {
+      "id": 4,
+      "name": "최영미",
+      "email": "choi@example.com",
+      "avatar": "https://i.pravatar.cc/40?img=4",
+      "role": "QA Engineer",
+      "phone": "010-4567-8901",
+      "department": "QA팀",
+      "joinDate": "2024-03-10"
+    }
+  ],
+  "teams": [
+    {
+      "id": 1,
+      "name": "캡스톤 디자인팀",
+      "description": "AI 학습 도우미 앱 개발팀",
+      "projectId": 1,
+      "leaderId": 1,
+      "members": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "createdAt": "2025-07-15T09:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "모바일 개발팀",
+      "description": "크로스플랫폼 모바일 앱 개발팀",
+      "projectId": 3,
+      "leaderId": 2,
+      "members": [
+        2,
+        3
+      ],
+      "createdAt": "2025-08-20T14:00:00.000Z"
+    }
+  ],
+  "analytics": {
+    "totalProjects": 3,
+    "completedProjects": 1,
+    "inProgressProjects": 1,
+    "notStartedProjects": 1,
+    "overallProgress": 48,
+    "totalTasks": 6,
+    "completedTasks": 3,
+    "taskCompletionRate": 50,
+    "totalBudget": 25000000,
+    "totalSpent": 9050000,
+    "budgetUtilization": 36,
+    "averageProjectDuration": 82,
+    "mostActiveUsers": [
+      {
+        "userId": 1,
+        "name": "김현우",
+        "tasksCompleted": 2,
+        "hoursWorked": 52
+      },
+      {
+        "userId": 2,
+        "name": "이수진",
+        "tasksCompleted": 1,
+        "hoursWorked": 18
+      },
+      {
+        "userId": 3,
+        "name": "박준호",
+        "tasksCompleted": 0,
+        "hoursWorked": 35
+      }
+    ],
+    "projectsByStatus": {
+      "completed": 1,
+      "in-progress": 1,
+      "not-started": 1,
+      "on-hold": 0
+    },
+    "tasksByPriority": {
+      "critical": 1,
+      "high": 3,
+      "medium": 1,
+      "low": 1
+    }
+  },
+  "subjects": [
+    {
+      "id": 1,
+      "name": "알고리즘",
+      "category": "major",
+      "color": "blue",
+      "priority": "high",
+      "difficulty": 4,
+      "totalChapters": 10,
+      "completedChapters": 6,
+      "targetCompletionDate": "2025-09-15",
+      "dailyGoal": 120,
+      "weeklyGoal": "2챕터 완료",
+      "totalStudyTime": 1240,
+      "currentStreak": 7,
+      "lastStudyDate": "2025-08-02",
+      "chapters": [
+        {
+          "id": 1,
+          "name": "배열과 문자열",
+          "completed": true,
+          "memo": "기본 개념 완료",
+          "timeSpent": 180,
+          "difficulty": 3,
+          "lastStudied": "2025-07-28"
+        },
+        {
+          "id": 2,
+          "name": "연결 리스트",
+          "completed": true,
+          "memo": "구현 연습 완료",
+          "timeSpent": 240,
+          "difficulty": 4,
+          "lastStudied": "2025-07-30"
+        },
+        {
+          "id": 3,
+          "name": "스택과 큐",
+          "completed": true,
+          "memo": "",
+          "timeSpent": 150,
+          "difficulty": 3,
+          "lastStudied": "2025-07-31"
+        },
+        {
+          "id": 4,
+          "name": "트리 구조",
+          "completed": true,
+          "memo": "이진트리 중점 학습",
+          "timeSpent": 300,
+          "difficulty": 5,
+          "lastStudied": "2025-08-01"
+        },
+        {
+          "id": 5,
+          "name": "그래프",
+          "completed": true,
+          "memo": "",
+          "timeSpent": 280,
+          "difficulty": 5,
+          "lastStudied": "2025-08-02"
+        },
+        {
+          "id": 6,
+          "name": "정렬 알고리즘",
+          "completed": true,
+          "memo": "퀵정렬, 버블정렬 완료",
+          "timeSpent": 190,
+          "difficulty": 4,
+          "lastStudied": "2025-08-02"
+        },
+        {
+          "id": 7,
+          "name": "탐색 알고리즘",
+          "completed": false,
+          "memo": "",
+          "timeSpent": 0,
+          "difficulty": 4,
+          "lastStudied": null
+        },
+        {
+          "id": 8,
+          "name": "동적 프로그래밍",
+          "completed": false,
+          "memo": "",
+          "timeSpent": 0,
+          "difficulty": 5,
+          "lastStudied": null
+        },
+        {
+          "id": 9,
+          "name": "그리디 알고리즘",
+          "completed": false,
+          "memo": "",
+          "timeSpent": 0,
+          "difficulty": 4,
+          "lastStudied": null
+        },
+        {
+          "id": 10,
+          "name": "백트래킹",
+          "completed": false,
+          "memo": "",
+          "timeSpent": 0,
+          "difficulty": 5,
+          "lastStudied": null
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "name": "데이터베이스",
+      "category": "major",
+      "color": "green",
+      "priority": "medium",
+      "difficulty": 3,
+      "totalChapters": 8,
+      "completedChapters": 4,
+      "targetCompletionDate": "2025-10-01",
+      "dailyGoal": 90,
+      "weeklyGoal": "1.5챕터 완료",
+      "totalStudyTime": 960,
+      "currentStreak": 5,
+      "lastStudyDate": "2025-08-01",
+      "chapters": [
+        {
+          "id": 11,
+          "name": "데이터베이스 기초",
+          "completed": true,
+          "memo": "개념 이해 완료",
+          "timeSpent": 120,
+          "difficulty": 2,
+          "lastStudied": "2025-07-25"
+        },
+        {
+          "id": 12,
+          "name": "관계형 모델",
+          "completed": true,
+          "memo": "",
+          "timeSpent": 180,
+          "difficulty": 3,
+          "lastStudied": "2025-07-27"
+        },
+        {
+          "id": 13,
+          "name": "SQL 기본",
+          "completed": true,
+          "memo": "CRUD 연습 완료",
+          "timeSpent": 240,
+          "difficulty": 3,
+          "lastStudied": "2025-07-29"
+        },
+        {
+          "id": 14,
+          "name": "고급 SQL",
+          "completed": true,
+          "memo": "",
+          "timeSpent": 200,
+          "difficulty": 4,
+          "lastStudied": "2025-07-31"
+        },
+        {
+          "id": 15,
+          "name": "정규화",
+          "completed": false,
+          "memo": "",
+          "timeSpent": 0,
+          "difficulty": 4,
+          "lastStudied": null
+        },
+        {
+          "id": 16,
+          "name": "인덱스와 최적화",
+          "completed": false,
+          "memo": "",
+          "timeSpent": 0,
+          "difficulty": 4,
+          "lastStudied": null
+        },
+        {
+          "id": 17,
+          "name": "트랜잭션",
+          "completed": false,
+          "memo": "",
+          "timeSpent": 0,
+          "difficulty": 3,
+          "lastStudied": null
+        },
+        {
+          "id": 18,
+          "name": "NoSQL",
+          "completed": false,
+          "memo": "",
+          "timeSpent": 0,
+          "difficulty": 3,
+          "lastStudied": null
+        }
+      ]
+    }
+  ],
+  "logs": [
+    {
+      "id": 1,
+      "subjectId": 1,
+      "chapterId": 6,
+      "date": "2025-08-02",
+      "duration": 45,
+      "content": "정렬 알고리즘 복습 및 문제 풀이"
+    },
+    {
+      "id": 2,
+      "subjectId": 1,
+      "chapterId": 5,
+      "date": "2025-08-02",
+      "duration": 60,
+      "content": "그래프 알고리즘 학습"
+    },
+    {
+      "id": 3,
+      "subjectId": 2,
+      "chapterId": 4,
+      "date": "2025-07-29",
+      "duration": 120,
+      "content": "고급 SQL 쿼리 연습"
+    },
+    {
+      "id": 4,
+      "subjectId": 1,
+      "chapterId": 4,
+      "date": "2025-08-01",
+      "duration": 90,
+      "content": "트리 구조 심화 학습"
+    }
+  ],
+  "goals": [
+    {
+      "id": 1,
+      "type": "daily",
+      "target": 180,
+      "current": 105,
+      "description": "일일 학습 시간"
+    },
+    {
+      "id": 2,
+      "type": "weekly",
+      "target": 2,
+      "current": 1,
+      "description": "완료할 챕터 수"
+    },
+    {
+      "id": 3,
+      "type": "monthly",
+      "target": 8,
+      "current": 6,
+      "description": "완료할 챕터 수"
+    }
+  ],
+  "events": [
+    {
+      "id": 1,
+      "title": "알고리즘 7강 듣기",
+      "type": "study",
+      "date": "2025-08-03",
+      "time": "14:00",
+      "duration": 2,
+      "repeat": "none",
+      "memo": "중요 개념: 탐색 알고리즘",
+      "completed": false,
+      "subjectId": 1,
+      "chapterId": 7
+    },
+    {
+      "id": 2,
+      "title": "데이터베이스 정규화 학습",
+      "type": "study",
+      "date": "2025-08-04",
+      "time": "10:00",
+      "duration": 1.5,
+      "repeat": "none",
+      "memo": "1NF, 2NF, 3NF 개념 정리",
+      "completed": false,
+      "subjectId": 2,
+      "chapterId": 15
+    },
+    {
+      "id": 3,
+      "title": "알고리즘 문제풀이",
+      "type": "study",
+      "date": "2025-08-05",
+      "time": "15:00",
+      "duration": 3,
+      "repeat": "none",
+      "memo": "LeetCode 중급 문제 5개",
+      "completed": false,
+      "subjectId": 1,
+      "chapterId": 8
+    }
+  ],
+  "studyAnalytics": {
+    "totalSubjects": 2,
+    "completedSubjects": 0,
+    "inProgressSubjects": 2,
+    "totalStudyTime": 2200,
+    "averageDailyStudyTime": 110,
+    "currentStreak": 7,
+    "longestStreak": 12,
+    "weeklyProgress": [
+      { "day": "월", "hours": 2.5 },
+      { "day": "화", "hours": 3.0 },
+      { "day": "수", "hours": 1.5 },
+      { "day": "화", "hours": 2.0 },
+      { "day": "금", "hours": 3.5 },
+      { "day": "토", "hours": 1.0 },
+      { "day": "일", "hours": 2.5 }
+    ],
+    "subjectProgress": [
+      { "subjectId": 1, "name": "알고리즘", "progress": 60 },
+      { "subjectId": 2, "name": "데이터베이스", "progress": 50 }
+    ]
+  },
+  "health": {
+    "status": "OK",
+    "timestamp": "2025-08-26T12:00:00.000Z",
+    "version": "1.0.0",
+    "uptime": "24h 15m",
+    "database": "connected"
+  }
+}
