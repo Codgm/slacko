@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  X, Users, Plus, Mail, Phone, UserMinus, 
-  Crown, Edit2, Search, Filter, UserPlus,
-  AlertCircle, Check, ChevronDown
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  X, Users, Mail, Phone, UserMinus,
+  Crown, Edit2, Search, UserPlus,
+  AlertCircle
 } from 'lucide-react';
 import { useProjectContext } from '../../context/ProjectContext';
 
@@ -24,7 +24,6 @@ const TeamManagementModal = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [removingMember, setRemovingMember] = useState(null);
-  const [editingMember, setEditingMember] = useState(null);
 
   // 새 멤버 추가 폼 상태
   const [newMember, setNewMember] = useState({
@@ -45,14 +44,8 @@ const TeamManagementModal = ({
     { value: 'Analyst', label: '분석가', icon: '📊', color: 'text-indigo-600' }
   ];
 
-  // 컴포넌트 마운트 시 팀 멤버 로드
-  useEffect(() => {
-    if (show && project) {
-      loadTeamMembers();
-    }
-  }, [show, project]);
-
-  const loadTeamMembers = async () => {
+  // 팀 멤버 로드 함수
+  const loadTeamMembers = useCallback(async () => {
     try {
       if (project.team) {
         setTeamMembers(project.team);
@@ -66,7 +59,14 @@ const TeamManagementModal = ({
     } catch (error) {
       console.error('팀 멤버 로드 실패:', error);
     }
-  };
+  }, [project, getTeamMembers]);
+
+  // 컴포넌트 마운트 시 팀 멤버 로드
+  useEffect(() => {
+    if (show && project) {
+      loadTeamMembers();
+    }
+  }, [show, project, loadTeamMembers]);
 
   // 필터링된 팀 멤버 목록
   const filteredMembers = teamMembers.filter(member => {
@@ -260,7 +260,6 @@ const TeamManagementModal = ({
                       {!isOwner && (
                         <div className="flex items-center gap-1">
                           <button
-                            onClick={() => setEditingMember(member)}
                             className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                             title="편집"
                           >
@@ -320,7 +319,7 @@ const TeamManagementModal = ({
                 </button>
               </div>
 
-              <form onSubmit={handleAddMember} className="space-y-4">
+              <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">이름</label>
                   <input
@@ -377,14 +376,15 @@ const TeamManagementModal = ({
                     취소
                   </button>
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={handleAddMember}
                     disabled={loading}
                     className="px-4 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
                   >
                     초대하기
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         )}

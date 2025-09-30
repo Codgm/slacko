@@ -97,6 +97,38 @@ export const ProjectProvider = ({ children }) => {
     ];
   }, []);
 
+  // 로컬 분석 계산
+  const calculateLocalAnalytics = useCallback(() => {
+    const totalProjects = projects.length;
+    const completedProjects = projects.filter(p => p.status === 'completed').length;
+    const inProgressProjects = projects.filter(p => p.status === 'in-progress').length;
+    const notStartedProjects = projects.filter(p => p.status === 'not-started').length;
+    const overallProgress = totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0;
+
+    const totalTasks = projects.reduce((acc, p) => acc + (p.tasks?.length || 0), 0);
+    const completedTasks = projects.reduce((acc, p) =>
+      acc + (p.tasks?.filter(t => t.status === 'completed').length || 0), 0);
+    const taskCompletionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+    const totalBudget = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
+    const totalSpent = projects.reduce((acc, p) => acc + (p.spent || 0), 0);
+    const budgetUtilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
+
+    return {
+      totalProjects,
+      completedProjects,
+      inProgressProjects,
+      notStartedProjects,
+      overallProgress,
+      totalTasks,
+      completedTasks,
+      taskCompletionRate,
+      totalBudget,
+      totalSpent,
+      budgetUtilization
+    };
+  }, [projects]);
+
   // 모든 프로젝트 로드
   const loadProjects = useCallback(async () => {
     setLoading(true);
@@ -138,48 +170,25 @@ export const ProjectProvider = ({ children }) => {
       setAnalytics(localAnalytics);
       return localAnalytics;
     }
-  }, []);
+  }, [calculateLocalAnalytics]);
 
-  // 로컬 분석 계산
-  const calculateLocalAnalytics = useCallback(() => {
-    const totalProjects = projects.length;
-    const completedProjects = projects.filter(p => p.status === 'completed').length;
-    const inProgressProjects = projects.filter(p => p.status === 'in-progress').length;
-    const notStartedProjects = projects.filter(p => p.status === 'not-started').length;
-    const overallProgress = totalProjects > 0 ? (completedProjects / totalProjects) * 100 : 0;
-
-    const totalTasks = projects.reduce((acc, p) => acc + (p.tasks?.length || 0), 0);
-    const completedTasks = projects.reduce((acc, p) =>
-      acc + (p.tasks?.filter(t => t.status === 'completed').length || 0), 0);
-    const taskCompletionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
-
-    const totalBudget = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
-    const totalSpent = projects.reduce((acc, p) => acc + (p.spent || 0), 0);
-    const budgetUtilization = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
-
-    return {
-      totalProjects,
-      completedProjects,
-      inProgressProjects,
-      notStartedProjects,
-      overallProgress,
-      totalTasks,
-      completedTasks,
-      taskCompletionRate,
-      totalBudget,
-      totalSpent,
-      budgetUtilization
-    };
-  }, [projects]);
-
+  // 초기 데이터 로드
   useEffect(() => {
     loadProjects();
     checkServerConnection();
-    loadAnalytics();
-  }, [loadProjects, loadAnalytics, checkServerConnection]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // projects가 업데이트되면 analytics 재계산
+  useEffect(() => {
+    if (projects.length > 0) {
+      const localAnalytics = calculateLocalAnalytics();
+      setAnalytics(localAnalytics);
+    }
+  }, [projects, calculateLocalAnalytics]);
 
   // 특정 프로젝트 조회 (새로운 기능)
-  const getProjectById = async (projectId) => {
+  const getProjectById = useCallback(async (projectId) => {
     try {
       const project = await ProjectApi.getProjectById(projectId);
       return ProjectApi.transformFromApiFormat(project);
@@ -187,10 +196,10 @@ export const ProjectProvider = ({ children }) => {
       console.error('❌ 프로젝트 조회 실패:', error);
       return projects.find(p => p.id === projectId);
     }
-  };
+  }, [projects]);
 
   // 서버 기반 검색 (개선된 기능)
-  const searchProjects = async (keyword) => {
+  const searchProjects = useCallback(async (keyword) => {
     if (!keyword.trim()) return projects;
     
     try {
@@ -207,10 +216,10 @@ export const ProjectProvider = ({ children }) => {
         project.tags.some(tag => tag.toLowerCase().includes(keyword.toLowerCase()))
       );
     }
-  };
+  }, [projects]);
 
   // 상태별 프로젝트 조회 (새로운 기능)
-  const getProjectsByStatus = async (status) => {
+  const getProjectsByStatus = useCallback(async (status) => {
     try {
       const results = await ProjectApi.getProjectsByStatus(status);
       return results.map(project => ProjectApi.transformFromApiFormat(project));
@@ -218,10 +227,10 @@ export const ProjectProvider = ({ children }) => {
       console.error('❌ 상태별 조회 실패, 로컬 필터링 사용:', error);
       return projects.filter(project => project.status === status);
     }
-  };
+  }, [projects]);
 
   // 우선순위별 프로젝트 조회 (새로운 기능)
-  const getProjectsByPriority = async (priority) => {
+  const getProjectsByPriority = useCallback(async (priority) => {
     try {
       const results = await ProjectApi.getProjectsByPriority(priority);
       return results.map(project => ProjectApi.transformFromApiFormat(project));
@@ -229,7 +238,7 @@ export const ProjectProvider = ({ children }) => {
       console.error('❌ 우선순위별 조회 실패, 로컬 필터링 사용:', error);
       return projects.filter(project => project.priority === priority);
     }
-  };
+  }, [projects]);
 
   // 프로젝트 추가
   const addProject = async (newProject) => {
@@ -317,7 +326,7 @@ export const ProjectProvider = ({ children }) => {
   // ========== 태스크 관리 기능 ==========
 
   // 특정 프로젝트의 태스크 조회 (새로운 기능)
-  const getTasksByProjectId = async (projectId) => {
+  const getTasksByProjectId = useCallback(async (projectId) => {
     try {
       const tasks = await ProjectApi.getTasksByProjectId(projectId);
       return tasks;
@@ -326,7 +335,7 @@ export const ProjectProvider = ({ children }) => {
       const project = projects.find(p => p.id === projectId);
       return project?.tasks || [];
     }
-  };
+  }, [projects]);
 
   // 태스크 추가
   const addTask = async (projectId, newTask) => {
@@ -469,7 +478,7 @@ export const ProjectProvider = ({ children }) => {
   };
 
   // 사용자별 태스크 조회 (새로운 기능)
-  const getTasksByUserId = async (userId) => {
+  const getTasksByUserId = useCallback(async (userId) => {
     try {
       const tasks = await ProjectApi.getTasksByUserId(userId);
       setUserTasks(tasks);
@@ -489,7 +498,7 @@ export const ProjectProvider = ({ children }) => {
       setUserTasks(allTasks);
       return allTasks;
     }
-  };
+  }, [projects]);
 
   // ========== 팀 관리 기능 (새로운 기능들) ==========
 
@@ -505,7 +514,6 @@ export const ProjectProvider = ({ children }) => {
   const addTeamMember = async (teamId, memberData) => {
     try {
       const newMember = await ProjectApi.addTeamMember(teamId, memberData);
-      // 관련 프로젝트의 팀원 목록 업데이트
       setProjects(prev => prev.map(project => {
         if (project.team.some(member => member.teamId === teamId)) {
           return {
@@ -526,7 +534,6 @@ export const ProjectProvider = ({ children }) => {
   const removeTeamMember = async (teamId, memberId) => {
     try {
       await ProjectApi.removeTeamMember(teamId, memberId);
-      // 관련 프로젝트의 팀원 목록 업데이트
       setProjects(prev => prev.map(project => {
         return {
           ...project,
@@ -542,7 +549,7 @@ export const ProjectProvider = ({ children }) => {
 
   // ========== 마일스톤 관리 기능 (새로운 기능들) ==========
 
-  const getMilestonesByProjectId = async (projectId) => {
+  const getMilestonesByProjectId = useCallback(async (projectId) => {
     try {
       return await ProjectApi.getMilestonesByProjectId(projectId);
     } catch (error) {
@@ -550,7 +557,7 @@ export const ProjectProvider = ({ children }) => {
       const project = projects.find(p => p.id === projectId);
       return project?.milestones || [];
     }
-  };
+  }, [projects]);
 
   const createMilestone = async (projectId, milestoneData) => {
     try {
@@ -622,7 +629,7 @@ export const ProjectProvider = ({ children }) => {
 
   // ========== 파일 관리 기능 (새로운 기능들) ==========
 
-  const getProjectFiles = async (projectId) => {
+  const getProjectFiles = useCallback(async (projectId) => {
     try {
       return await ProjectApi.getProjectFiles(projectId);
     } catch (error) {
@@ -630,7 +637,7 @@ export const ProjectProvider = ({ children }) => {
       const project = projects.find(p => p.id === projectId);
       return project?.files || [];
     }
-  };
+  }, [projects]);
 
   const uploadFile = async (projectId, fileData) => {
     try {
@@ -656,7 +663,7 @@ export const ProjectProvider = ({ children }) => {
 
   // ========== 활동 로그 기능 (새로운 기능) ==========
 
-  const getProjectActivities = async (projectId) => {
+  const getProjectActivities = useCallback(async (projectId) => {
     try {
       return await ProjectApi.getProjectActivities(projectId);
     } catch (error) {
@@ -664,7 +671,7 @@ export const ProjectProvider = ({ children }) => {
       const project = projects.find(p => p.id === projectId);
       return project?.activity || [];
     }
-  };
+  }, [projects]);
 
   const getUserProjectAnalytics = async (userId) => {
     try {
@@ -674,7 +681,6 @@ export const ProjectProvider = ({ children }) => {
       return null;
     }
   };
-
 
   // 에러 초기화
   const clearError = () => {
@@ -688,7 +694,6 @@ export const ProjectProvider = ({ children }) => {
   };
 
   const value = {
-    // 기존 기능
     projects,
     loading,
     error,
@@ -696,7 +701,6 @@ export const ProjectProvider = ({ children }) => {
     analytics,
     userTasks,
     
-    // 프로젝트 관리
     addProject,
     updateProject,
     deleteProject,
@@ -705,7 +709,6 @@ export const ProjectProvider = ({ children }) => {
     getProjectsByStatus,
     getProjectsByPriority,
     
-    // 태스크 관리
     getTasksByProjectId,
     addTask,
     updateTask,
@@ -713,28 +716,22 @@ export const ProjectProvider = ({ children }) => {
     updateTaskStatus,
     getTasksByUserId,
     
-    // 팀 관리
     getTeamMembers,
     addTeamMember,
     removeTeamMember,
     
-    // 마일스톤 관리
     getMilestonesByProjectId,
     createMilestone,
     updateMilestone,
     
-    // 파일 관리
     getProjectFiles,
     uploadFile,
     
-    // 활동 로그
     getProjectActivities,
     
-    // 분석 및 통계
     loadAnalytics,
     getUserProjectAnalytics,
     
-    // 유틸리티
     clearError,
     refreshProjects,
     checkServerConnection

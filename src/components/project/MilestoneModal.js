@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   X, Target, Plus, Calendar, CheckCircle2, Circle,
-  Edit2, Trash2, Flag, Clock, MoreHorizontal
+  Edit2, Flag, Clock,
 } from 'lucide-react';
 import { useProjectContext } from '../../context/ProjectContext';
 
@@ -29,14 +29,10 @@ const MilestoneModal = ({
     priority: 'medium'
   });
 
-  // 컴포넌트 마운트 시 마일스톤 로드
-  useEffect(() => {
-    if (show && project) {
-      loadMilestones();
-    }
-  }, [show, project]);
-
-  const loadMilestones = async () => {
+  // 마일스톤 로드 함수를 useCallback으로 래핑
+  const loadMilestones = useCallback(async () => {
+    if (!project) return;
+    
     try {
       const projectMilestones = await getMilestonesByProjectId(project.id);
       setMilestones(projectMilestones);
@@ -45,7 +41,14 @@ const MilestoneModal = ({
       // 프로젝트에서 기본 마일스톤 사용
       setMilestones(project.milestones || []);
     }
-  };
+  }, [project, getMilestonesByProjectId]);
+
+  // 컴포넌트 마운트 시 마일스톤 로드
+  useEffect(() => {
+    if (show && project) {
+      loadMilestones();
+    }
+  }, [show, project, loadMilestones]);
 
   // 마일스톤 생성
   const handleCreateMilestone = async (e) => {

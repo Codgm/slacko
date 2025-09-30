@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
-import { 
-  Upload, X, FileText, Image, FileVideo, 
-  FileArchive, File, Check, AlertCircle,
+import {
+  Upload, X, FileText, Image, FileVideo,
+  FileArchive, File, AlertCircle,
   Trash2, Download, Eye
 } from 'lucide-react';
 import { useProjectContext } from '../../context/ProjectContext';
@@ -12,7 +12,7 @@ const FileUploadComponent = ({
   maxFileSize = 10 * 1024 * 1024, // 10MB
   allowedTypes = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpg', 'jpeg', 'png', 'gif', 'zip', 'rar']
 }) => {
-  const { uploadFile, loading } = useProjectContext();
+  const { uploadFile } = useProjectContext();
   const fileInputRef = useRef(null);
   
   const [dragActive, setDragActive] = useState(false);

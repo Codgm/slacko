@@ -395,4 +395,5 @@ class TextbookApi {
   }
 }
 
-export default new TextbookApi();
+const textbookApi = new TextbookApi();
+export default textbookApi;
